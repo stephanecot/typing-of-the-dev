@@ -232,7 +232,7 @@ const I18N = {
     statBugs: 'BUGS ÉCRASÉS',
     statBosses: 'BOSS VAINCUS',
     shame: '☠ GOD MODE DÉTECTÉ — SCORE DE TRICHEUR, NON ENREGISTRÉ ☠',
-    ranked: (rank) => `Tu es classé #${rank} du DevFest !`,
+    ranked: (rank) => `Tu es classé #${rank} au général !`,
     offline: '(serveur injoignable — score non enregistré)',
     replay: '[ ENTRÉE : rejouer ]    [ M : menu ]',
     // ---- formulaire DOM
@@ -243,7 +243,7 @@ const I18N = {
     formEmail: 'email ',
     formPhone: 'téléphone ',
     formOpt: '(optionnel)',
-    formConsent: 'J\'accepte d\'être recontacté·e après le DevFest. Sans cette case, '
+    formConsent: 'J\'accepte d\'être recontacté·e après l\'événement. Sans cette case, '
       + 'nom, prénom, email et téléphone ne sont pas conservés (RGPD : données '
       + 'supprimées après le tirage, jamais cédées).',
     formSave: '[ ENREGISTRER ]',
@@ -474,7 +474,7 @@ const I18N = {
     statBugs: 'BUGS SQUASHED',
     statBosses: 'BOSSES DEFEATED',
     shame: '☠ GOD MODE DETECTED — CHEATER SCORE, NOT SAVED ☠',
-    ranked: (rank) => `You ranked #${rank} at DevFest!`,
+    ranked: (rank) => `You ranked #${rank} overall!`,
     offline: '(server unreachable — score not saved)',
     replay: '[ ENTER: replay ]    [ M: menu ]',
     // ---- DOM form
@@ -485,7 +485,7 @@ const I18N = {
     formEmail: 'email ',
     formPhone: 'phone ',
     formOpt: '(optional)',
-    formConsent: 'I agree to be contacted after DevFest. Without this box, '
+    formConsent: 'I agree to be contacted after the event. Without this box, '
       + 'name, email and phone are not stored (GDPR: data deleted '
       + 'after the prize draw, never shared).',
     formSave: '[ SAVE ]',

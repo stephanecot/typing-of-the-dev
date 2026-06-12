@@ -1,5 +1,5 @@
 /**
- * Typing of the Dev — serveur de stand (DevFest Toulouse 2026)
+ * Typing of the Dev — serveur du jeu (stand, salon, bureau…)
  * Zéro dépendance : node:http pour le statique + API, node:sqlite pour la BDD.
  * Lancement : node server.js  →  http://localhost:3333
  */

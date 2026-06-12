@@ -1,7 +1,7 @@
 {
   "name": "typing-of-the-dev",
   "version": "1.4.0",
-  "description": "Typing of the Dev — jeu de stand DevFest Toulouse 2026. Tuez les bugs zombies en tapant du code.",
+  "description": "Arcade typing game — a tribute to The Typing of the Dead: zombie bugs march toward your PROD server, type their words to squash them. Phaser 3, procedural WebAudio music, zero npm dependencies.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -9,5 +9,30 @@
   "engines": {
     "node": ">=22.5.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "keywords": [
+    "game",
+    "typing-game",
+    "phaser",
+    "phaser3",
+    "arcade",
+    "retro",
+    "ascii-art",
+    "crt",
+    "webaudio",
+    "nodejs",
+    "sqlite",
+    "zero-dependencies",
+    "offline-first",
+    "typing-of-the-dead"
+  ],
+  "homepage": "https://github.com/stephanecot/typing-of-the-dev#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stephanecot/typing-of-the-dev.git"
+  },
+  "bugs": {
+    "url": "https://github.com/stephanecot/typing-of-the-dev/issues"
+  },
+  "author": "Stéphane Cottin"
 }
