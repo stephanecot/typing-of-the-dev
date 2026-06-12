@@ -32,6 +32,10 @@ const CSS = {
   greenSoft: '#2da55e',
 };
 
+/* Easter egg : taper GINES sur l'écran d'accueil remplace tous les mots du
+   jeu par des insultes geek bon enfant. Se désactive en retapant GINES. */
+let GINES_MODE = false;
+
 /* Accessibilité : coupe secousses de caméra et glitchs cosmétiques quand
    l'OS demande de réduire les animations. */
 const REDUCED_MOTION = typeof window.matchMedia === 'function'
