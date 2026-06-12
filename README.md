@@ -48,6 +48,8 @@ Tout fonctionne **offline** : Phaser, police et sons sont locaux/procéduraux.
 - `H` sur l'écran d'accueil : aide complète sur 4 pages (règles, difficultés,
   bestiaire, boss). `L` : bascule la langue FR/EN (interface + banques de mots
   les plus franchouillardes).
+- 🥚 Il paraît aussi qu'un certain prénom tapé sur l'accueil rend les bugs
+  très impolis (retapez-le pour qu'ils retrouvent leurs bonnes manières).
 - 🥚 Il paraît qu'un certain code bien connu des joueurs rend invincible…
   mais le jeu affiche alors `☠ GOD MODE = TRICHEUR ☠` à côté du score et
   refuse d'enregistrer la partie. On n'aime pas les tricheurs.
@@ -67,6 +69,7 @@ Tout fonctionne **offline** : Phaser, police et sons sont locaux/procéduraux.
 | Le recruteur | 3 | — | campe et spamme des InMails |
 | Le monolithe | 3 | exceptions ×2 | exige 2 mots, recule entre les deux |
 | La spec foireuse | 3 | du charabia aléatoire | son mot ne veut rien dire |
+| L'indép | 3 | vie de freelance | esquive à mi-mot ; sa mort élimine l'ennemi le plus proche |
 | Le consultant | 4 | buzzwords | **CTO/DIEU uniquement**, accélère |
 | L'obfuscateur | 4 | jargon du code illisible | **CTO/DIEU uniquement**, écran de fumée 5 s à sa mort |
 | Le ransomware | 5 | commandes | **DIEU uniquement**, rechiffre son mot / 6 s |

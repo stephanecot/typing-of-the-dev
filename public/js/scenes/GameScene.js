@@ -147,6 +147,11 @@ class GameScene extends Phaser.Scene {
       this.lifeIcons.push(this.add.rectangle(x, 66, 30, 30).setDepth(40));
     }
     this.lifePulse = null;
+    if (GINES_MODE) {
+      this.add.text(GAME_W - 24, 96, T('ginesBadge'), {
+        fontFamily: FONT, fontSize: '22px', color: CSS.magenta,
+      }).setOrigin(1, 0).setDepth(40);
+    }
     this.banner = this.add.text(GAME_W / 2, GAME_H / 2 - 60, '', {
       fontFamily: FONT, fontSize: '64px', color: CSS.amber, align: 'center',
     }).setOrigin(0.5).setDepth(45).setAlpha(0);
@@ -332,6 +337,7 @@ class GameScene extends Phaser.Scene {
       if (n >= 6) for (let i = 0; i < Math.min(1 + Math.floor((n - 6) / 4), 2); i++) q.push('monolith');
       if (n >= 5) for (let i = 0; i < Math.min(1 + Math.floor((n - 5) / 3), 2); i++) q.push('microservice');
       if (n >= 4) for (let i = 0; i < Math.min(1 + Math.floor((n - 4) / 3), 2); i++) q.push('spec');
+      if (n >= 5) for (let i = 0; i < Math.min(1 + Math.floor((n - 5) / 4), 2); i++) q.push('indep');
       // niv.4 et 5 : seulement en CTO BURNOUT et DIEU DU TERMINAL
       const hardcore = this.diff.key === 'cto' || this.diff.key === 'ultime';
       if (hardcore && n >= 3) for (let i = 0; i < Math.min(1 + Math.floor((n - 3) / 3), 3); i++) q.push('consultant');
@@ -361,6 +367,8 @@ class GameScene extends Phaser.Scene {
   labelFor(kind) {
     const ex = new Set(this.enemies.map((e) => e.label));
     const opts = { maxLen: this.diff.maxLen, exclude: ex };
+    // mode Ginès : tout le monde insulte le joueur, peu importe la classe
+    if (GINES_MODE) return pickWord(wordBank('insults'), opts);
     switch (kind) {
       case 'bug': return pickWord(WORDS.keywords, opts);
       case 'elite': return pickWord(WORDS.exceptions, { exclude: ex, maxLen: this.diff.maxLen + 8 });
@@ -373,6 +381,7 @@ class GameScene extends Phaser.Scene {
       case 'virus': return pickWord(WORDS.keywords, { exclude: ex, maxLen: Math.min(8, this.diff.maxLen) });
       case 'monolith': return pickWord(WORDS.exceptions, { exclude: ex, maxLen: this.diff.maxLen + 8 });
       case 'microservice': return pickWord(WORDS.keywords, { exclude: ex, maxLen: Math.min(8, this.diff.maxLen) });
+      case 'indep': return pickWord(wordBank('freelance'), opts);
       case 'spec': return this.gibberish(Phaser.Math.Between(5, Math.min(9, this.diff.maxLen)));
       case 'consultant': return pickWord(wordBank('buzzwords'), { exclude: ex });
       case 'obfuscator': return pickWord(WORDS.obfuscation, { exclude: ex });
@@ -440,6 +449,7 @@ class GameScene extends Phaser.Scene {
       virus: { color: CSS.red, tint: PALETTE.red, speed: 55, art: 'virus', cls: 'bug', size: 17, level: 2 },
       monolith: { color: CSS.amber, tint: PALETTE.amber, speed: 18, art: 'monolith', cls: 'legacy', size: 22, level: 3 },
       microservice: { color: CSS.cyan, tint: PALETTE.cyan, speed: 38, art: 'microservice', cls: 'bug', size: 17, level: 2 },
+      indep: { color: CSS.cyan, tint: PALETTE.cyan, speed: 38, art: 'indep', cls: 'bug', size: 18, level: 3 },
       spec: { color: CSS.white, tint: PALETTE.white, speed: 40, art: 'spec', cls: 'deadline', size: 17, level: 3 },
       // niv.4 et 5 : réservés aux difficultés CTO BURNOUT et DIEU DU TERMINAL
       consultant: { color: CSS.gold, tint: PALETTE.gold, speed: 48, art: 'consultant', cls: 'deadline', size: 18, level: 4 },
@@ -456,7 +466,8 @@ class GameScene extends Phaser.Scene {
       flipped: !masked && this.rollFlip(kind),
       // le monolithe encaisse un 2e mot après le premier
       extraWords: kind === 'monolith'
-        ? [pickWord(WORDS.exceptions, { maxLen: this.diff.maxLen + 8, exclude: new Set([label]) })]
+        ? [pickWord(GINES_MODE ? wordBank('insults') : WORDS.exceptions,
+            { maxLen: this.diff.maxLen + 8, exclude: new Set([label]) })]
         : null,
       x: SPAWN_X, y: Phaser.Math.Between(LANE_TOP, LANE_BOTTOM),
       speed: conf.speed * this.diff.speed * (1 + this.wave * 0.04) * Phaser.Math.FloatBetween(0.9, 1.1),
@@ -549,8 +560,9 @@ class GameScene extends Phaser.Scene {
     const cmdCount = this.diff.bossCmds + (isFinal ? 2 : 0);
     const cmds = [];
     const used = new Set();
+    const bossBank = GINES_MODE ? wordBank('insults') : WORDS.commands;
     for (let i = 0; i < cmdCount; i++) {
-      const c = pickWord(WORDS.commands, { exclude: used });
+      const c = pickWord(bossBank, { exclude: used });
       used.add(c);
       cmds.push(c);
     }
@@ -655,10 +667,39 @@ class GameScene extends Phaser.Scene {
         if (t.kind === 'boss') { this.target = null; this.bossHit(); }
         else if (t.extraWords && t.extraWords.length) this.monolithNext(t);
         else this.killEnemy(t);
+      } else if (t.kind === 'indep' && !t.dodged && t.progress >= Math.ceil(t.label.length / 2)) {
+        this.indepDodge(t);
       }
     } else {
       this.typoOn(t);
     }
+  }
+
+  /* L'INDÉP esquive une fois, à la moitié de son mot : "plus dispo", il se
+     téléporte plus loin (la saisie et le verrouillage sont conservés). */
+  indepDodge(e) {
+    e.dodged = true;
+    Sfx.missile();
+    this.scorePopup(e.container.x, e.container.y - 90, T('indepDodge'), CSS.cyan, 24);
+    e.container.x = Math.min(e.container.x + 240, SPAWN_X - 40);
+    e.baseY = Phaser.Math.Between(LANE_TOP, LANE_BOTTOM);
+    e.container.setAlpha(0.2);
+    this.tweens.add({ targets: e.container, alpha: 1, duration: 350 });
+  }
+
+  /* …mais une fois son mot fini, il accepte la mission : il facture et
+     élimine l'ennemi le plus proche de la prod avant de partir. */
+  indepContract(e) {
+    const targets = this.enemies.filter((v) => v.kind !== 'boss' && v.cls !== 'powerup');
+    if (!targets.length) return;
+    targets.sort((a, b) => a.container.x - b.container.x);
+    const victim = targets[0];
+    this.scorePopup(e.container.x, e.container.y - 100, T('indepHired'), CSS.cyan, 26);
+    this.time.delayedCall(300, () => {
+      if (!victim.container.active || !this.enemies.includes(victim) || this.over) return;
+      this.scorePopup(victim.container.x, victim.container.y - 80, T('indepKill'), CSS.cyan, 24);
+      this.killEnemy(victim);
+    });
   }
 
   /* Le monolithe encaisse : premier mot fini = points partiels + recul,
@@ -687,7 +728,8 @@ class GameScene extends Phaser.Scene {
     Sfx.powerup();
     const ex = new Set(this.enemies.map((x) => x.label));
     for (let i = 0; i < 2; i++) {
-      const label = pickWord(WORDS.keywords, { maxLen: Math.max(4, 7 - e.gen * 2), exclude: ex });
+      const label = pickWord(GINES_MODE ? wordBank('insults') : WORDS.keywords,
+        { maxLen: Math.max(4, 7 - e.gen * 2), exclude: ex });
       ex.add(label);
       this.addEnemy({
         kind: 'microservice', cls: 'bug', label, level: 2, gen: e.gen + 1,
@@ -742,7 +784,7 @@ class GameScene extends Phaser.Scene {
     this.scorePopup(e.container.x, e.container.y - 80, T('virusSplit'), CSS.red, 26);
     const ex = new Set(this.enemies.map((x) => x.label));
     for (let i = 0; i < 2; i++) {
-      const label = pickWord(WORDS.keywords, { maxLen: 6, exclude: ex });
+      const label = pickWord(GINES_MODE ? wordBank('insults') : WORDS.keywords, { maxLen: 6, exclude: ex });
       ex.add(label);
       this.addEnemy({
         kind: 'bug', cls: 'bug', label, level: 1,
@@ -817,6 +859,7 @@ class GameScene extends Phaser.Scene {
       this.sparks.explode(Math.min(14 + e.label.length * 2, 50), e.container.x, e.container.y);
       if (e.kind === 'virus') this.splitVirus(e);
       if (e.kind === 'obfuscator') this.spawnSmokeCloud(e.container.x, e.container.y);
+      if (e.kind === 'indep') this.indepContract(e);
       this.rollDrop(e);
     }
     this.combo++;
@@ -885,6 +928,8 @@ class GameScene extends Phaser.Scene {
       if (t.kind === 'boss') { this.target = null; this.bossHit(); }
       else if (t.extraWords && t.extraWords.length) this.monolithNext(t);
       else this.killEnemy(t);
+    } else if (t.kind === 'indep' && !t.dodged && t.progress >= Math.ceil(t.label.length / 2)) {
+      this.indepDodge(t);
     }
     this.refreshHud();
   }

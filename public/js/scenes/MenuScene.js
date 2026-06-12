@@ -9,6 +9,7 @@ class MenuScene extends Phaser.Scene {
     this.helpOpen = false;
     this.godArmed = false; // Konami Code ↑↑↓↓←→←→BA saisi ici, sur l'accueil
     this.konamiIdx = 0;
+    this.ginesIdx = 0; // taper GINES bascule le mode insultes
     Api.loadConfig(); // recharge les réglages admin à chaque passage au menu
     this.buildTitle();
     this.buildDifficulties();
@@ -20,6 +21,7 @@ class MenuScene extends Phaser.Scene {
       Sfx.ensure();
       if (!Music.playing) Music.start(0); // ambiance d'accueil, plus douce
       this.trackKonami(e.key);
+      this.trackGines(e.key);
       if (this.helpOpen) {
         if (e.key === 'ArrowLeft') this.changeHelpPage(-1);
         else if (e.key === 'ArrowRight') this.changeHelpPage(1);
@@ -36,6 +38,8 @@ class MenuScene extends Phaser.Scene {
     });
 
     if (REDUCED_MOTION) this.cameras.main.shake = () => this.cameras.main;
+    this.ginesBadge = null;
+    this.refreshGinesBadge();
     this.cameras.main.fadeIn(400, 5, 10, 7);
   }
 
@@ -144,7 +148,7 @@ class MenuScene extends Phaser.Scene {
   static ART_COLORS = {
     bug: CSS.green, legacy: CSS.amber, deadline: CSS.magenta, spammer: CSS.cyan,
     missile: CSS.red, powerup: CSS.gold, ghost: CSS.white, virus: CSS.red,
-    monolith: CSS.amber, consultant: CSS.gold, ransomware: CSS.red, microservice: CSS.cyan, spec: CSS.white, obfuscator: CSS.white, po: CSS.magenta,
+    monolith: CSS.amber, consultant: CSS.gold, ransomware: CSS.red, microservice: CSS.cyan, spec: CSS.white, obfuscator: CSS.white, po: CSS.magenta, indep: CSS.cyan,
     boss: CSS.red, finalBoss: CSS.magenta,
   };
 
@@ -239,6 +243,28 @@ class MenuScene extends Phaser.Scene {
     if (this.helpOpen) { this.helpPage = 0; this.refreshHelpPage(); }
     this.helpPanel.setVisible(this.helpOpen);
     Sfx.blip(this.helpOpen ? 20 : 5);
+  }
+
+  /* Taper G-I-N-E-S : bascule le mode Ginès — tous les mots du jeu
+     deviennent des insultes geek (et on retape GINES pour l'éteindre). */
+  trackGines(key) {
+    const SEQ = ['g', 'i', 'n', 'e', 's'];
+    const k = String(key).toLowerCase();
+    this.ginesIdx = k === SEQ[this.ginesIdx] ? this.ginesIdx + 1 : (k === SEQ[0] ? 1 : 0);
+    if (this.ginesIdx < SEQ.length) return;
+    this.ginesIdx = 0;
+    GINES_MODE = !GINES_MODE;
+    Sfx.powerup();
+    this.refreshGinesBadge();
+  }
+
+  refreshGinesBadge() {
+    if (this.ginesBadge) { this.ginesBadge.destroy(); this.ginesBadge = null; }
+    if (!GINES_MODE) return;
+    this.ginesBadge = this.add.text(GAME_W / 2, 320, T('ginesOn'), {
+      fontFamily: FONT, fontSize: '32px', color: CSS.magenta,
+    }).setOrigin(0.5).setDepth(60);
+    this.tweens.add({ targets: this.ginesBadge, alpha: 0.4, duration: 450, yoyo: true, repeat: -1 });
   }
 
   /* ↑↑↓↓←→←→BA sur l'écran d'accueil : arme le god mode pour la prochaine

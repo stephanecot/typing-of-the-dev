@@ -233,6 +233,29 @@ const WORDS = {
     'relance 2', 'derniere chance', 'exclu !', 'process rapide', 'call demain ?',
   ],
 
+  // MODE GINÈS : insultes geek bon enfant (façon capitaine Haddock du dev)
+  insults: [
+    'espece de bug', 'tete de null', 'sac a spaghetti', 'mange disquette',
+    'cerveau monothread', 'casseur de build', 'voleur de wifi', 'face de captcha',
+    'cervelle en ram', 'tas de legacy', 'apprenti cobol', 'fan de vbscript',
+    'commit sans message', 'testeur en prod', 'adorateur de excel',
+    'dompteur de jquery', 'bouffeur de cookies', 'troll de forum',
+    'noob du terminal', 'copieur de stackoverflow', 'craneur en vim',
+    'roi du copier coller', 'banane en bash', 'moule a merge', 'bug sur pattes',
+    'pixel mal aligne', 'div mal centree', 'point virgule oublie',
+    'tab contre espaces', 'windows vista', 'imprimante du diable',
+    'modem dans ta tete', 'pousseur de vendredi', 'gobelin du backlog',
+    'merge conflict ambulant', 'esclave du daily', 'pilleur de npm',
+  ],
+
+  // L'INDÉP (niv.3) : la vie de freelance
+  freelance: [
+    'tjm a negocier', 'dispo en mars', 'freelance', 'portage salarial',
+    'urssaf', 'facture impayee', 'mission courte', 'full remote sinon rien',
+    'pas de cdi merci', 'micro entreprise', 'kbis', 'acompte de moitie',
+    'mon reseau suffit', 'cumul de missions', 'relance facture', 'intercontrat jamais',
+  ],
+
   // LE PO INSPIRÉ (niv.5) : ses idées foireuses, à taper…
   poIdeas: [
     'on pivote', 'comme uber', 'de la blockchain', 'avec de l ia',
@@ -296,6 +319,24 @@ const WORDS = {
     spammers: [
       'linkedin recruiter', 'head hunter', 'agency hunting', 'urgent staffing',
       'business developer', 'talent acquisition', 'crazy sourcer', 'hr agency',
+    ],
+    insults: [
+      'you absolute bug', 'null head', 'spaghetti bag', 'floppy muncher',
+      'single thread brain', 'build breaker', 'wifi thief', 'captcha face',
+      'ram for brains', 'legacy pile', 'cobol apprentice', 'vbscript fan',
+      'no message committer', 'tester in prod', 'excel worshipper',
+      'jquery tamer', 'cookie eater', 'forum troll', 'terminal noob',
+      'stackoverflow copier', 'vim show off', 'copy paste king', 'bash banana',
+      'merge conflict goblin', 'bug on legs', 'misaligned pixel',
+      'uncentered div', 'missing semicolon', 'tabs vs spaces', 'windows vista',
+      'cursed printer', 'dialup brain', 'friday deployer', 'backlog goblin',
+      'daily standup hostage', 'npm looter',
+    ],
+    freelance: [
+      'rate negotiable', 'available in march', 'freelance', 'umbrella company',
+      'unpaid invoice', 'short gig', 'full remote or nothing', 'no permanent contract',
+      'my own boss', 'sole trader', 'upfront deposit', 'my network is enough',
+      'stacking gigs', 'invoice reminder', 'never on the bench', 'side project',
     ],
     poIdeas: [
       'lets pivot', 'like uber', 'add blockchain', 'with some ai',
