@@ -143,7 +143,7 @@ class MenuScene extends Phaser.Scene {
   static ART_COLORS = {
     bug: CSS.green, legacy: CSS.amber, deadline: CSS.magenta, spammer: CSS.cyan,
     missile: CSS.red, powerup: CSS.gold, ghost: CSS.white, virus: CSS.red,
-    monolith: CSS.amber, consultant: CSS.gold, ransomware: CSS.red, microservice: CSS.cyan,
+    monolith: CSS.amber, consultant: CSS.gold, ransomware: CSS.red, microservice: CSS.cyan, spec: CSS.white,
     boss: CSS.red, finalBoss: CSS.magenta,
   };
 

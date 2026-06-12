@@ -66,6 +66,7 @@ Tout fonctionne **offline** : Phaser, police et sons sont locaux/procéduraux.
 | Bug d'élite | 3 | exceptions CamelCase | majuscules comprises |
 | Le recruteur | 3 | — | campe et spamme des InMails |
 | Le monolithe | 3 | exceptions ×2 | exige 2 mots, recule entre les deux |
+| La spec foireuse | 3 | du charabia aléatoire | son mot ne veut rien dire |
 | Le consultant | 4 | buzzwords | **CTO/DIEU uniquement**, accélère |
 | Le ransomware | 5 | commandes | **DIEU uniquement**, rechiffre son mot / 6 s |
 | Boss | — | commandes terminal | tous les 4 sprints |

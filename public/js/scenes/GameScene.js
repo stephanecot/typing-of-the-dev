@@ -330,6 +330,7 @@ class GameScene extends Phaser.Scene {
       if (n >= 5) for (let i = 0; i < Math.min(Math.floor((n - 3) / 3), 3); i++) q.push('virus');
       if (n >= 6) for (let i = 0; i < Math.min(1 + Math.floor((n - 6) / 4), 2); i++) q.push('monolith');
       if (n >= 5) for (let i = 0; i < Math.min(1 + Math.floor((n - 5) / 3), 2); i++) q.push('microservice');
+      if (n >= 4) for (let i = 0; i < Math.min(1 + Math.floor((n - 4) / 3), 2); i++) q.push('spec');
       // niv.4 et 5 : seulement en CTO BURNOUT et DIEU DU TERMINAL
       const hardcore = this.diff.key === 'cto' || this.diff.key === 'ultime';
       if (hardcore && n >= 3) for (let i = 0; i < Math.min(1 + Math.floor((n - 3) / 3), 3); i++) q.push('consultant');
@@ -369,6 +370,7 @@ class GameScene extends Phaser.Scene {
       case 'virus': return pickWord(WORDS.keywords, { exclude: ex, maxLen: Math.min(8, this.diff.maxLen) });
       case 'monolith': return pickWord(WORDS.exceptions, { exclude: ex, maxLen: this.diff.maxLen + 8 });
       case 'microservice': return pickWord(WORDS.keywords, { exclude: ex, maxLen: Math.min(8, this.diff.maxLen) });
+      case 'spec': return this.gibberish(Phaser.Math.Between(5, Math.min(9, this.diff.maxLen)));
       case 'consultant': return pickWord(wordBank('buzzwords'), { exclude: ex });
       case 'ransomware': return pickWord(WORDS.commands, { exclude: ex });
       default: return pickWord(WORDS.keywords, opts);
@@ -385,6 +387,19 @@ class GameScene extends Phaser.Scene {
     Phaser.Utils.Array.Shuffle(candidates);
     const count = Math.max(1, Math.ceil(label.length * 0.3));
     return new Set(candidates.slice(0, count));
+  }
+
+  /* LA SPEC FOIREUSE : un mot qui ne veut rien dire, généré au hasard
+     (alternance consonne/voyelle pour rester tapable). */
+  gibberish(len) {
+    const cons = 'bcdfghjklmnprstvz';
+    const vow = 'aeiou';
+    let out = '';
+    for (let i = 0; i < len; i++) {
+      const bank = i % 2 ? vow : cons;
+      out += bank[Math.floor(Math.random() * bank.length)];
+    }
+    return out;
   }
 
   /* Pouvoir "RETOURNÉ" : le reste du mot est affiché tête en bas (flipY).
@@ -420,6 +435,7 @@ class GameScene extends Phaser.Scene {
       virus: { color: CSS.red, tint: PALETTE.red, speed: 55, art: 'virus', cls: 'bug', size: 17, level: 2 },
       monolith: { color: CSS.amber, tint: PALETTE.amber, speed: 18, art: 'monolith', cls: 'legacy', size: 22, level: 3 },
       microservice: { color: CSS.cyan, tint: PALETTE.cyan, speed: 38, art: 'microservice', cls: 'bug', size: 17, level: 2 },
+      spec: { color: CSS.white, tint: PALETTE.white, speed: 40, art: 'spec', cls: 'deadline', size: 17, level: 3 },
       // niv.4 et 5 : réservés aux difficultés CTO BURNOUT et DIEU DU TERMINAL
       consultant: { color: CSS.gold, tint: PALETTE.gold, speed: 48, art: 'consultant', cls: 'deadline', size: 18, level: 4 },
       ransomware: { color: CSS.red, tint: PALETTE.red, speed: 32, art: 'ransomware', cls: 'legacy', size: 18, level: 5 },
