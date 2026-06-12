@@ -35,8 +35,10 @@ Tout fonctionne **offline** : Phaser, police et sons sont locaux/procéduraux.
 - Combo : pas de faute = multiplicateur de score qui grimpe.
 - **Super combo ultime** (difficultés ★★★ et plus) : aux paliers de combo
   5/10/15, on gagne +1/+2/+3 **étoiles de combat** (max 6). Une faute remet
-  le combo à zéro mais les étoiles acquises sont conservées. Leurs pouvoirs
-  arrivent dans une prochaine version.
+  le combo à zéro mais les étoiles acquises sont conservées. Pouvoirs
+  (la frappe garde la priorité : la touche n'agit que si la lettre ne sert
+  pas à taper) : `A` bouclier 3 s (1★) · `Z` +1 vie (3★) · `E` détruit
+  l'ennemi le plus fort hors boss (2★).
 - Chaque ennemi affiche son **niveau** (`niv.1 ▲` à `niv.3 ▲▲▲`) ; les points gagnés
   s'affichent à chaque kill : longueur du mot × 10 × niveau × multiplicateur de
   combo × **bonus de vitesse** (chrono du verrouillage à la mort : ~3 caractères/s

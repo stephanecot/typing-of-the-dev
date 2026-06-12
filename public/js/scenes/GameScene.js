@@ -34,6 +34,12 @@ function waveQueueFor(diff, n, bossWave) {
     if (hardcore && n >= 4) for (let i = 0; i < Math.min(1 + Math.floor((n - 4) / 4), 2); i++) q.push('obfuscator');
     if (diff.key === 'ultime' && n >= 4) for (let i = 0; i < Math.min(1 + Math.floor((n - 4) / 4), 2); i++) q.push('ransomware');
     if (diff.key === 'ultime' && n >= 5) q.push('po'); // 1 seul PO à la fois suffit largement
+
+    // +15 % d'ennemis spéciaux : on repioche (déterministe, pour que les %
+    // affichés dans l'aide restent stables) parmi les non-bugs de la vague
+    const specials = q.filter((k) => k !== 'bug');
+    const extra = Math.round(specials.length * 0.15);
+    for (let i = 0; i < extra; i++) q.push(specials[i % specials.length]);
   }
   return q;
 }
@@ -62,6 +68,7 @@ class GameScene extends Phaser.Scene {
     this.superComboEnabled = ['hard', 'cto', 'ultime'].includes(this.diff.key);
     this.comboStars = 0;
     this.runStarTier = 0; // paliers déjà payés dans la série de combo en cours
+    this.invincibleUntil = 0; // bouclier du pouvoir A
     this.spawnQueue = [];
     this.boss = null;
     this.bossPending = false;
@@ -245,7 +252,7 @@ class GameScene extends Phaser.Scene {
     this.hudCombo.setText(this.combo > 1 ? `COMBO x${this.combo}  (×${mult})` : '');
     this.hudBombs.setText(T('hudItems')(this.bombs, this.lasers));
     this.hudStars.setText(this.superComboEnabled
-      ? `${T('hudStars')} ${'★'.repeat(this.comboStars)}${'☆'.repeat(6 - this.comboStars)}`
+      ? `${T('hudStars')} ${'★'.repeat(this.comboStars)}${'☆'.repeat(6 - this.comboStars)}${this.comboStars > 0 ? T('hudStarsKeys') : ''}`
       : '');
     this.hudWave.setText(`SPRINT ${this.wave}/${this.maxSprints}`);
     this.refreshSprintBar();
@@ -681,6 +688,11 @@ class GameScene extends Phaser.Scene {
     Sfx.ensure();
     const char = e.key;
 
+    // pouvoirs du SUPER COMBO (a/z/e) : la frappe garde TOUJOURS la priorité,
+    // le pouvoir ne part que si la lettre ne correspond à aucune saisie valide
+    if (this.superComboEnabled && (char === 'a' || char === 'z' || char === 'e')
+        && !this.isValidKeystroke(char) && this.tryStarPower(char)) return;
+
     if (!this.target) {
       // verrouille l'ennemi correspondant le plus proche de la prod
       const candidates = this.enemies.filter((en) => en.label[0] === char);
@@ -828,6 +840,52 @@ class GameScene extends Phaser.Scene {
         speed: 60 * this.diff.speed, color: CSS.red, artKind: 'bug', artSize: 14,
       });
     }
+  }
+
+  /* La touche servirait-elle à taper ? (lettre attendue de la cible, espace
+     sautable, ou première lettre d'un ennemi verrouillable) */
+  isValidKeystroke(char) {
+    if (this.target) {
+      const t = this.target;
+      return char === t.label[t.progress]
+        || (t.label[t.progress] === ' ' && char === t.label[t.progress + 1]);
+    }
+    return this.enemies.some((en) => en.label[0] === char);
+  }
+
+  /* Pouvoirs des étoiles de combat : A bouclier 3 s (1★) · E détruit
+     l'ennemi le plus fort hors boss (2★) · Z +1 vie (3★).
+     Retourne false si le pouvoir ne peut pas partir (la frappe reprend la main). */
+  tryStarPower(key) {
+    const cost = { a: 1, e: 2, z: 3 }[key];
+    if (this.comboStars < cost) return false;
+
+    if (key === 'z') {
+      if (this.lives >= this.diff.lives) return false; // vies au max : rien à soigner
+      this.comboStars -= cost;
+      this.lives++;
+      Sfx.powerup();
+      this.scorePopup(PLAYER_X + 170, this.player.y - 90, T('starLife'), CSS.gold, 32);
+    } else if (key === 'a') {
+      this.comboStars -= cost;
+      this.invincibleUntil = this.time.now + 3000;
+      Sfx.powerup();
+      this.scorePopup(PLAYER_X + 170, this.player.y - 90, T('starShield'), CSS.gold, 32);
+      this.player.setColor(CSS.gold);
+      this.time.delayedCall(3000, () => { if (this.player.active) this.player.setColor(CSS.green); });
+    } else {
+      // E : annihile l'ennemi le plus fort (niveau max, puis le plus proche)
+      const targets = this.enemies.filter((v) => v.kind !== 'boss' && v.cls !== 'powerup');
+      if (!targets.length) return false;
+      targets.sort((x, y) => (y.level || 1) - (x.level || 1) || x.container.x - y.container.x);
+      const victim = targets[0];
+      this.comboStars -= cost;
+      this.scorePopup(victim.container.x, victim.container.y - 80, T('starSmite'), CSS.gold, 32);
+      this.redSparks.explode(45, victim.container.x, victim.container.y);
+      this.killEnemy(victim);
+    }
+    this.refreshHud();
+    return true;
   }
 
   softMiss() {
@@ -1088,10 +1146,11 @@ class GameScene extends Phaser.Scene {
   incident(e) {
     Phaser.Utils.Array.Remove(this.enemies, e);
     if (this.target === e) { this.target = null; this.lockLine.clear(); }
-    if (this.godMode && e.cls !== 'powerup') {
+    if ((this.godMode || this.time.now < this.invincibleUntil) && e.cls !== 'powerup') {
       // invincible : l'ennemi s'écrase sur un bouclier, aucun dégât
       this.redSparks.explode(25, PROD_X + 80, e.container.y);
-      this.scorePopup(PROD_X + 160, e.container.y, T('invincible'), CSS.red, 26);
+      this.scorePopup(PROD_X + 160, e.container.y,
+        this.godMode ? T('invincible') : T('starShieldBlock'), this.godMode ? CSS.red : CSS.gold, 26);
       if (e.kind === 'boss') this.boss = null;
       e.container.destroy();
       this.checkWaveEnd();

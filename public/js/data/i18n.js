@@ -81,6 +81,7 @@ const I18N = {
     helpSections: [
       ['OBJECTIF', [
         'Protège ta PROD : chaque ennemi qui l\'atteint = un INCIDENT. Trop d\'incidents = GAME OVER.',
+        'Tiens tous les sprints puis bats LE DSI ÉNERVÉ : victoire, et le temps restant fait bonus !',
       ]],
       ['COMMENT TUER UN BUG', [
         'Tape la PREMIÈRE LETTRE d\'un ennemi pour le verrouiller, puis finis',
@@ -91,7 +92,8 @@ const I18N = {
         'Points = longueur × 10 × niveau × combo × VITESSE (rapide = jusqu\'à ×3 !).',
         'Certains ennemis lâchent un bonus : +1 vie, points, combo +5, slow-mo, items.',
         'Dès ★★★ : SUPER COMBO ULTIME — combo 5/10/15 = +1/+2/+3 étoiles de combat',
-        '(max 6). Une faute casse le combo, jamais les étoiles. Pouvoirs à venir !',
+        '(max 6, gardées même si le combo casse). Pouvoirs (si la lettre ne sert pas',
+        'à taper) : A bouclier 3 s (1★) · Z +1 vie (3★) · E frappe le plus fort (2★).',
       ]],
       ['POUVOIRS ENNEMIS', [
         'Mots MINIFIÉS : des lettres sont masquées (?), à toi de les deviner !',
@@ -115,7 +117,12 @@ const I18N = {
     hudItems: (bombs, lasers) => `kill -9 x${bombs} [ENTRÉE]   autocomplete x${lasers} [EFFACER]`,
     hudTime: 'TEMPS',
     hudStars: 'SUPER COMBO',
+    hudStarsKeys: '  ·  A bouclier 1★ · Z +1 vie 3★ · E frappe 2★',
     starGain: (n) => `+${n} ÉTOILE${n > 1 ? 'S' : ''} DE COMBAT !`,
+    starShield: 'BOUCLIER ★ 3 s !',
+    starShieldBlock: 'bouclier ★ !',
+    starLife: '+1 VIE ★',
+    starSmite: 'ANNIHILÉ ★',
     bannerBossWave: '!! INCIDENT MAJEUR DÉTECTÉ !!',
     bannerWave: 'déploiement des bugs...',
     bannerFinal: '!! LE DSI ÉNERVÉ ARRIVE !!',
@@ -248,6 +255,7 @@ const I18N = {
     helpSections: [
       ['GOAL', [
         'Protect your PROD: every enemy that reaches it = an INCIDENT. Too many incidents = GAME OVER.',
+        'Survive every sprint then beat THE FURIOUS CIO: victory, and the remaining time pays a bonus!',
       ]],
       ['HOW TO KILL A BUG', [
         'Type the FIRST LETTER of an enemy to lock it, then finish',
@@ -258,7 +266,8 @@ const I18N = {
         'Points = length × 10 × level × combo × SPEED (fast typing = up to ×3!).',
         'Some enemies drop a bonus: +1 life, points, combo +5, slow-mo, items.',
         'From ★★★: ULTIMATE SUPER COMBO — combo 5/10/15 = +1/+2/+3 combat stars',
-        '(max 6). A typo breaks the combo, never the stars. Powers coming soon!',
+        '(max 6, kept when the combo breaks). Powers (when the letter is not a valid',
+        'keystroke): A shield 3 s (1★) · Z +1 life (3★) · E smite strongest (2★).',
       ]],
       ['ENEMY POWERS', [
         'MINIFIED words: some letters are masked (?), guess them!',
@@ -282,7 +291,12 @@ const I18N = {
     hudItems: (bombs, lasers) => `kill -9 x${bombs} [ENTER]   autocomplete x${lasers} [BACKSPACE]`,
     hudTime: 'TIME',
     hudStars: 'SUPER COMBO',
+    hudStarsKeys: '  ·  A shield 1★ · Z +1 life 3★ · E smite 2★',
     starGain: (n) => `+${n} COMBAT STAR${n > 1 ? 'S' : ''}!`,
+    starShield: 'SHIELD ★ 3 s!',
+    starShieldBlock: 'shield ★!',
+    starLife: '+1 LIFE ★',
+    starSmite: 'SMITTEN ★',
     bannerBossWave: '!! MAJOR INCIDENT DETECTED !!',
     bannerWave: 'deploying bugs...',
     bannerFinal: '!! THE FURIOUS CIO IS COMING !!',

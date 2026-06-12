@@ -80,7 +80,8 @@ class MenuScene extends Phaser.Scene {
     this.refreshHelpPage();
   }
 
-  // page 1 : règles
+  // page 1 : règles — flux sur 2 colonnes (retour à la ligne automatique),
+  // une section qui ne tient plus en bas de colonne passe dans la suivante
   buildHelpRules() {
     const cx = GAME_W / 2;
     const page = this.add.container(0, 0);
@@ -92,19 +93,30 @@ class MenuScene extends Phaser.Scene {
       fontFamily: FONT, fontSize: '48px', color: CSS.amber,
     }).setOrigin(0.5));
 
-    let y = 118;
+    const COLS = [110, 815];
+    const COL_W = 660;
+    const TOP = 112, BOTTOM = 806;
+    let col = 0;
+    let y = TOP;
     for (const [title, color, lines] of sections) {
-      page.add(this.add.text(330, y, `-- ${title} --`, {
-        fontFamily: FONT, fontSize: '28px', color,
-      }).setOrigin(0, 0));
-      y += 34;
-      for (const line of lines) {
-        page.add(this.add.text(360, y, line, {
-          fontFamily: FONT, fontSize: '24px', color: CSS.white,
-        }).setOrigin(0, 0).setAlpha(0.92));
-        y += 27;
+      const titleTxt = this.add.text(0, 0, `-- ${title} --`, {
+        fontFamily: FONT, fontSize: '26px', color,
+      });
+      const lineTxts = lines.map((line) => this.add.text(0, 0, line, {
+        fontFamily: FONT, fontSize: '22px', color: CSS.white,
+        wordWrap: { width: COL_W - 22 },
+      }).setAlpha(0.92));
+      const height = 34 + lineTxts.reduce((acc, t) => acc + t.height + 3, 0);
+      if (y + height > BOTTOM && col < COLS.length - 1) { col = 1; y = TOP; }
+      titleTxt.setPosition(COLS[col], y);
+      page.add(titleTxt);
+      let yy = y + 34;
+      for (const t of lineTxts) {
+        t.setPosition(COLS[col] + 22, yy);
+        page.add(t);
+        yy += t.height + 3;
       }
-      y += 11;
+      y = yy + 14;
     }
     return page;
   }
