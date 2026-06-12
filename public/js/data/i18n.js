@@ -25,21 +25,36 @@ const I18N = {
     helpBossCmds: 'cmds boss',
     helpEnemiesTitle: '> BESTIAIRE — LES ENNEMIS_',
     helpBossesTitle: '> LES BOSS_',
-    bestiary: [
-      ['bug', 'BUG', 'niv.1 — le tout-venant du backlog :\njargon dev court. Lent, mais nombreux.', 'toutes difficultés'],
-      ['missile', 'INMAIL', 'niv.1 — missile du recruteur : mot\ncourt et très rapide.', 'toutes difficultés'],
-      ['ghost', 'BUG FANTÔME', 'niv.2 — disparaît par intermittence.\nGardez son mot en tête !', 'toutes · dès le sprint 4'],
-      ['virus', 'VIRUS', 'niv.2 — se réplique en 2 mini-bugs\nà sa mort. Nettoyez vite !', 'toutes · dès le sprint 5'],
-      ['microservice', 'LE MICROSERVICE', 'niv.2 — se scinde en 2 instances\ntoutes les 8 s. Scale out !', 'toutes · dès le sprint 5'],
-      ['legacy', 'ZOMBIE LEGACY', 'niv.2 — code et technos qui refusent\nde mourir. Lent mais long à taper.', 'toutes difficultés'],
-      ['deadline', 'FAUCHEUSE DEADLINE', 'niv.2 — l\'horreur du quotidien\n(réunions, jira…). Rapide !', 'toutes difficultés'],
-      ['bug', 'BUG D\'ÉLITE', 'niv.3 — exceptions CamelCase,\nmajuscules comprises. Teigneux.', 'toutes difficultés'],
-      ['spammer', 'LE RECRUTEUR', 'niv.3 — campe au fond et spamme des\nInMails. Éliminez la source !', 'toutes · dès le sprint 3'],
-      ['monolith', 'LE MONOLITHE', 'niv.3 — exige 2 mots pour tomber,\net recule entre les deux.', 'toutes · dès le sprint 6'],
-      ['spec', 'LA SPEC FOIREUSE', 'niv.3 — son mot ne veut RIEN dire\n(généré au hasard). Bon courage.', 'toutes · dès le sprint 4'],
-      ['consultant', 'LE CONSULTANT', 'niv.4 — buzzwords à rallonge,\net il accélère vers la prod.', '★★★★ et ★★★★★'],
-      ['ransomware', 'LE RANSOMWARE', 'niv.5 — rechiffre son mot toutes les\n6 s : tout est à refaire !', '★★★★★ uniquement'],
-      ['powerup', 'POWER-UP', 'bonus doré — le taper déclenche son\npouvoir : coffee, revert, reboot.', 'toutes difficultés'],
+    helpCont: '(suite)',
+    /* Bestiaire groupé par niveau : [titre du groupe, [[kind, nom, desc, dispo], …]].
+       Ajouter un ennemi = une ligne dans le bon groupe, la mise en page suit. */
+    bestiaryGroups: [
+      ['NIVEAU 1 ▲', [
+        ['bug', 'BUG', 'le tout-venant du backlog : jargon\ndev court. Lent, mais nombreux.', 'toutes difficultés'],
+        ['missile', 'INMAIL', 'missile du recruteur : mot court\net très rapide.', 'toutes difficultés'],
+      ]],
+      ['NIVEAU 2 ▲▲', [
+        ['ghost', 'BUG FANTÔME', 'disparaît par intermittence.\nGardez son mot en tête !', 'toutes · dès le sprint 4'],
+        ['virus', 'VIRUS', 'se réplique en 2 mini-bugs à sa\nmort. Nettoyez vite !', 'toutes · dès le sprint 5'],
+        ['microservice', 'LE MICROSERVICE', 'se scinde en 2 instances toutes\nles 8 s. Scale out !', 'toutes · dès le sprint 5'],
+        ['legacy', 'ZOMBIE LEGACY', 'code et technos qui refusent de\nmourir. Lent mais long à taper.', 'toutes difficultés'],
+        ['deadline', 'FAUCHEUSE DEADLINE', 'l\'horreur du quotidien\n(réunions, jira…). Rapide !', 'toutes difficultés'],
+      ]],
+      ['NIVEAU 3 ▲▲▲', [
+        ['bug', 'BUG D\'ÉLITE', 'exceptions CamelCase, majuscules\ncomprises. Teigneux.', 'toutes difficultés'],
+        ['spammer', 'LE RECRUTEUR', 'campe au fond et spamme des\nInMails. Éliminez la source !', 'toutes · dès le sprint 3'],
+        ['monolith', 'LE MONOLITHE', 'exige 2 mots pour tomber, et\nrecule entre les deux.', 'toutes · dès le sprint 6'],
+        ['spec', 'LA SPEC FOIREUSE', 'son mot ne veut RIEN dire (généré\nau hasard). Bon courage.', 'toutes · dès le sprint 4'],
+      ]],
+      ['NIVEAU 4 ▲▲▲▲', [
+        ['consultant', 'LE CONSULTANT', 'buzzwords à rallonge, et il\naccélère vers la prod.', '★★★★ et ★★★★★'],
+      ]],
+      ['NIVEAU 5 ▲▲▲▲▲', [
+        ['ransomware', 'LE RANSOMWARE', 'rechiffre son mot toutes les 6 s :\ntout est à refaire !', '★★★★★ uniquement'],
+      ]],
+      ['BONUS', [
+        ['powerup', 'POWER-UP', 'le taper déclenche son pouvoir :\ncoffee, revert, reboot.', 'toutes difficultés'],
+      ]],
     ],
     bestiaryBosses: [
       ['boss', 'INCIDENT PROD MAJEUR', 'Apparaît tous les 4 sprints.\nEnchaînez ses commandes terminal pour\nle faire reculer. Lâche toujours +1 vie.', 'toutes difficultés'],
@@ -163,21 +178,34 @@ const I18N = {
     helpBossCmds: 'boss cmds',
     helpEnemiesTitle: '> BESTIARY — THE ENEMIES_',
     helpBossesTitle: '> THE BOSSES_',
-    bestiary: [
-      ['bug', 'BUG', 'lvl.1 — backlog regulars: short dev\njargon. Slow, but they swarm.', 'all difficulties'],
-      ['missile', 'INMAIL', 'lvl.1 — recruiter missile: short\nword, very fast.', 'all difficulties'],
-      ['ghost', 'GHOST BUG', 'lvl.2 — fades out intermittently.\nKeep its word in mind!', 'all · from sprint 4'],
-      ['virus', 'VIRUS', 'lvl.2 — splits into 2 mini-bugs\nwhen killed. Clean up fast!', 'all · from sprint 5'],
-      ['microservice', 'THE MICROSERVICE', 'lvl.2 — splits into 2 instances\nevery 8 s. Scale out!', 'all · from sprint 5'],
-      ['legacy', 'LEGACY ZOMBIE', 'lvl.2 — code and tech that refuse\nto die. Slow but long to type.', 'all difficulties'],
-      ['deadline', 'DEADLINE REAPER', 'lvl.2 — everyday horror (meetings,\njira…). Fast!', 'all difficulties'],
-      ['bug', 'ELITE BUG', 'lvl.3 — CamelCase exceptions,\ncapital letters included. Mean.', 'all difficulties'],
-      ['spammer', 'THE RECRUITER', 'lvl.3 — camps in the back and spams\nInMails. Kill the source!', 'all · from sprint 3'],
-      ['monolith', 'THE MONOLITH', 'lvl.3 — takes 2 words to bring down,\nand knocks back in between.', 'all · from sprint 6'],
-      ['spec', 'THE BOTCHED SPEC', 'lvl.3 — its word means NOTHING\n(randomly generated). Good luck.', 'all · from sprint 4'],
-      ['consultant', 'THE CONSULTANT', 'lvl.4 — endless buzzwords, and it\naccelerates toward prod.', '★★★★ and ★★★★★'],
-      ['ransomware', 'THE RANSOMWARE', 'lvl.5 — re-encrypts its word every\n6 s: start all over again!', '★★★★★ only'],
-      ['powerup', 'POWER-UP', 'golden bonus — typing it triggers its\npower: coffee, revert, reboot.', 'all difficulties'],
+    helpCont: '(cont.)',
+    bestiaryGroups: [
+      ['LEVEL 1 ▲', [
+        ['bug', 'BUG', 'backlog regulars: short dev\njargon. Slow, but they swarm.', 'all difficulties'],
+        ['missile', 'INMAIL', 'recruiter missile: short word,\nvery fast.', 'all difficulties'],
+      ]],
+      ['LEVEL 2 ▲▲', [
+        ['ghost', 'GHOST BUG', 'fades out intermittently.\nKeep its word in mind!', 'all · from sprint 4'],
+        ['virus', 'VIRUS', 'splits into 2 mini-bugs when\nkilled. Clean up fast!', 'all · from sprint 5'],
+        ['microservice', 'THE MICROSERVICE', 'splits into 2 instances every\n8 s. Scale out!', 'all · from sprint 5'],
+        ['legacy', 'LEGACY ZOMBIE', 'code and tech that refuse to\ndie. Slow but long to type.', 'all difficulties'],
+        ['deadline', 'DEADLINE REAPER', 'everyday horror (meetings,\njira…). Fast!', 'all difficulties'],
+      ]],
+      ['LEVEL 3 ▲▲▲', [
+        ['bug', 'ELITE BUG', 'CamelCase exceptions, capital\nletters included. Mean.', 'all difficulties'],
+        ['spammer', 'THE RECRUITER', 'camps in the back and spams\nInMails. Kill the source!', 'all · from sprint 3'],
+        ['monolith', 'THE MONOLITH', 'takes 2 words to bring down,\nknocks back in between.', 'all · from sprint 6'],
+        ['spec', 'THE BOTCHED SPEC', 'its word means NOTHING (randomly\ngenerated). Good luck.', 'all · from sprint 4'],
+      ]],
+      ['LEVEL 4 ▲▲▲▲', [
+        ['consultant', 'THE CONSULTANT', 'endless buzzwords, and it\naccelerates toward prod.', '★★★★ and ★★★★★'],
+      ]],
+      ['LEVEL 5 ▲▲▲▲▲', [
+        ['ransomware', 'THE RANSOMWARE', 're-encrypts its word every 6 s:\nstart all over again!', '★★★★★ only'],
+      ]],
+      ['BONUS', [
+        ['powerup', 'POWER-UP', 'typing it triggers its power:\ncoffee, revert, reboot.', 'all difficulties'],
+      ]],
     ],
     bestiaryBosses: [
       ['boss', 'MAJOR PROD INCIDENT', 'Shows up every 4 sprints.\nChain its terminal commands to push\nit back. Always drops +1 life.', 'all difficulties'],

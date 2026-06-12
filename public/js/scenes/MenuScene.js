@@ -148,7 +148,9 @@ class MenuScene extends Phaser.Scene {
     boss: CSS.red, finalBoss: CSS.magenta,
   };
 
-  // page 3 : bestiaire — les ennemis de base, classés par niveau
+  // page 3 : bestiaire — ennemis groupés par niveau, sur 3 colonnes remplies
+  // de haut en bas avec débordement automatique : ajouter un ennemi dans
+  // bestiaryGroups (i18n.js) suffit, la mise en page absorbe la croissance.
   buildHelpEnemies() {
     const cx = GAME_W / 2;
     const page = this.add.container(0, 0);
@@ -156,24 +158,50 @@ class MenuScene extends Phaser.Scene {
       fontFamily: FONT, fontSize: '48px', color: CSS.amber,
     }).setOrigin(0.5));
 
-    T('bestiary').forEach(([kind, name, desc, avail], i) => {
-      const col = i < 7 ? 0 : 1;
-      const x = 220 + col * 660;
-      const y = 108 + (i % 7) * 104;
-      const art = (ASCII[kind][0] || '').replace('<tech>', 'COBOL ');
-      page.add(this.add.text(x, y, art, {
-        fontFamily: FONT, fontSize: '14px',
-        color: MenuScene.ART_COLORS[kind] || CSS.white, align: 'center', lineSpacing: -3,
+    const COLS = [110, 610, 1110];
+    const TOP = 116, BOTTOM = 812;
+    const ENTRY_H = 96, HEADER_H = 42;
+    const LEVEL_COLORS = [CSS.green, CSS.amber, CSS.red, CSS.magenta, CSS.cyan, CSS.gold];
+    let col = 0;
+    let y = TOP;
+
+    const addHeader = (text, color) => {
+      page.add(this.add.text(COLS[col], y, `-- ${text} --`, {
+        fontFamily: FONT, fontSize: '26px', color,
       }).setOrigin(0, 0));
-      page.add(this.add.text(x + 150, y, name, {
-        fontFamily: FONT, fontSize: '27px', color: MenuScene.ART_COLORS[kind] || CSS.white,
-      }).setOrigin(0, 0));
-      page.add(this.add.text(x + 150, y + 28, avail, {
-        fontFamily: FONT, fontSize: '19px', color: CSS.gold,
-      }).setOrigin(0, 0).setAlpha(0.9));
-      page.add(this.add.text(x + 150, y + 50, desc, {
-        fontFamily: FONT, fontSize: '20px', color: CSS.white,
-      }).setOrigin(0, 0).setAlpha(0.9));
+      y += HEADER_H;
+    };
+
+    T('bestiaryGroups').forEach(([groupTitle, entries], gi) => {
+      const color = LEVEL_COLORS[gi] || CSS.white;
+      // jamais d'en-tête orphelin en bas de colonne
+      if (y + HEADER_H + ENTRY_H > BOTTOM && col < COLS.length - 1) { col++; y = TOP; }
+      addHeader(groupTitle, color);
+
+      entries.forEach(([kind, name, desc, avail]) => {
+        if (y + ENTRY_H > BOTTOM && col < COLS.length - 1) {
+          col++;
+          y = TOP;
+          addHeader(`${groupTitle} ${T('helpCont')}`, color);
+        }
+        const x = COLS[col];
+        const art = (ASCII[kind][0] || '').replace('<tech>', 'COBOL ');
+        page.add(this.add.text(x, y, art, {
+          fontFamily: FONT, fontSize: '12px',
+          color: MenuScene.ART_COLORS[kind] || CSS.white, align: 'center', lineSpacing: -3,
+        }).setOrigin(0, 0));
+        page.add(this.add.text(x + 110, y, name, {
+          fontFamily: FONT, fontSize: '24px', color: MenuScene.ART_COLORS[kind] || CSS.white,
+        }).setOrigin(0, 0));
+        page.add(this.add.text(x + 110, y + 25, avail, {
+          fontFamily: FONT, fontSize: '17px', color: CSS.gold,
+        }).setOrigin(0, 0).setAlpha(0.9));
+        page.add(this.add.text(x + 110, y + 45, desc, {
+          fontFamily: FONT, fontSize: '18px', color: CSS.white,
+        }).setOrigin(0, 0).setAlpha(0.9));
+        y += ENTRY_H;
+      });
+      y += 10; // respiration entre les groupes
     });
     return page;
   }
