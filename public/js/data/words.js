@@ -310,6 +310,14 @@ const WORDS = {
     'patate en python', 'cornichon du cluster', 'sombre nullite',
   ],
 
+  // LE TYPO (niv.1) : des mots déjà mal écrits — tapez la faute telle quelle
+  typos: [
+    'gti', 'pyhton', 'dokcer', 'javascirpt', 'recat', 'lniux', 'pirnt',
+    'cosnole', 'imoprt', 'fucntion', 'reutrn', 'flase', 'treu', 'nlul',
+    'undefiend', 'paquage', 'comit', 'brnach', 'mrege', 'sduo', 'grpe',
+    'kubernets', 'pormise', 'asnyc', 'awiat', 'calback', 'stirng', 'vraiable',
+  ],
+
   // L'INDÉP (niv.3) : la vie de freelance
   freelance: [
     'tjm a negocier', 'dispo en mars', 'freelance', 'portage salarial',

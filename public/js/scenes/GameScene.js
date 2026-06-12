@@ -20,6 +20,7 @@ function waveQueueFor(diff, n, bossWave) {
   const bugCount = bossWave ? 3 : Math.min(3 + Math.ceil(n / 2), 8);
   for (let i = 0; i < bugCount; i++) q.push('bug');
   if (!bossWave) {
+    for (let i = 0; i < Math.min(1 + Math.floor(n / 3), 4); i++) q.push('typo');
     if (n >= 2) for (let i = 0; i < Math.min(1 + Math.floor(n / 2), 5); i++) q.push('legacy');
     if (n >= diff.deadlineWave) for (let i = 0; i < Math.min(1 + Math.floor(n / 2), 6); i++) q.push('deadline');
     if (n >= diff.eliteWave) for (let i = 0; i < Math.min(Math.floor(n / 3) + 1, 4); i++) q.push('elite');
@@ -488,6 +489,7 @@ class GameScene extends Phaser.Scene {
       case 'deadline': return pickWord(wordBank('deadlines'), opts);
       case 'spammer': return pickWord(wordBank('spammers'), { exclude: ex });
       case 'missile': return pickWord(wordBank('missiles'), { exclude: ex });
+      case 'typo': return pickWord(WORDS.typos, { exclude: ex });
       case 'ghost': return pickWord(WORDS.keywords, opts);
       case 'virus': return pickWord(WORDS.keywords, { exclude: ex, maxLen: Math.min(8, this.diff.maxLen) });
       case 'monolith': return pickWord(WORDS.exceptions, { exclude: ex, maxLen: this.diff.maxLen + 8 });
@@ -552,6 +554,7 @@ class GameScene extends Phaser.Scene {
   spawnEnemy(kind) {
     const conf = {
       bug: { color: CSS.green, tint: PALETTE.green, speed: 42, art: 'bug', cls: 'bug', size: 18, level: 1 },
+      typo: { color: CSS.green, tint: PALETTE.green, speed: 46, art: 'typo', cls: 'bug', size: 17, level: 1 },
       deadline: { color: CSS.magenta, tint: PALETTE.magenta, speed: 75, art: 'deadline', cls: 'deadline', size: 17, level: 2 },
       legacy: { color: CSS.amber, tint: PALETTE.amber, speed: 26, art: 'legacy', cls: 'legacy', size: 18, level: 2 },
       elite: { color: CSS.green, tint: PALETTE.green, speed: 34, art: 'bug', cls: 'bug', size: 22, level: 3 },

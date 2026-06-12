@@ -83,6 +83,7 @@ Tout fonctionne **offline** : Phaser, police et sons sont locaux/procéduraux.
 |---|---|---|---|
 | Bug zombie | 1 | jargon dev court | nombreux |
 | InMail | 1 | mots courts | missile du recruteur, rapide |
+| Le typo | 1 | mots mal écrits | tapez la faute telle quelle ! |
 | Bug fantôme | 2 | jargon dev | disparaît par intermittence |
 | Virus | 2 | mots courts | se réplique en 2 mini-bugs à sa mort |
 | Le microservice | 2 | mots courts | se scinde en 2 instances toutes les 8 s |

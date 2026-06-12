@@ -66,6 +66,7 @@ const I18N = {
       ['NIVEAU 1 ▲', [
         ['bug', 'BUG', 'le tout-venant du backlog : jargon\ndev court. Lent, mais nombreux.', 'toutes difficultés'],
         ['missile', 'INMAIL', 'missile du recruteur : mot court\net très rapide.', 'toutes difficultés'],
+        ['typo', 'LE TYPO', 'son mot est déjà mal écrit —\ntapez la faute telle quelle !', 'toutes difficultés'],
       ]],
       ['NIVEAU 2 ▲▲', [
         ['ghost', 'BUG FANTÔME', 'disparaît par intermittence.\nGardez son mot en tête !', 'toutes · dès le sprint 3'],
@@ -307,6 +308,7 @@ const I18N = {
       ['LEVEL 1 ▲', [
         ['bug', 'BUG', 'backlog regulars: short dev\njargon. Slow, but they swarm.', 'all difficulties'],
         ['missile', 'INMAIL', 'recruiter missile: short word,\nvery fast.', 'all difficulties'],
+        ['typo', 'THE TYPO', 'its word is already misspelled —\ntype the mistake as is!', 'all difficulties'],
       ]],
       ['LEVEL 2 ▲▲', [
         ['ghost', 'GHOST BUG', 'fades out intermittently.\nKeep its word in mind!', 'all · from sprint 3'],

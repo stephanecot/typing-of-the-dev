@@ -203,7 +203,7 @@ class MenuScene extends Phaser.Scene {
 
   // couleur de sprite par type d'ennemi (aide pages 3 et 4)
   static ART_COLORS = {
-    bug: CSS.green, legacy: CSS.amber, deadline: CSS.magenta, spammer: CSS.cyan,
+    bug: CSS.green, typo: CSS.green, legacy: CSS.amber, deadline: CSS.magenta, spammer: CSS.cyan,
     missile: CSS.red, powerup: CSS.gold, ghost: CSS.white, virus: CSS.red,
     monolith: CSS.amber, consultant: CSS.gold, ransomware: CSS.red, microservice: CSS.cyan, spec: CSS.white, obfuscator: CSS.white, po: CSS.magenta, indep: CSS.cyan,
     boss: CSS.red, finalBoss: CSS.magenta,
