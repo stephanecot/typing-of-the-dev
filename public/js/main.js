@@ -1,7 +1,7 @@
 /* Configuration globale + lancement Phaser. */
 'use strict';
 
-const APP_VERSION = 'v1.2.0';
+const APP_VERSION = 'v1.3.0';
 
 const GAME_W = 1600;
 const GAME_H = 900;
@@ -32,9 +32,37 @@ const CSS = {
   greenSoft: '#2da55e',
 };
 
-/* Easter egg : taper GINES sur l'écran d'accueil remplace tous les mots du
-   jeu par des insultes geek bon enfant. Se désactive en retapant GINES. */
+/* Easter eggs (à taper sur l'écran d'accueil, retaper pour désactiver) :
+   GINES — tous les mots deviennent des insultes geek bon enfant.
+   DISCO — ambiance boule à facettes et musique disco. */
 let GINES_MODE = false;
+let DISCO_MODE = false;
+let BOISSON_MODE = false;
+
+/* MODE INFINI (touche I au menu, persisté) : pas de chrono ni de limite de
+   sprints — on enchaîne tant qu'on survit. Le DSI final n'apparaît jamais. */
+let INFINITE_MODE = localStorage.getItem('totd-infinite') === '1';
+
+/* Code secret SPEED : +30 % de vitesse pour tout le monde, toutes difficultés. */
+let SPEED_MODE = false;
+
+/* MODE BOISSON : caméra qui tangue, zoom qui respire et léger flou (WebGL).
+   Appliqué au menu et en jeu. Les animations respectent reduced-motion. */
+function applyDrunkFx(scene) {
+  const cam = scene.cameras.main;
+  if (scene.game.renderer && scene.game.renderer.type === Phaser.WEBGL && cam.postFX) {
+    cam.postFX.addBlur(0, 2, 2, 0.55);
+  }
+  if (REDUCED_MOTION) return;
+  scene.tweens.add({
+    targets: cam, zoom: { from: 1, to: 1.05 },
+    duration: 2600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+  });
+  scene.tweens.add({
+    targets: cam, angle: { from: -1.2, to: 1.2 },
+    duration: 3400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+  });
+}
 
 /* Accessibilité : coupe secousses de caméra et glitchs cosmétiques quand
    l'OS demande de réduire les animations. */

@@ -46,6 +46,13 @@ function waveQueueFor(diff, n, bossWave) {
   return q;
 }
 
+/* Boss spéciaux du MODE INFINI, en rotation sur les vagues de boss. */
+const INFINITE_BOSSES = [
+  { art: 'mainframe', nameKey: 'bossMainframe', cmdDelta: 3, speedMult: 0.6, color: '#41f2ff' },
+  { art: 'dette', nameKey: 'bossDette', cmdDelta: 1, speedMult: 0.9, color: '#ffb000', longest: true },
+  { art: 'stagiaireBoss', nameKey: 'bossStagiaire', cmdDelta: -1, speedMult: 1.8, color: '#39ff7a' },
+];
+
 class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
 
@@ -54,6 +61,8 @@ class GameScene extends Phaser.Scene {
     this.godModeArmed = !!data.godMode; // armé via Konami Code sur l'écran d'accueil
     // partie gagnée au bout de maxSprints (réglable depuis l'admin) ;
     // le compte à rebours "par" sert d'affichage et de bonus de fin
+    this.infinite = INFINITE_MODE; // pas de chrono, sprints sans fin
+    this.speedScale = SPEED_MODE ? 1.3 : 1; // code secret SPEED : +30 %
     this.maxSprints = GAME_CONFIG.maxSprints;
     this.parMs = this.maxSprints * PAR_SECONDS_PER_SPRINT * 1000;
     this.playMs = 0; // temps de jeu effectif (pauses exclues)
@@ -126,8 +135,49 @@ class GameScene extends Phaser.Scene {
     g.fillEllipse(PROD_X + 30, GAME_H / 2, 240, 380);
   }
 
+  /* MODE DISCO : boule à facettes scintillante, 6 spots qui balaient la
+     piste, dance floor en damier et ennemis qui changent de couleur.
+     Tout reste sous ~2,5 Hz et s'assagit en animations réduites. */
+  buildDiscoAmbiance() {
+    const colors = [0xff5cf0, 0x41f2ff, 0xffd76a, 0x39ff7a, 0xff3b3b, 0xeafff0];
+    // 6 spots qui balaient
+    colors.forEach((c, i) => {
+      const spot = this.add.circle(260 + i * 220, 260 + (i % 3) * 200, 240, c, 0.08).setDepth(2);
+      if (!REDUCED_MOTION) this.tweens.add({
+        targets: spot,
+        x: GAME_W - 260 - i * 160,
+        y: GAME_H - 220 - ((i + 1) % 3) * 220,
+        duration: 2200 + i * 500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+      });
+    });
+    // dance floor en damier sous les ennemis
+    this.discoTiles = [];
+    for (let col = 0; col < 8; col++) {
+      for (let row = 0; row < 2; row++) {
+        this.discoTiles.push(this.add.rectangle(
+          100 + col * 200, GAME_H - 175 + row * 115, 192, 108,
+          colors[(col + row) % colors.length], 0.07).setDepth(-1));
+      }
+    }
+    // boule à facettes + paillettes qui tombent
+    const ball = this.add.text(GAME_W / 2, 56, ASCII.discoBall, {
+      fontFamily: FONT, fontSize: '16px', color: CSS.white, align: 'center', lineSpacing: -3,
+    }).setOrigin(0.5, 0).setDepth(5);
+    if (!REDUCED_MOTION) {
+      this.tweens.add({ targets: ball, angle: { from: -8, to: 8 }, duration: 1600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      this.add.particles(0, 0, 'px', {
+        x: { min: GAME_W / 2 - 40, max: GAME_W / 2 + 40 }, y: 110,
+        speedY: { min: 40, max: 120 }, speedX: { min: -60, max: 60 },
+        lifespan: { min: 800, max: 1600 }, scale: { start: 1.6, end: 0 },
+        tint: colors, frequency: 90,
+      }).setDepth(4);
+    }
+  }
+
   buildDecor() {
     this.buildCrtBackground();
+    if (DISCO_MODE) this.buildDiscoAmbiance();
+    if (BOISSON_MODE) applyDrunkFx(this);
     // pluie de caractères en fond, très discrète
     this.bgGlyphs = [];
     for (let i = 0; i < 40; i++) {
@@ -191,11 +241,18 @@ class GameScene extends Phaser.Scene {
       this.lifeIcons.push(this.add.rectangle(x, 66, 30, 30).setDepth(40));
     }
     this.lifePulse = null;
-    if (GINES_MODE) {
-      this.add.text(GAME_W - 24, 96, T('ginesBadge'), {
-        fontFamily: FONT, fontSize: '22px', color: CSS.magenta,
+    // badges des modes secrets actifs, empilés sous les PV
+    let badgeY = 96;
+    const addBadge = (txt, color) => {
+      this.add.text(GAME_W - 24, badgeY, txt, {
+        fontFamily: FONT, fontSize: '22px', color,
       }).setOrigin(1, 0).setDepth(40);
-    }
+      badgeY += 26;
+    };
+    if (GINES_MODE) addBadge(T('ginesBadge'), CSS.magenta);
+    if (DISCO_MODE) addBadge(T('discoBadge'), CSS.cyan);
+    if (BOISSON_MODE) addBadge(T('boissonBadge'), CSS.gold);
+    if (SPEED_MODE) addBadge(T('speedBadge'), CSS.red);
     this.banner = this.add.text(GAME_W / 2, GAME_H / 2 - 60, '', {
       fontFamily: FONT, fontSize: '64px', color: CSS.amber, align: 'center',
     }).setOrigin(0.5).setDepth(45).setAlpha(0);
@@ -256,12 +313,13 @@ class GameScene extends Phaser.Scene {
     this.hudStars.setText(this.superComboEnabled
       ? `${T('hudStars')} ${'★'.repeat(this.comboStars)}${'☆'.repeat(6 - this.comboStars)}${this.comboStars > 0 ? T('hudStarsKeys') : ''}`
       : '');
-    this.hudWave.setText(`SPRINT ${this.wave}/${this.maxSprints}`);
+    this.hudWave.setText(this.infinite ? `SPRINT ${this.wave} ∞` : `SPRINT ${this.wave}/${this.maxSprints}`);
     this.refreshSprintBar();
     this.refreshLives();
   }
 
   refreshSprintBar() {
+    if (this.infinite) { this.sprintBar.clear(); return; }
     const w = 260, h = 8;
     const x = GAME_W / 2 - w / 2, y = 40;
     const done = Phaser.Math.Clamp(Math.max(this.wave - 1, 0) / this.maxSprints, 0, 1);
@@ -280,6 +338,7 @@ class GameScene extends Phaser.Scene {
   /* Compte à rebours du temps "par" : à 0 il ne se passe rien de grave,
      mais chaque seconde restante à la victoire rapporte des points. */
   refreshTime() {
+    if (this.infinite) return; // pas de chrono en mode infini
     const leftS = Math.max(0, Math.ceil((this.parMs - this.playMs) / 1000));
     if (leftS === this._shownTimeS) return;
     this._shownTimeS = leftS;
@@ -365,18 +424,19 @@ class GameScene extends Phaser.Scene {
   nextWave() {
     if (this.over) return;
     // le dernier sprint se répète tant que le DSI n'est pas vaincu (s'il
-    // atteint la prod sans la détruire, il revient)
-    this.wave = Math.min(this.wave + 1, this.maxSprints);
+    // atteint la prod sans la détruire, il revient) ; en infini, on enchaîne
+    this.wave = this.infinite ? this.wave + 1 : Math.min(this.wave + 1, this.maxSprints);
     Music.setIntensity(Math.min(3, 1 + Math.floor(this.wave / 3)));
     this.refreshHud();
 
-    const isFinal = this.wave === this.maxSprints;
+    const sprintLabel = this.infinite ? `SPRINT ${this.wave}` : `SPRINT ${this.wave}/${this.maxSprints}`;
+    const isFinal = !this.infinite && this.wave === this.maxSprints;
     const isBossWave = isFinal || this.wave % 4 === 0;
     this.showBanner(isFinal
-      ? `SPRINT ${this.wave}/${this.maxSprints}\n${T('bannerFinal')}`
+      ? `${sprintLabel}\n${T('bannerFinal')}`
       : isBossWave
-        ? `SPRINT ${this.wave}/${this.maxSprints}\n${T('bannerBossWave')}`
-        : `SPRINT ${this.wave}/${this.maxSprints}\n${T('bannerWave')}`);
+        ? `${sprintLabel}\n${T('bannerBossWave')}`
+        : `${sprintLabel}\n${T('bannerWave')}`);
 
     this.spawnQueue = this.buildWaveQueue(this.wave, isBossWave);
     this.time.delayedCall(1800, () => this.scheduleSpawn());
@@ -600,11 +660,17 @@ class GameScene extends Phaser.Scene {
     Sfx.bossSpawn();
     Music.setIntensity(4);
     this.cameras.main.shake(isFinal ? 800 : 500, isFinal ? 0.009 : 0.006);
+    // mode infini : 3 boss spéciaux tournent sur les vagues de boss
+    const variant = this.infinite ? INFINITE_BOSSES[(Math.max(Math.floor(this.wave / 4), 1) - 1) % INFINITE_BOSSES.length] : null;
     // le DSI énervé encaisse 2 commandes de plus que les boss ordinaires
-    const cmdCount = this.diff.bossCmds + (isFinal ? 2 : 0);
+    const cmdCount = Math.max(2, this.diff.bossCmds + (isFinal ? 2 : variant ? variant.cmdDelta : 0));
     const cmds = [];
     const used = new Set();
-    const bossBank = GINES_MODE ? wordBank('insults') : WORDS.commands;
+    let bossBank = GINES_MODE ? wordBank('insults') : WORDS.commands;
+    if (variant && variant.longest && !GINES_MODE) {
+      // la dette technique : les commandes les plus interminables du shell
+      bossBank = [...WORDS.commands].sort((a, b) => b.length - a.length).slice(0, 25);
+    }
     for (let i = 0; i < cmdCount; i++) {
       const c = pickWord(bossBank, { exclude: used });
       used.add(c);
@@ -612,13 +678,17 @@ class GameScene extends Phaser.Scene {
     }
     const c = this.add.container(SPAWN_X + 100, GAME_H / 2);
     const art = this.add.text(0, 0,
-      isFinal ? ASCII.finalBoss[0] : Phaser.Utils.Array.GetRandom(ASCII.boss), {
+      isFinal ? ASCII.finalBoss[0]
+        : variant ? ASCII[variant.art][0]
+          : Phaser.Utils.Array.GetRandom(ASCII.boss), {
         fontFamily: FONT, fontSize: isFinal ? '26px' : '30px',
-        color: isFinal ? CSS.magenta : CSS.red, align: 'center', lineSpacing: -4,
+        color: isFinal ? CSS.magenta : variant ? variant.color : CSS.red,
+        align: 'center', lineSpacing: -4,
       }).setOrigin(0.5, 1);
-    const name = this.add.text(0, -art.height - 36, isFinal ? T('finalBossName') : T('bossName'), {
-      fontFamily: FONT, fontSize: isFinal ? '32px' : '26px', color: CSS.red,
-    }).setOrigin(0.5);
+    const name = this.add.text(0, -art.height - 36,
+      isFinal ? T('finalBossName') : variant ? T(variant.nameKey) : T('bossName'), {
+        fontFamily: FONT, fontSize: isFinal ? '32px' : '26px', color: CSS.red,
+      }).setOrigin(0.5);
     const hp = this.add.text(0, -art.height - 10, '', {
       fontFamily: FONT, fontSize: '24px', color: CSS.amber,
     }).setOrigin(0.5);
@@ -630,7 +700,7 @@ class GameScene extends Phaser.Scene {
       kind: 'boss', cls: 'boss', isFinal, container: c, art, typedText: typed, restText: rest,
       hpText: hp, cmds, cmdIndex: 0, label: cmds[0], progress: 0,
       x: SPAWN_X + 100, y: GAME_H / 2, baseY: GAME_H / 2, phase: 0,
-      speed: 18 * this.diff.speed, color: CSS.red,
+      speed: 18 * this.diff.speed * (variant ? variant.speedMult : 1), color: CSS.red,
       glitchAt: this.time.now + 500,
       cmdStart: this.time.now,
     };
@@ -683,8 +753,7 @@ class GameScene extends Phaser.Scene {
     // items : touches jamais utilisées pour taper les mots
     if (e.key === 'Enter') { this.useBomb(); return; }
     if (e.key === 'Backspace') { e.preventDefault(); this.useLaser(); return; }
-    // F2 et pas M : les mots à taper peuvent contenir un m
-    if (e.key === 'F2') { Sfx.toggleMute(); return; }
+    if (e.key === 'F2') { Sfx.toggleMute(); return; } // secours discret
     if (e.key.length !== 1) return;
     e.preventDefault();
     Sfx.ensure();
@@ -694,6 +763,12 @@ class GameScene extends Phaser.Scene {
     // le pouvoir ne part que si la lettre ne correspond à aucune saisie valide
     if (this.superComboEnabled && (char === 'a' || char === 'z' || char === 'e')
         && !this.isValidKeystroke(char) && this.tryStarPower(char)) return;
+
+    // S coupe/active le son — même règle : seulement si la lettre ne tape rien
+    if ((char === 's' || char === 'S') && !this.isValidKeystroke(char)) {
+      Sfx.toggleMute();
+      return;
+    }
 
     if (!this.target) {
       // verrouille l'ennemi correspondant le plus proche de la prod
@@ -1295,6 +1370,28 @@ class GameScene extends Phaser.Scene {
       this.hudFps.setText(`${Math.round(this.game.loop.actualFps)} fps${Sfx.muted ? T('mutedTag') : ''}`);
     }
 
+    // mode disco : pluie colorée, dance floor qui pulse, ennemis chamarrés
+    if (DISCO_MODE && (!this._discoAt || time > this._discoAt)) {
+      this._discoAt = time + (REDUCED_MOTION ? 800 : 250);
+      const palette = [CSS.magenta, CSS.cyan, CSS.gold, CSS.green, CSS.red, CSS.white];
+      for (let i = 0; i < 6; i++) {
+        Phaser.Utils.Array.GetRandom(this.bgGlyphs)
+          .setColor(Phaser.Utils.Array.GetRandom(palette));
+      }
+      if (!REDUCED_MOTION && this.discoTiles) {
+        for (let i = 0; i < 4; i++) {
+          const tile = Phaser.Utils.Array.GetRandom(this.discoTiles);
+          tile.fillColor = Phaser.Display.Color.HexStringToColor(
+            Phaser.Utils.Array.GetRandom(palette)).color;
+        }
+      }
+      // les sprites des ennemis (pas leurs mots !) changent de couleur
+      for (let i = 0; i < 2 && this.enemies.length; i++) {
+        const e = Phaser.Utils.Array.GetRandom(this.enemies);
+        if (e.art && e.art.active) e.art.setColor(Phaser.Utils.Array.GetRandom(palette));
+      }
+    }
+
     // pluie de fond
     for (const g of this.bgGlyphs) {
       g.y += g.fall * dt;
@@ -1302,7 +1399,7 @@ class GameScene extends Phaser.Scene {
     }
 
     for (const e of [...this.enemies]) {
-      e.container.x -= e.speed * dt;
+      e.container.x -= e.speed * dt * this.speedScale;
       e.phase += dt * 2.2;
       e.container.y = e.baseY + Math.sin(e.phase) * 9;
       // glitch visuel périodique (cosmétique : coupé en animations réduites)

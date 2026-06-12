@@ -56,6 +56,20 @@ const WORDS = {
     'neovim', 'lazygit', 'starship', 'ohmyzsh', 'fzf', 'ripgrep', 'jq', 'yq',
     'httpie', 'ngrok', 'localhost', 'boilerplate', 'refactor', 'rubber duck',
     'yak shaving', 'bikeshed', 'cargo cult', 'feature flag', 'dark launch',
+    // — extension 3 —
+    'lua', 'groovy', 'julia', 'racket', 'prolog', 'nim', 'crystal', 'gleam',
+    'mojo', 'carbon', 'fastify', 'hono', 'nestjs', 'adonis', 'strapi',
+    'gatsby', 'eleventy', 'hugo', 'jekyll', 'docusaurus', 'polars', 'keras',
+    'tensorflow', 'xgboost', 'mlflow', 'huggingface', 'ollama', 'whisper',
+    'stable diffusion', 'nomad', 'etcd', 'zookeeper', 'memcached',
+    'clickhouse', 'cassandra', 'scylla', 'cockroach', 'timescale', 'influxdb',
+    'esbuild', 'rollup', 'parcel', 'swc', 'webassembly', 'service worker',
+    'indexeddb', 'pair programming', 'mob programming', 'code review',
+    'tech lead', 'side project', 'hackathon', 'lan party', 'open source',
+    'pull request', 'merge request', 'git flow', 'trunk based', 'blue green',
+    'canary release', 'chaos monkey', 'dry run', 'smoke test', 'load test',
+    'unit test', 'e2e test', 'profiler', 'debugger', 'breakpoint',
+    'stack trace', 'hot reload',
   ],
 
   // Bugs d'élite : exceptions CamelCase (les majuscules font partie du challenge)
@@ -89,6 +103,15 @@ const WORDS = {
     'PreflightFailed', 'CSRFMismatch', 'XSSDetected', 'SQLInjection',
     'PathTraversal', 'PrototypePollution', 'RegexDoS', 'BillionLaughs',
     'OffByTwoError', 'CopyPasteBug', 'MidnightDeploy', 'FridayCommit',
+    // — extension 3 —
+    'OutOfDiskSpace', 'TooManyRequests', 'GatewayTimeout', 'BadGateway',
+    'NotImplemented', 'Forbidden403', 'Unauthorized401', 'ConflictDetected',
+    'PreconditionFailed', 'PayloadTooLarge', 'UnsupportedMediaType',
+    'TeapotError', 'HeapOutOfBounds', 'StackSmashing', 'DoubleFree',
+    'WildPointer', 'TornWrite', 'WriteSkew', 'DeadTupleBloat',
+    'IndexCorruption', 'ReplicationLag', 'FailoverLoop', 'QuorumLost',
+    'LeaderElectionStorm', 'NoisyNeighbor', 'ColdStart', 'VendorLockIn',
+    'DependencyHell', 'SchemaDrloft'.replace('rl', 'ri'), 'BrownoutAlert',
   ],
 
   // Zombies legacy : snippets de code + technos qui refusent de mourir
@@ -135,6 +158,16 @@ const WORDS = {
     'derive(Debug)', 'let mut acc = 0;', 'tokio::spawn(async)',
     'sync.WaitGroup', 'errors.Is(err, io.EOF)', 'set -euo pipefail',
     'trap cleanup EXIT', '2>&1 | tee log.txt', '$(date +%F)',
+    // — extension 3 —
+    'SELECT 1;', 'TRUNCATE TABLE logs;', 'GRANT ALL ON db', 'REVOKE INSERT',
+    'CREATE VIEW v AS', 'DROP INDEX idx;', 'npm run dev', 'npm i --force',
+    'yarn why lodash', 'pnpm dlx cowsay', 'npx degit', 'console.error(e)',
+    'await sleep(100)', 'return res.json(data)', 'app.listen(port)',
+    'req.params.id', 'res.status(404)', 'throw new Error(msg)',
+    'process.env.PORT', 'os.environ.get(key)', 'print(f"done")', 'assert ok',
+    'pytest -x', 'def __init__(self):', 'self.data = data', 'return None',
+    'pass  # todo', 'cargo test', 'cargo clippy', 'go vet ./...',
+    'gofmt -w .', 'make test', 'echo $PATH', 'source .env',
   ],
   legacyNames: [
     'cobol', 'fortran', 'pascal', 'delphi', 'vb6', 'flash', 'silverlight', 'ie6',
@@ -155,6 +188,12 @@ const WORDS = {
     'napster', 'winamp', 'clippy', 'msn messenger', 'icq', 'myspace', 'skyblog',
     'python 2', 'php5 en prod', 'angularjs', 'bower', 'grunt', 'coffeescript',
     'spacer gif', 'comic sans',
+    // — extension 3 —
+    'pager motorola', 'cassette vhs', 'cd gravable', 'graveur scsi',
+    'port parallele', 'ecran cathodique', 'tour beige', 'souris a boule',
+    'cle wep', 'bluetooth v1', 'infrarouge nokia', 'wap push', 'mms surtaxe',
+    'sonnerie polyphonique', 'java me', 'symbian', 'windows phone', 'bada os',
+    'firefox os', 'netbook', 'modem rtc', 'minidisc', 'lecteur zip',
   ],
 
   // Faucheuses deadline : l'horreur du quotidien (rapides !)
@@ -185,6 +224,16 @@ const WORDS = {
     'daily a rallonge', 'demo qui plante', 'wifi du client', 'badge oublie',
     'salle occupee', 'gel des changements', 'cloture comptable', 'ticket bloque',
     'escalade n3', 'comite de crise', 'war room', 'plan daction', 'points bloquants',
+    // — extension 3 —
+    'sprint de stabilisation', 'reunion preparatoire', 'point hebdo',
+    'comite darchitecture', 'revue de code geante', 'audit de licence',
+    'cartographie applicative', 'schema directeur', 'budget previsionnel',
+    'note de frais', 'ticket sans repro', 'bug du lundi', 'mise a jour forcee',
+    'certificat expire', 'mot de passe expire', 'session expiree',
+    'vpn qui tombe', 'proxy dentreprise', 'pare feu zele', 'poste verrouille',
+    'admin en vacances', 'doc introuvable', 'wiki obsolete', 'readme menteur',
+    'specs dans un mail', 'decision en couloir', 'priorite qui change',
+    'demo au client final', 'golive reporte', 'gel de fin dannee',
   ],
 
   // Boss : commandes terminal complètes
@@ -217,12 +266,20 @@ const WORDS = {
     'sed -i "s/http/https/g" *.conf', 'cut -d: -f1 access.log',
     'sort access.log | uniq -c', 'tar -czvf backup.tgz /data',
     'python3 -m http.server 8000', 'npx kill-port 3000', 'yes | head -1000000',
+    // — extension 3 —
+    'git switch -c hotfix', 'git fetch --prune', 'git tag v1.3.0',
+    'git push --tags', 'git blame -w app.js', 'git shortlog -sn',
+    'docker compose logs -f', 'docker image prune -a', 'kubectl top pods',
+    'kubectl get events -w', 'helm rollback api 1', 'terraform plan -out tf.plan',
+    'curl -I https://prod', 'dig +short prod.local', 'host -t mx exemple.dev',
+    'uptime && who', 'last -n 5', 'chmod 600 id_rsa', 'ssh-keygen -t ed25519',
   ],
 
   // Le RECRUTEUR : ennemi spammeur, et ses "missiles" InMail à abattre
   spammers: [
     'recruteur linkedin', 'chasseur de tetes', 'esn en chasse', 'staffing urgent',
     'business developer', 'talent acquisition', 'sourceur fou', 'cabinet rh',
+    'cabinet premium', 'chasseur deux point zero',
   ],
   missiles: [
     'cv ?', 'dispo ?', 'ping', 'inmail', 'connect', 'tjm ?', 'urgent !',
@@ -231,6 +288,8 @@ const WORDS = {
     // — extension 2 —
     'top profil', 'match !', 'offre en or', 'full remote ?', 'relance',
     'relance 2', 'derniere chance', 'exclu !', 'process rapide', 'call demain ?',
+    'on se rappelle', 'ton profil match', 'super offre', 'cv en pdf ?',
+    'deja en poste ?', 'salaire cache', 'reponds stp',
   ],
 
   // MODE GINÈS : insultes geek, gentiment grossières (ça reste un stand)
@@ -257,6 +316,7 @@ const WORDS = {
     'urssaf', 'facture impayee', 'mission courte', 'full remote sinon rien',
     'pas de cdi merci', 'micro entreprise', 'kbis', 'acompte de moitie',
     'mon reseau suffit', 'cumul de missions', 'relance facture', 'intercontrat jamais',
+    'devis gratuit', 'tjm double en urgence', 'reseau linkedin', 'mission au forfait',
   ],
 
   // LE PO INSPIRÉ (niv.5) : ses idées foireuses, à taper…
@@ -265,6 +325,7 @@ const WORDS = {
     'juste un bouton', 'cest facile non', 'pour hier', 'mvp direct en prod',
     'les users adorent', 'ca prend 5 min', 'on verra en prod',
     'pas besoin de tests', 'comme tiktok', 'un petit chatbot', 'gamifions tout',
+    'une marketplace', 'du machine learning', 'on fait comme avant', 'juste un petit script',
   ],
   // …et les rallonges qu'il greffe aux mots des autres (scope creep)
   scopeCreep: [' v2', ' v3', ' bis', ' rgpd', ' mobile', ' offline', ' dark mode', ' en mieux'],
@@ -275,6 +336,7 @@ const WORDS = {
     'spaghetti code', 'eval', 'rot13', 'magic number', 'no comment',
     'undocumented', 'write only', 'opaque', 'side effect', 'global state',
     'var x2', 'tmp final', 'foo bar baz', 'wtf per minute', 'here be dragons',
+    'code golf', 'one liner', 'regex illisible', 'variable a', 'fonction dieu',
   ],
 
   // LE CONSULTANT (niv.4) : buzzwords de cabinet de conseil
@@ -286,6 +348,8 @@ const WORDS = {
     'alignement strategique', 'montee en competence', 'pool de ressources',
     'vision 360', 'cost killing', 'lean six sigma', 'top management',
     'deep dive', 'core business', 'growth hacking', 'scalabilite',
+    'culture produit', 'plateformisation', 'data driven', 'customer centric',
+    'test and learn', 'fail fast', 'one team',
   ],
 
   // Power-ups (libellés fixes, dorés)
@@ -312,16 +376,23 @@ const WORDS = {
       'security audit', 'pentest at 4pm', 'plan b', 'teams down', 'you are muted',
       'cant hear you', 'screen share', 'not my fault', 'worked yesterday',
       'blame the network', 'war room', 'crisis meeting', 'change freeze',
+      'prep meeting', 'weekly sync', 'architecture board', 'license audit',
+      'expense report', 'ticket without repro', 'monday bug', 'forced update',
+      'expired certificate', 'expired password', 'vpn drop', 'corporate proxy',
+      'zealous firewall', 'locked workstation', 'admin on holiday',
+      'outdated wiki', 'lying readme',
     ],
     missiles: [
       'cv ?', 'open to work', 'ping', 'inmail', 'connect', 'rate ?', 'urgent !',
       'dream job', 're: re: cv', 'opportunity', 'hello !!', 'quick call ?',
       '5 min ?', 'my network', 'top profile', 'come back', 'last chance',
-      'gold offer', 'full remote ?', 'follow up 2',
+      'gold offer', 'full remote ?', 'follow up 2', 'lets reconnect',
+      'perfect match', 'great offer', 'cv in pdf ?', 'salary hidden',
     ],
     spammers: [
       'linkedin recruiter', 'head hunter', 'agency hunting', 'urgent staffing',
       'business developer', 'talent acquisition', 'crazy sourcer', 'hr agency',
+      'premium agency', 'hunter two point oh',
     ],
     insults: [
       'you absolute bug', 'null head', 'spaghetti bag', 'floppy muncher',
@@ -343,12 +414,14 @@ const WORDS = {
       'unpaid invoice', 'short gig', 'full remote or nothing', 'no permanent contract',
       'my own boss', 'sole trader', 'upfront deposit', 'my network is enough',
       'stacking gigs', 'invoice reminder', 'never on the bench', 'side project',
+      'free quote', 'double rate for rush', 'linkedin network', 'fixed price gig',
     ],
     poIdeas: [
       'lets pivot', 'like uber', 'add blockchain', 'with some ai',
       'just one button', 'easy right', 'due yesterday', 'mvp straight to prod',
       'users love it', 'takes 5 min', 'we will see in prod',
       'no tests needed', 'like tiktok', 'a small chatbot', 'gamify everything',
+      'a marketplace', 'some machine learning', 'lets do it like before', 'just a small script',
     ],
     scopeCreep: [' v2', ' v3', ' gdpr', ' mobile', ' offline', ' dark mode', ' but better'],
     buzzwords: [
@@ -358,6 +431,8 @@ const WORDS = {
       'thought leader', 'swot matrix', 'roadmap alignment', 'upskilling',
       'resource pool', '360 vision', 'cost killing', 'lean six sigma',
       'c-level deep dive', 'core business', 'growth hacking', 'scalability',
+      'product culture', 'platformization', 'data driven', 'customer centric',
+      'test and learn', 'fail fast', 'one team',
     ],
   },
 };
@@ -368,20 +443,24 @@ const WORDS = {
 (function expandInsults() {
   const frNouns = ['boulet', 'tocard', 'quiche', 'brele', 'andouille', 'gland',
     'naze', 'patate', 'cornichon', 'truffe', 'moule', 'banane', 'nouille',
-    'courge', 'gourde', 'buse', 'cruche', 'manche', 'tanche', 'mollusque'];
+    'courge', 'gourde', 'buse', 'cruche', 'manche', 'tanche', 'mollusque',
+    'cageot', 'bulot', 'poireau', 'navet'];
   const frDomains = ['du cloud', 'du backlog', 'en regex', 'en css', 'du kanban',
     'en sql', 'du terminal', 'en python', 'du daily', 'des migrations',
     'du sprint', 'en yaml', 'du monorepo', 'en prod', 'du vendredi',
-    'en typescript', 'du refacto', 'des reviews'];
+    'en typescript', 'du refacto', 'des reviews', 'du rebase', 'de la ci',
+    'du lundi matin', 'des hotfix'];
   for (const n of frNouns) for (const d of frDomains) WORDS.insults.push(`${n} ${d}`);
   WORDS.insults.push(...frNouns);
 
   const enDomains = ['cloud', 'backlog', 'regex', 'css', 'kanban', 'sql',
     'terminal', 'python', 'standup', 'yaml', 'monorepo', 'prod', 'sprint',
-    'docker', 'friday', 'refactor', 'review', 'typescript'];
+    'docker', 'friday', 'refactor', 'review', 'typescript', 'rebase',
+    'hotfix', 'monday', 'pipeline'];
   const enNouns = ['muppet', 'donut', 'numpty', 'plonker', 'dimwit', 'nitwit',
     'potato', 'clown', 'goblin', 'walnut', 'pickle', 'noodle', 'dunce',
-    'turnip', 'wally', 'twit', 'doofus', 'lemon', 'gremlin', 'clod'];
+    'turnip', 'wally', 'twit', 'doofus', 'lemon', 'gremlin', 'clod',
+    'melon', 'wombat', 'sausage', 'puddle'];
   for (const d of enDomains) for (const n of enNouns) WORDS.en.insults.push(`${d} ${n}`);
   WORDS.en.insults.push(...enNouns);
 })();

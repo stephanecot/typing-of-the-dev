@@ -9,7 +9,8 @@ class MenuScene extends Phaser.Scene {
     this.helpOpen = false;
     this.godArmed = false; // Konami Code ↑↑↓↓←→←→BA saisi ici, sur l'accueil
     this.konamiIdx = 0;
-    this.ginesIdx = 0; // taper GINES bascule le mode insultes
+    this.codeOpen = false; // invite "code secret" (touche C)
+    this.codeBuffer = '';
     Api.loadConfig(); // recharge les réglages admin à chaque passage au menu
     this.buildTitle();
     this.buildDifficulties();
@@ -20,8 +21,8 @@ class MenuScene extends Phaser.Scene {
     this.input.keyboard.on('keydown', (e) => {
       Sfx.ensure();
       if (!Music.playing) Music.start(0); // ambiance d'accueil, plus douce
+      if (this.codeOpen) { this.onCodeKey(e); return; }
       this.trackKonami(e.key);
-      this.trackGines(e.key);
       if (this.helpOpen) {
         if (e.key === 'ArrowLeft') this.changeHelpPage(-1);
         else if (e.key === 'ArrowRight') this.changeHelpPage(1);
@@ -31,17 +32,29 @@ class MenuScene extends Phaser.Scene {
       if (e.key === 'h' || e.key === 'H') this.toggleHelp();
       else if (e.key === 'l' || e.key === 'L') this.toggleLang();
       else if (e.key === 'b' || e.key === 'B') this.cycleMusic();
+      else if (e.key === 'c' || e.key === 'C') this.openCodePrompt();
+      else if (e.key === 'i' || e.key === 'I') this.toggleInfinite();
       else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') this.move(-1);
       else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') this.move(1);
       else if (e.key === 'Enter' || e.key === ' ') this.launch();
-      else if (e.key === 'm' || e.key === 'M' || e.key === 'F2') Sfx.toggleMute();
+      else if (e.key === 's' || e.key === 'S' || e.key === 'F2') Sfx.toggleMute();
       else if (e.key >= '1' && e.key <= String(DIFFICULTIES.length)) { this.selected = +e.key - 1; this.refreshDiff(); }
     });
 
     if (REDUCED_MOTION) this.cameras.main.shake = () => this.cameras.main;
-    this.ginesBadge = null;
-    this.refreshGinesBadge();
+    if (BOISSON_MODE) applyDrunkFx(this);
+    this.secretBadges = [];
+    this.buildCodePrompt();
+    this.refreshSecretBadges();
     this.cameras.main.fadeIn(400, 5, 10, 7);
+  }
+
+  /* I : bascule le mode infini (pas de chrono, sprints sans fin), persisté. */
+  toggleInfinite() {
+    INFINITE_MODE = !INFINITE_MODE;
+    localStorage.setItem('totd-infinite', INFINITE_MODE ? '1' : '0');
+    Sfx.blip(12);
+    if (this.modeLabel) this.modeLabel.setText(T('menuMode')(INFINITE_MODE));
   }
 
   /* B : fait défiler les 5 pistes musicales — pré-écoute immédiate, persistée. */
@@ -173,6 +186,7 @@ class MenuScene extends Phaser.Scene {
     missile: CSS.red, powerup: CSS.gold, ghost: CSS.white, virus: CSS.red,
     monolith: CSS.amber, consultant: CSS.gold, ransomware: CSS.red, microservice: CSS.cyan, spec: CSS.white, obfuscator: CSS.white, po: CSS.magenta, indep: CSS.cyan,
     boss: CSS.red, finalBoss: CSS.magenta,
+    mainframe: CSS.cyan, dette: CSS.amber, stagiaireBoss: CSS.green,
   };
 
   // page 3 : bestiaire — ennemis groupés par niveau, sur 3 colonnes remplies
@@ -264,20 +278,20 @@ class MenuScene extends Phaser.Scene {
     }).setOrigin(0.5));
 
     T('bestiaryBosses').forEach(([kind, name, desc, avail], i) => {
-      const x = 300 + i * 660;
-      const y = 180;
-      page.add(this.add.text(x + 110, y + 230, ASCII[kind][0], {
-        fontFamily: FONT, fontSize: '20px',
+      const cx2 = 270 + (i % 3) * 530;
+      const y = 112 + Math.floor(i / 3) * 352;
+      page.add(this.add.text(cx2, y + 158, ASCII[kind][0], {
+        fontFamily: FONT, fontSize: '15px',
         color: MenuScene.ART_COLORS[kind] || CSS.white, align: 'center', lineSpacing: -3,
       }).setOrigin(0.5, 1));
-      page.add(this.add.text(x + 110, y + 280, name, {
-        fontFamily: FONT, fontSize: '36px', color: MenuScene.ART_COLORS[kind] || CSS.white, align: 'center',
+      page.add(this.add.text(cx2, y + 168, name, {
+        fontFamily: FONT, fontSize: '30px', color: MenuScene.ART_COLORS[kind] || CSS.white, align: 'center',
       }).setOrigin(0.5, 0));
-      page.add(this.add.text(x + 110, y + 322, avail, {
-        fontFamily: FONT, fontSize: '24px', color: CSS.gold, align: 'center',
+      page.add(this.add.text(cx2, y + 202, avail, {
+        fontFamily: FONT, fontSize: '20px', color: CSS.gold, align: 'center',
       }).setOrigin(0.5, 0));
-      page.add(this.add.text(x + 110, y + 360, desc, {
-        fontFamily: FONT, fontSize: '24px', color: CSS.white, align: 'center',
+      page.add(this.add.text(cx2, y + 228, desc, {
+        fontFamily: FONT, fontSize: '20px', color: CSS.white, align: 'center',
       }).setOrigin(0.5, 0).setAlpha(0.92));
     });
     return page;
@@ -318,26 +332,121 @@ class MenuScene extends Phaser.Scene {
     Sfx.blip(this.helpOpen ? 20 : 5);
   }
 
-  /* Taper G-I-N-E-S : bascule le mode Ginès — tous les mots du jeu
-     deviennent des insultes geek (et on retape GINES pour l'éteindre). */
-  trackGines(key) {
-    const SEQ = ['g', 'i', 'n', 'e', 's'];
-    const k = String(key).toLowerCase();
-    this.ginesIdx = k === SEQ[this.ginesIdx] ? this.ginesIdx + 1 : (k === SEQ[0] ? 1 : 0);
-    if (this.ginesIdx < SEQ.length) return;
-    this.ginesIdx = 0;
-    GINES_MODE = !GINES_MODE;
-    Sfx.powerup();
-    this.refreshGinesBadge();
+  /* Invite "code secret" (touche C) : on y tape gines, disco, iddqd…
+     sans aucun conflit avec les raccourcis du menu. */
+  buildCodePrompt() {
+    const cx = GAME_W / 2;
+    this.codePanel = this.add.container(0, 0).setDepth(95).setVisible(false);
+    this.codePanel.add([
+      this.add.rectangle(cx, GAME_H / 2, GAME_W, GAME_H, 0x020503, 0.88),
+      this.add.rectangle(cx, GAME_H / 2, 640, 250, 0x06120a, 0.98)
+        .setStrokeStyle(2, PALETTE.green),
+      this.add.text(cx, GAME_H / 2 - 80, T('codeTitle'), {
+        fontFamily: FONT, fontSize: '40px', color: CSS.amber,
+      }).setOrigin(0.5),
+    ]);
+    this.codeText = this.add.text(cx, GAME_H / 2 - 8, '> _', {
+      fontFamily: FONT, fontSize: '44px', color: CSS.green,
+    }).setOrigin(0.5);
+    this.codeStatus = this.add.text(cx, GAME_H / 2 + 46, '', {
+      fontFamily: FONT, fontSize: '24px', color: CSS.red,
+    }).setOrigin(0.5);
+    this.codePanel.add([this.codeText, this.codeStatus,
+      this.add.text(cx, GAME_H / 2 + 92, T('codeHint'), {
+        fontFamily: FONT, fontSize: '24px', color: CSS.greenSoft,
+      }).setOrigin(0.5)]);
   }
 
-  refreshGinesBadge() {
-    if (this.ginesBadge) { this.ginesBadge.destroy(); this.ginesBadge = null; }
-    if (!GINES_MODE) return;
-    this.ginesBadge = this.add.text(GAME_W / 2, 320, T('ginesOn'), {
-      fontFamily: FONT, fontSize: '32px', color: CSS.magenta,
-    }).setOrigin(0.5).setDepth(60);
-    this.tweens.add({ targets: this.ginesBadge, alpha: 0.4, duration: 450, yoyo: true, repeat: -1 });
+  openCodePrompt() {
+    this.codeOpen = true;
+    this.codeBuffer = '';
+    this.codeStatus.setText('');
+    this.refreshCodeText();
+    this.codePanel.setVisible(true);
+    Sfx.blip(8);
+  }
+
+  closeCodePrompt() {
+    this.codeOpen = false;
+    this.codePanel.setVisible(false);
+  }
+
+  refreshCodeText() {
+    this.codeText.setText(`> ${this.codeBuffer}_`);
+  }
+
+  onCodeKey(e) {
+    // le Konami code (flèches comprises) se saisit aussi ici
+    const wasArmed = this.godArmed;
+    this.trackKonami(e.key);
+    if (!wasArmed && this.godArmed) { this.closeCodePrompt(); return; }
+
+    if (e.key === 'Escape') { this.closeCodePrompt(); return; }
+    if (e.key === 'Enter') { this.submitCode(); return; }
+    if (e.key === 'Backspace') {
+      this.codeBuffer = this.codeBuffer.slice(0, -1);
+      this.refreshCodeText();
+      return;
+    }
+    const ARROWS = { ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→' };
+    if (ARROWS[e.key] && this.codeBuffer.length < 12) {
+      this.codeBuffer += ARROWS[e.key]; // affichées pour le feedback Konami
+      this.refreshCodeText();
+      Sfx.blip(4);
+      return;
+    }
+    if (e.key.length === 1 && this.codeBuffer.length < 12 && /[a-z0-9]/i.test(e.key)) {
+      this.codeBuffer += e.key.toLowerCase();
+      this.refreshCodeText();
+      Sfx.blip(4);
+    }
+  }
+
+  submitCode() {
+    const code = this.codeBuffer.replace(/[^a-z0-9]/g, ''); // ignore les flèches affichées
+    if (code === 'gines') {
+      GINES_MODE = !GINES_MODE;
+    } else if (code === 'disco') {
+      DISCO_MODE = !DISCO_MODE;
+      Music.step = 0; // la piste disco prend (ou rend) la main immédiatement
+    } else if (code === 'speed') {
+      SPEED_MODE = !SPEED_MODE;
+    } else if (code === 'boisson') {
+      BOISSON_MODE = !BOISSON_MODE;
+      Sfx.powerup();
+      this.scene.restart(); // pose ou retire l'effet caméra proprement
+      return;
+    } else if (code === 'iddqd' && !this.godArmed) {
+      this.armGodMode();
+    } else if (code !== 'iddqd') {
+      this.codeStatus.setText(T('codeUnknown'));
+      this.codeBuffer = '';
+      this.refreshCodeText();
+      Sfx.error();
+      return;
+    }
+    Sfx.powerup();
+    this.refreshSecretBadges();
+    this.closeCodePrompt();
+  }
+
+  /* Badges des modes secrets actifs, empilés sous la tagline. */
+  refreshSecretBadges() {
+    this.secretBadges.forEach((b) => b.destroy());
+    this.secretBadges = [];
+    let y = 290;
+    const add = (txt, color) => {
+      const b = this.add.text(GAME_W / 2, y, txt, {
+        fontFamily: FONT, fontSize: '30px', color,
+      }).setOrigin(0.5).setDepth(60);
+      this.tweens.add({ targets: b, alpha: 0.4, duration: 450, yoyo: true, repeat: -1 });
+      this.secretBadges.push(b);
+      y += 34;
+    };
+    if (GINES_MODE) add(T('ginesOn'), CSS.magenta);
+    if (DISCO_MODE) add(T('discoOn'), CSS.cyan);
+    if (BOISSON_MODE) add(T('boissonOn'), CSS.gold);
+    if (SPEED_MODE) add(T('speedOn'), CSS.red);
   }
 
   /* ↑↑↓↓←→←→BA sur l'écran d'accueil : arme le god mode pour la prochaine
@@ -496,6 +605,16 @@ class MenuScene extends Phaser.Scene {
     // choix de la musique (touche B), juste au-dessus
     this.musicLabel = this.add.text(GAME_W - 16, GAME_H - 40, T('menuMusic')(Music.track().name), {
       fontFamily: FONT, fontSize: '22px', color: CSS.cyan,
+    }).setOrigin(1, 1).setAlpha(0.85);
+
+    // l'entrée des codes secrets (touche C), au-dessus
+    this.add.text(GAME_W - 16, GAME_H - 68, T('menuCode'), {
+      fontFamily: FONT, fontSize: '22px', color: CSS.greenSoft,
+    }).setOrigin(1, 1).setAlpha(0.85);
+
+    // mode objectif / infini (touche I), tout en haut de la pile
+    this.modeLabel = this.add.text(GAME_W - 16, GAME_H - 96, T('menuMode')(INFINITE_MODE), {
+      fontFamily: FONT, fontSize: '22px', color: CSS.gold,
     }).setOrigin(1, 1).setAlpha(0.85);
   }
 

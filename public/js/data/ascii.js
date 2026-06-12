@@ -86,10 +86,23 @@ const ASCII = {
     '    ________\n   /        \\\n  | (X)  (X) |\n  |    __    |\n  |  \\____/  |\n   \\________/\n   _|XXXXXX|_\n  / |XXXXXX| \\\n    |X|  |X|',
     '   ______\n  /==||==\\\n | (o)(o) |\n |   /\\   |\n |  ====  |\n  \\______/\n _|######|_\n/ |######| \\\n  |_|  |_|',
   ],
+  // Boss du mode infini
+  mainframe: [
+    ' _________\n|MAINFRAME|\n| ###  ## |\n| oo o oo |\n| ###  ## |\n| oo o oo |\n|_________|\n |__|  |__|',
+  ],
+  dette: [
+    '    ____\n   |RIP |\n  _|____|_\n | LEGACY |\n |__ ____ |\n |  DETTE |\n |________|',
+  ],
+  stagiaireBoss: [
+    '  \\!!/\n (>_<)\n<|###|>\n /|_|\\\n d   b',
+  ],
+
   // Le boss final : LE DSI ÉNERVÉ — costume, cravate, sourcils froncés
   finalBoss: [
     '     _________\n    /  _____  \\\n   |  \\\\   //  |\n   | (\\@) (@/) |\n   |    ___    |\n   |   /___\\   |\n    \\_________/\n   __|       |__\n  /  |  \\_/  |  \\\n |   | (===) |   |\n |___|  |#|  |___|\n  (_)   |#|   (_)\n        |_|',
   ],
+  discoBall:
+    '   |\n .-+-.\n( / \\ )\n( \\ / )\n \'-+-\'',
   player:
     '  (o_o)\n<)   )>\n /   \\\n[#####]',
   prod:

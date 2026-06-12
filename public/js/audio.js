@@ -277,6 +277,37 @@ const TRACKS = [
   },
 ];
 
+/* Piste cachée du MODE DISCO : four-on-the-floor, charley en contretemps,
+   basse octave funky et stabs de cordes. Prend le dessus sur la piste choisie. */
+const DISCO_TRACK = {
+  name: 'DISCO 🪩',
+  ROOTS: [73.4, 98, 65.4, 110], // Dm — G — C — Am, la pompe funky
+  CHORDS: [[220, 261.6, 349.2], [196, 246.9, 293.7], [261.6, 329.6, 392], [220, 261.6, 329.6]],
+  MEL: [440, 0, 523.3, 587.3, 0, 523.3, 440, 0, 392, 440, 0, 349.2, 392, 0, 440, 0],
+  bpm(i) { return i === 0 ? 104 : i >= 4 ? 142 : 114 + i * 6; },
+  step(s, when, I) {
+    const chord = Math.floor(s / 4);
+    const root = this.ROOTS[chord];
+    // basse octave sur chaque croche, signature disco
+    Sfx.tone({ type: 'sawtooth', f: s % 2 ? root * 2 : root, dur: 0.13, vol: I === 0 ? 0.14 : 0.2, when, dest: Sfx.music });
+    if (I === 0) {
+      if (s % 4 === 0) this.CHORDS[chord].forEach((f) =>
+        Sfx.tone({ type: 'triangle', f, dur: 0.9, vol: 0.04, when, dest: Sfx.music }));
+      return;
+    }
+    if (s % 2 === 0) Sfx.tone({ type: 'sine', f: 130, f2: 45, dur: 0.15, vol: 0.4, when, dest: Sfx.music });
+    else Sfx.noise({ dur: 0.14, vol: 0.09, filterF: 9000, type: 'highpass', when, dest: Sfx.music });
+    if (I >= 2 && (s === 2 || s === 7 || s === 10 || s === 15)) {
+      this.CHORDS[chord].forEach((f) => Sfx.tone({ type: 'square', f, dur: 0.14, vol: 0.05, when, dest: Sfx.music }));
+    }
+    if (I >= 3) {
+      const m = this.MEL[s];
+      if (m) Sfx.tone({ type: 'triangle', f: m, dur: 0.2, vol: 0.1, when, dest: Sfx.music });
+    }
+    if (I >= 4 && s % 4 === 2) Sfx.noise({ dur: 0.2, vol: 0.14, filterF: 2200, when, dest: Sfx.music });
+  },
+};
+
 const Music = {
   playing: false,
   intensity: 1,
@@ -285,7 +316,10 @@ const Music = {
   timer: null,
   trackIndex: Math.min(TRACKS.length - 1, Math.max(0, Number(localStorage.getItem('totd-music')) || 0)),
 
-  track() { return TRACKS[this.trackIndex]; },
+  track() {
+    if (typeof DISCO_MODE !== 'undefined' && DISCO_MODE) return DISCO_TRACK;
+    return TRACKS[this.trackIndex];
+  },
 
   /* Change de piste (B au menu) : prend effet immédiatement, persiste. */
   setTrack(i) {

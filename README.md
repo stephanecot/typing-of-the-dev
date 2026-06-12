@@ -21,11 +21,17 @@ Tout fonctionne **offline** : Phaser, police et sons sont locaux/procéduraux.
 - Tapez la **première lettre** d'un ennemi pour le verrouiller, finissez son mot pour le tuer
   (les **espaces sont facultatifs** : taper directement la lettre suivante les saute).
 - `ÉCHAP` met en pause (puis `Q` pour quitter la partie). `TAB` relâche la cible
-  (sa saisie est remise à zéro). `F2` coupe le son.
+  (sa saisie est remise à zéro). `S` coupe le son (seulement quand la lettre
+  ne sert pas à taper — `F2` marche toujours en secours).
 - 3 incidents (ennemis qui atteignent la PROD) → **LA PROD EST DOWN**.
 - **Objectif : tenir 10 sprints** (réglable depuis l'admin) puis vaincre le boss final,
   **LE DSI ÉNERVÉ**. Un compte à rebours est affiché : chaque seconde restante à la
   victoire rapporte des points bonus.
+- **Mode infini** (touche `I` au menu, persisté) : pas de chrono ni de limite —
+  les sprints s'enchaînent tant qu'on survit, le DSI ne vient jamais. À la
+  place, 3 boss exclusifs tournent toutes les 4 vagues : **LE MAINFRAME**
+  (lent, +3 commandes), **LA DETTE TECHNIQUE** (les commandes les plus
+  longues) et **LE STAGIAIRE VENGEUR** (rapide, −1 commande).
 - **Boss** tous les 4 sprints : enchaîner plusieurs commandes terminal complètes.
 - **Pouvoirs ennemis** : certains mots arrivent **MINIFIÉS** (des lettres sont
   masquées par des `?`, devine-les !) ou **RETOURNÉS** (affichés tête en bas) ;
@@ -54,8 +60,16 @@ Tout fonctionne **offline** : Phaser, police et sons sont locaux/procéduraux.
 - `H` sur l'écran d'accueil : aide complète sur 4 pages (règles, difficultés,
   bestiaire, boss). `L` : bascule la langue FR/EN (interface + banques de mots
   les plus franchouillardes).
-- 🥚 Il paraît aussi qu'un certain prénom tapé sur l'accueil rend les bugs
-  très impolis (retapez-le pour qu'ils retrouvent leurs bonnes manières).
+- 🥚 Touche `C` sur l'accueil : l'invite des **codes secrets** (resaisir un
+  code le désactive) :
+
+  | Code | Effet |
+  |---|---|
+  | `gines` | tous les mots deviennent des insultes geek |
+  | `disco` | boule à facettes, dance floor, spots… et musique disco |
+  | `boisson` | l'écran tangue comme après un apéro trop long |
+  | `speed` | tout va 30 % plus vite, toutes difficultés |
+  | `iddqd` ou Konami (↑↑↓↓←→←→BA) | god mode — invincible mais marqué TRICHEUR, score non enregistré |
 - 🥚 Il paraît qu'un certain code bien connu des joueurs rend invincible…
   mais le jeu affiche alors `☠ GOD MODE = TRICHEUR ☠` à côté du score et
   refuse d'enregistrer la partie. On n'aime pas les tricheurs.
