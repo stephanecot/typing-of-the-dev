@@ -15,6 +15,7 @@ class GameScene extends Phaser.Scene {
 
   init(data) {
     this.diff = data.difficulty || DIFFICULTIES[1];
+    this.godModeArmed = !!data.godMode; // armé via Konami Code sur l'écran d'accueil
     this.enemies = [];
     this.target = null;
     this.score = 0;
@@ -28,6 +29,9 @@ class GameScene extends Phaser.Scene {
     this.timeScale = 1;
     this.over = false;
     this.paused = false;
+    this.bombs = 1;  // item KILL -9 : ENTRÉE tue l'ennemi le plus proche de la prod, max 3
+    this.lasers = 1; // item AUTOCOMPLETE : EFFACER complète les 4 prochaines lettres de la cible, max 5
+    this.godMode = this.godModeArmed; // invincible, mais affiché comme tricheur et score non sauvegardé
     this.stats = {
       typedOK: 0, errors: 0, startTime: 0,
       kills: { bug: 0, legacy: 0, deadline: 0, boss: 0, powerup: 0 },
@@ -92,6 +96,7 @@ class GameScene extends Phaser.Scene {
     const styleSm = { fontFamily: FONT, fontSize: '28px', color: CSS.green };
     this.hudScore = this.add.text(24, 16, '', styleSm).setDepth(40);
     this.hudCombo = this.add.text(24, 50, '', { ...styleSm, color: CSS.amber }).setDepth(40);
+    this.hudBombs = this.add.text(24, 84, '', { ...styleSm, color: CSS.gold }).setDepth(40);
     this.hudWave = this.add.text(GAME_W / 2, 28, '', {
       fontFamily: FONT, fontSize: '32px', color: CSS.white,
     }).setOrigin(0.5, 0.5).setDepth(40);
@@ -150,9 +155,13 @@ class GameScene extends Phaser.Scene {
   }
 
   refreshHud() {
-    this.hudScore.setText(`SCORE ${this.score}`);
+    // le tricheur est affiché à côté de son score, bien en rouge
+    this.hudScore.setText(`SCORE ${this.score}${this.godMode ? '  ☠ GOD MODE = TRICHEUR ☠' : ''}`);
+    this.hudScore.setColor(this.godMode ? CSS.red : CSS.green);
     const mult = this.multiplier();
     this.hudCombo.setText(this.combo > 1 ? `COMBO x${this.combo}  (×${mult})` : '');
+    this.hudBombs.setText(
+      `kill -9 x${this.bombs} [ENTRÉE]   autocomplete x${this.lasers} [EFFACER]`);
     this.hudWave.setText(`SPRINT ${this.wave}`);
     const blocks = '█'.repeat(this.lives) + '░'.repeat(Math.max(0, this.diff.lives - this.lives));
     const pct = Math.round((this.lives / this.diff.lives) * 100);
@@ -172,6 +181,14 @@ class GameScene extends Phaser.Scene {
   }
 
   multiplier() { return (1 + Math.floor(this.combo / 5)) * this.diff.scoreMult; }
+
+  /* Bonus vitesse : ~3 caractères/s = neutre (×1), frappe éclair = jusqu'à ×3.
+     Proportionnel au mot : un long mot tapé vite rapporte beaucoup plus. */
+  speedMult(e, sinceMs) {
+    if (!sinceMs || sinceMs <= 0) return 1;
+    const cps = e.label.length / Math.max(sinceMs / 1000, 0.15);
+    return Phaser.Math.Clamp(cps / 3, 0.6, 3);
+  }
 
   // ------------------------------------------------------------ vagues
   nextWave() {
@@ -203,6 +220,7 @@ class GameScene extends Phaser.Scene {
       if (n >= 2) for (let i = 0; i < Math.min(1 + Math.floor(n / 2), 6); i++) q.push('legacy');
       if (n >= this.diff.deadlineWave) for (let i = 0; i < Math.min(Math.floor(n / 2), 7); i++) q.push('deadline');
       if (n >= this.diff.eliteWave) for (let i = 0; i < Math.min(Math.floor(n / 3) + 1, 4); i++) q.push('elite');
+      if (n >= 3) for (let i = 0; i < Math.min(1 + Math.floor((n - 3) / 3), 2); i++) q.push('spammer');
     }
     return Phaser.Utils.Array.Shuffle(q);
   }
@@ -232,8 +250,37 @@ class GameScene extends Phaser.Scene {
       case 'legacy': return Math.random() < 0.55
         ? pickWord(WORDS.snippets, opts) : pickWord(WORDS.legacyNames, opts);
       case 'deadline': return pickWord(WORDS.deadlines, opts);
+      case 'spammer': return pickWord(WORDS.spammers, { exclude: ex });
+      case 'missile': return pickWord(WORDS.missiles, { exclude: ex });
       default: return pickWord(WORDS.keywords, opts);
     }
+  }
+
+  /* Pouvoir "MINIFIÉ" : ~30 % des lettres remplacées par ? à l'écran
+     (jamais la première, jamais les espaces) — il faut deviner. */
+  rollMask(kind, label) {
+    if (!['legacy', 'elite', 'deadline'].includes(kind)) return null;
+    if (this.wave < 2 || Math.random() > 0.22) return null;
+    const candidates = [];
+    for (let i = 1; i < label.length; i++) if (label[i] !== ' ') candidates.push(i);
+    Phaser.Utils.Array.Shuffle(candidates);
+    const count = Math.max(1, Math.ceil(label.length * 0.3));
+    return new Set(candidates.slice(0, count));
+  }
+
+  /* Partie restante du mot, avec les lettres minifiées affichées en ?. */
+  maskedRest(e) {
+    let out = '';
+    for (let i = e.progress; i < e.label.length; i++) {
+      out += e.masked && e.masked.has(i) ? '?' : e.label[i];
+    }
+    return out;
+  }
+
+  updateLabel(e) {
+    e.typedText.setText(e.label.slice(0, e.progress));
+    e.restText.setText(this.maskedRest(e));
+    this.layoutLabel(e);
   }
 
   spawnEnemy(kind) {
@@ -242,11 +289,13 @@ class GameScene extends Phaser.Scene {
       deadline: { color: CSS.magenta, tint: PALETTE.magenta, speed: 75, art: 'deadline', cls: 'deadline', size: 17, level: 2 },
       legacy: { color: CSS.amber, tint: PALETTE.amber, speed: 26, art: 'legacy', cls: 'legacy', size: 18, level: 2 },
       elite: { color: CSS.green, tint: PALETTE.green, speed: 34, art: 'bug', cls: 'bug', size: 22, level: 3 },
+      spammer: { color: CSS.cyan, tint: PALETTE.cyan, speed: 20, art: 'spammer', cls: 'deadline', size: 18, level: 3 },
     }[kind];
     const label = this.labelFor(kind);
     const techName = conf.art === 'legacy' ? label : null;
     this.addEnemy({
       kind, cls: conf.cls, label, level: conf.level,
+      masked: this.rollMask(kind, label),
       x: SPAWN_X, y: Phaser.Math.Between(LANE_TOP, LANE_BOTTOM),
       speed: conf.speed * this.diff.speed * (1 + this.wave * 0.04) * Phaser.Math.FloatBetween(0.9, 1.1),
       color: conf.color, artKind: conf.art, techName, artSize: conf.size,
@@ -276,7 +325,10 @@ class GameScene extends Phaser.Scene {
     }).setOrigin(0.5, 1);
     if (spec.level) {
       const lvlColor = [CSS.greenDim, CSS.amber, CSS.red][spec.level - 1] || CSS.red;
-      c.add(this.add.text(0, -art.height - 16, `niv.${spec.level} ${'▲'.repeat(spec.level)}`, {
+      let badge = `niv.${spec.level} ${'▲'.repeat(spec.level)}`;
+      if (spec.masked) badge += ' [minifié]';
+      if (spec.kind === 'spammer') badge += ' [recruteur]';
+      c.add(this.add.text(0, -art.height - 16, badge, {
         fontFamily: FONT, fontSize: '19px', color: lvlColor,
       }).setOrigin(0.5));
     }
@@ -293,9 +345,22 @@ class GameScene extends Phaser.Scene {
       progress: 0, baseY: spec.y, phase: Math.random() * Math.PI * 2,
       glitchAt: this.time.now + Phaser.Math.Between(800, 3000),
     };
-    this.layoutLabel(e);
+    if (e.kind === 'spammer') e.fireAt = this.time.now + 2500;
+    this.updateLabel(e); // applique le masquage "minifié" dès l'apparition
     this.enemies.push(e);
     return e;
+  }
+
+  /* LE RECRUTEUR lance un InMail : petit missile rapide à taper lui aussi. */
+  fireMissile(sp) {
+    Sfx.missile();
+    this.scorePopup(sp.container.x, sp.container.y - 120, 'nouveau message !', CSS.cyan, 22);
+    this.addEnemy({
+      kind: 'missile', cls: 'deadline', label: this.labelFor('missile'), level: 1,
+      x: sp.container.x - 70,
+      y: Phaser.Math.Clamp(sp.container.y + Phaser.Math.Between(-70, 70), LANE_TOP, LANE_BOTTOM),
+      speed: 115 * this.diff.speed, color: CSS.red, artKind: 'missile', artSize: 16,
+    });
   }
 
   layoutLabel(e) {
@@ -339,6 +404,7 @@ class GameScene extends Phaser.Scene {
       x: SPAWN_X + 100, y: GAME_H / 2, baseY: GAME_H / 2, phase: 0,
       speed: 14 * this.diff.speed, color: CSS.red,
       glitchAt: this.time.now + 500,
+      cmdStart: this.time.now,
     };
     this.layoutLabel(this.boss);
     this.refreshBossHp();
@@ -357,9 +423,12 @@ class GameScene extends Phaser.Scene {
     this.cameras.main.shake(220, 0.005);
     this.sparks.explode(40, b.container.x, b.container.y - 60);
     b.cmdIndex++;
-    const pts = Math.round(b.label.length * 15 * this.multiplier());
+    const sm = this.speedMult(b, b.cmdStart ? this.time.now - b.cmdStart : 0);
+    const pts = Math.round(b.label.length * 15 * this.multiplier() * sm);
     this.score += pts;
-    this.scorePopup(b.container.x, b.container.y - 140, `+${pts}`, CSS.amber, 36);
+    this.scorePopup(b.container.x, b.container.y - 140,
+      sm >= 1.5 ? `+${pts} >> RAPIDE ×${sm.toFixed(1)}` : `+${pts}`, CSS.amber, 36);
+    b.cmdStart = this.time.now; // chrono de la commande suivante
     if (b.cmdIndex >= b.cmds.length) return this.killEnemy(b);
     b.container.x = Math.min(b.container.x + 170, SPAWN_X);
     b.label = b.cmds[b.cmdIndex];
@@ -382,6 +451,9 @@ class GameScene extends Phaser.Scene {
     if (e.key === 'Escape') { this.togglePause(); return; }
     // TAB relâche la cible ; ÉCHAP est pris par la pause
     if (e.key === 'Tab') { e.preventDefault(); this.releaseTarget(); return; }
+    // items : touches jamais utilisées pour taper les mots
+    if (e.key === 'Enter') { this.useBomb(); return; }
+    if (e.key === 'Backspace') { e.preventDefault(); this.useLaser(); return; }
     // F2 et pas M : les mots à taper peuvent contenir un m
     if (e.key === 'F2') { Sfx.toggleMute(); return; }
     if (e.key.length !== 1) return;
@@ -395,6 +467,7 @@ class GameScene extends Phaser.Scene {
       if (!candidates.length) { this.softMiss(); return; }
       candidates.sort((a, b) => a.container.x - b.container.x);
       this.target = candidates[0];
+      this.target.lockTime = this.time.now; // départ du chrono pour le bonus vitesse
     }
 
     const t = this.target;
@@ -402,9 +475,7 @@ class GameScene extends Phaser.Scene {
       t.progress++;
       this.stats.typedOK++;
       Sfx.blip(this.combo);
-      t.typedText.setText(t.label.slice(0, t.progress));
-      t.restText.setText(t.label.slice(t.progress));
-      this.layoutLabel(t);
+      this.updateLabel(t);
       if (t.progress >= t.label.length) {
         if (t.kind === 'boss') { this.target = null; this.bossHit(); }
         else this.killEnemy(t);
@@ -438,9 +509,7 @@ class GameScene extends Phaser.Scene {
     const t = this.target;
     if (!t) return;
     t.progress = 0;
-    t.typedText.setText('');
-    t.restText.setText(t.label);
-    this.layoutLabel(t);
+    this.updateLabel(t);
     this.target = null;
     this.lockLine.clear();
   }
@@ -461,9 +530,13 @@ class GameScene extends Phaser.Scene {
       this.dropBonus(e, 'life'); // le boss lâche toujours une vie
     } else {
       this.stats.kills[e.cls] = (this.stats.kills[e.cls] || 0) + 1;
-      const pts = Math.round(e.label.length * 10 * (e.level || 1) * this.multiplier());
+      const sm = this.speedMult(e, e.lockTime ? this.time.now - e.lockTime : 0);
+      const pts = Math.round(e.label.length * 10 * (e.level || 1) * this.multiplier() * sm);
       this.score += pts;
-      this.scorePopup(e.container.x, e.container.y - 50, `+${pts}`, CSS.white, 30);
+      const fast = sm >= 1.5;
+      this.scorePopup(e.container.x, e.container.y - 50,
+        fast ? `+${pts} >> RAPIDE ×${sm.toFixed(1)}` : `+${pts}`,
+        fast ? CSS.gold : CSS.white, fast ? 34 : 30);
       this.sparks.explode(Math.min(14 + e.label.length * 2, 50), e.container.x, e.container.y);
       this.rollDrop(e);
     }
@@ -475,6 +548,65 @@ class GameScene extends Phaser.Scene {
     e.container.destroy();
     this.refreshHud();
     this.checkWaveEnd();
+  }
+
+  /* ITEM "kill -9" (ENTRÉE) : tue le process ennemi le plus proche de la prod.
+     Ne touche ni le boss ni les power-ups. */
+  useBomb() {
+    const px = PLAYER_X;
+    if (this.bombs <= 0) {
+      Sfx.error();
+      this.scorePopup(px + 120, this.player.y - 60, 'PLUS DE KILL -9 !', CSS.red, 28);
+      return;
+    }
+    const targets = this.enemies.filter((e) => e.kind !== 'boss' && e.cls !== 'powerup');
+    if (!targets.length) {
+      Sfx.error();
+      this.scorePopup(px + 120, this.player.y - 60, 'AUCUN PROCESS À TUER', CSS.red, 28);
+      return;
+    }
+    this.bombs--;
+    this.scorePopup(px + 160, this.player.y - 90, 'kill -9 envoyé_', CSS.gold, 30);
+    targets.sort((a, b) => a.container.x - b.container.x);
+    const victim = targets[0];
+    Sfx.bomb();
+    this.cameras.main.shake(250, 0.006);
+    this.redSparks.explode(70, victim.container.x, victim.container.y);
+    this.killEnemy(victim);
+    this.refreshHud();
+  }
+
+  /* ITEM "autocomplete" (EFFACER) : l'IA complète les 4 prochaines lettres
+     de la cible verrouillée. */
+  useLaser() {
+    if (this.lasers <= 0) {
+      Sfx.error();
+      this.scorePopup(PLAYER_X + 120, this.player.y - 60, 'PLUS D\'AUTOCOMPLETE !', CSS.red, 28);
+      return;
+    }
+    const t = this.target;
+    if (!t) {
+      Sfx.error();
+      this.scorePopup(PLAYER_X + 120, this.player.y - 60, 'VERROUILLE UNE CIBLE !', CSS.red, 28);
+      return;
+    }
+    this.lasers--;
+    this.scorePopup(t.container.x, t.container.y - 90, 'suggestion acceptée_', CSS.cyan, 28);
+    Sfx.laser();
+    // rayon visuel éphémère du dev vers la cible
+    const beam = this.add.graphics().setDepth(36);
+    beam.lineStyle(5, PALETTE.cyan, 0.95);
+    beam.lineBetween(PLAYER_X + 40, this.player.y - 30, t.container.x, t.container.y);
+    this.tweens.add({ targets: beam, alpha: 0, duration: 280, onComplete: () => beam.destroy() });
+    this.sparks.explode(25, t.container.x, t.container.y);
+
+    t.progress = Math.min(t.progress + 4, t.label.length);
+    this.updateLabel(t);
+    if (t.progress >= t.label.length) {
+      if (t.kind === 'boss') { this.target = null; this.bossHit(); }
+      else this.killEnemy(t);
+    }
+    this.refreshHud();
   }
 
   /* Texte flottant : points gagnés, bonus ramassés... */
@@ -490,9 +622,10 @@ class GameScene extends Phaser.Scene {
 
   /* Certains ennemis lâchent un bonus à leur mort, selon leur classe. */
   rollDrop(e) {
-    const chance = { elite: 0.35, legacy: 0.2, deadline: 0.15, bug: 0.08 }[e.kind] || 0;
+    // arcade de salon : drops généreux pour que ça pleuve un peu
+    const chance = { elite: 0.55, legacy: 0.4, deadline: 0.3, bug: 0.18 }[e.kind] || 0;
     if (Math.random() >= chance) return;
-    const pool = ['life', 'score', 'combo', 'slowmo'];
+    const pool = ['life', 'score', 'combo', 'slowmo', 'bomb', 'bomb', 'laser', 'laser'];
     this.dropBonus(e, Phaser.Utils.Array.GetRandom(pool));
   }
 
@@ -520,6 +653,24 @@ class GameScene extends Phaser.Scene {
       this.timeScale = 0.35;
       this.time.delayedCall(3000, () => { this.timeScale = 1; });
       this.scorePopup(x, y, '☕ SLOW-MO 3s', CSS.gold, 34);
+    } else if (type === 'bomb') {
+      if (this.bombs < 3) {
+        this.bombs++;
+        this.scorePopup(x, y, '+1 KILL -9', CSS.gold, 34);
+      } else {
+        const pts = Math.round(150 * this.diff.scoreMult);
+        this.score += pts;
+        this.scorePopup(x, y, `stock plein +${pts}`, CSS.gold, 30);
+      }
+    } else if (type === 'laser') {
+      if (this.lasers < 5) {
+        this.lasers++;
+        this.scorePopup(x, y, '+1 AUTOCOMPLETE', CSS.cyan, 34);
+      } else {
+        const pts = Math.round(150 * this.diff.scoreMult);
+        this.score += pts;
+        this.scorePopup(x, y, `stock plein +${pts}`, CSS.cyan, 30);
+      }
     }
     this.refreshHud();
   }
@@ -574,6 +725,15 @@ class GameScene extends Phaser.Scene {
   incident(e) {
     Phaser.Utils.Array.Remove(this.enemies, e);
     if (this.target === e) { this.target = null; this.lockLine.clear(); }
+    if (this.godMode && e.cls !== 'powerup') {
+      // invincible : l'ennemi s'écrase sur un bouclier, aucun dégât
+      this.redSparks.explode(25, PROD_X + 80, e.container.y);
+      this.scorePopup(PROD_X + 160, e.container.y, 'INVINCIBLE (tricheur)', CSS.red, 26);
+      if (e.kind === 'boss') this.boss = null;
+      e.container.destroy();
+      this.checkWaveEnd();
+      return;
+    }
     if (e.cls !== 'powerup') {
       this.lives -= e.kind === 'boss' ? 2 : 1;
       this.combo = 0;
@@ -633,6 +793,7 @@ class GameScene extends Phaser.Scene {
           score: this.score, wave: this.wave, wpm, accuracy,
           maxCombo: this.maxCombo, durationS: Math.round(duration),
           kills: this.stats.kills, missedWords: this.stats.missedWords.slice(0, 100),
+          godMode: this.godMode,
         },
       });
     });
@@ -663,6 +824,12 @@ class GameScene extends Phaser.Scene {
         this.time.delayedCall(90, () => {
           if (e.art.active) { e.art.setX(0); e.art.setAlpha(1); }
         });
+      }
+      // le recruteur spamme tant qu'il est en vie (4 messages max à l'écran)
+      if (e.kind === 'spammer' && e.container.x < GAME_W - 120 && time > e.fireAt
+          && this.enemies.filter((m) => m.kind === 'missile').length < 4) {
+        e.fireAt = time + Phaser.Math.Between(3800, 6200);
+        this.fireMissile(e);
       }
       if (e.container.x < PROD_X + 80) this.incident(e);
     }

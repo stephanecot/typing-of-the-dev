@@ -32,18 +32,29 @@ class GameOverScene extends Phaser.Scene {
       ['BUGS ÉCRASÉS', String((kills.bug || 0) + (kills.legacy || 0) + (kills.deadline || 0))],
       ['BOSS VAINCUS', String(kills.boss || 0)],
     ];
+    // stats dans la moitié gauche : le formulaire s'affiche à droite, sur le même écran
     lines.forEach(([k, v], i) => {
-      const y = 215 + i * 44;
-      this.add.text(cx - 280, y, k, { fontFamily: FONT, fontSize: '32px', color: CSS.greenDim })
+      const y = 250 + i * 52;
+      this.add.text(150, y, k, { fontFamily: FONT, fontSize: '32px', color: CSS.greenDim })
         .setOrigin(0, 0.5);
-      const val = this.add.text(cx + 280, y, v, { fontFamily: FONT, fontSize: '36px', color: CSS.green })
+      const val = this.add.text(700, y, v, { fontFamily: FONT, fontSize: '36px', color: CSS.green })
         .setOrigin(1, 0.5).setAlpha(0);
       this.tweens.add({ targets: val, alpha: 1, duration: 200, delay: 300 + i * 180 });
     });
     this.time.delayedCall(350, () => Sfx.waveClear());
 
-    // formulaire DOM par-dessus le canvas
-    this.time.delayedCall(1800, () => this.showForm());
+    if (r.godMode) {
+      // pas de leaderboard pour les tricheurs : tout le monde doit le savoir
+      const shame = this.add.text(cx, 545,
+        '☠ GOD MODE DÉTECTÉ — SCORE DE TRICHEUR, NON ENREGISTRÉ ☠', {
+          fontFamily: FONT, fontSize: '34px', color: CSS.red, align: 'center',
+        }).setOrigin(0.5);
+      this.tweens.add({ targets: shame, alpha: 0.3, duration: 450, yoyo: true, repeat: -1 });
+      this.time.delayedCall(2500, () => this.showLeaderboard(null, null));
+    } else {
+      // formulaire DOM à droite des stats (même écran, rien n'est caché)
+      this.time.delayedCall(900, () => this.showForm());
+    }
 
     // retour menu auto (stand : éviter un écran figé)
     this.idleTimer = this.time.delayedCall(60000, () => this.backToMenu());

@@ -96,6 +96,19 @@ const Sfx = {
     [330, 392, 494, 659, 784].forEach((f, i) =>
       this.tone({ type: 'square', f, dur: 0.1, vol: 0.12, when: i * 0.06 }));
   },
+  missile() { // le recruteur envoie un InMail
+    this.tone({ type: 'square', f: 340, f2: 980, dur: 0.13, vol: 0.12 });
+    this.tone({ type: 'square', f: 980, dur: 0.06, vol: 0.08, when: 0.14 });
+  },
+  bomb() { // kill -9 : grosse détonation sourde
+    this.tone({ type: 'sine', f: 90, f2: 30, dur: 0.45, vol: 0.5 });
+    this.noise({ dur: 0.35, vol: 0.3, filterF: 1800 });
+    this.tone({ type: 'square', f: 500, f2: 60, dur: 0.3, vol: 0.15, when: 0.04 });
+  },
+  laser() { // autocomplete : zap descendant rapide
+    this.tone({ type: 'sawtooth', f: 2400, f2: 180, dur: 0.18, vol: 0.2 });
+    this.noise({ dur: 0.1, vol: 0.08, filterF: 6000, type: 'highpass' });
+  },
   bossHit() {
     this.tone({ type: 'sawtooth', f: 200, f2: 50, dur: 0.35, vol: 0.3 });
     this.noise({ dur: 0.3, vol: 0.2, filterF: 2500 });
@@ -124,8 +137,20 @@ const Music = {
   BASS: [55, 0, 55, 0, 65.4, 0, 55, 0, 41.2, 0, 55, 0, 49, 0, 55, 0],
   BASS_BOSS: [55, 55, 51.9, 51.9, 55, 55, 61.7, 49, 55, 55, 51.9, 51.9, 65.4, 0, 49, 0],
   ARP: [220, 261.6, 329.6, 392, 440, 392, 329.6, 261.6, 220, 261.6, 329.6, 523.3, 440, 392, 329.6, 261.6],
+  // accueil (intensité 0) : ballade chiptune douce — Am / F / C / G
+  MENU_BASS: [110, 87.3, 130.8, 98],
+  MENU_ARP: [
+    220, 261.6, 329.6, 440, // Am
+    174.6, 220, 261.6, 349.2, // F
+    261.6, 329.6, 392, 523.3, // C
+    196, 246.9, 293.7, 392, // G
+  ],
+  MENU_MELODY: [440, 0, 523.3, 0, 440, 392, 0, 329.6, 0, 0, 392, 0, 440, 0, 0, 0],
 
-  bpm() { return this.intensity >= 4 ? 150 : 104 + this.intensity * 10; },
+  bpm() {
+    if (this.intensity === 0) return 82;
+    return this.intensity >= 4 ? 150 : 104 + this.intensity * 10;
+  },
 
   start(intensity = 1) {
     Sfx.ensure();
@@ -142,7 +167,7 @@ const Music = {
     if (this.timer) { clearInterval(this.timer); this.timer = null; }
   },
 
-  setIntensity(i) { this.intensity = Math.max(1, Math.min(4, i)); },
+  setIntensity(i) { this.intensity = Math.max(0, Math.min(4, i)); },
 
   schedule() {
     if (!this.playing || !Sfx.ctx) return;
@@ -155,6 +180,18 @@ const Music = {
   },
 
   playStep(s, when) {
+    if (this.intensity === 0) {
+      // écran d'accueil : ballade chiptune douce, sans agressivité
+      const chord = Math.floor(s / 4);
+      if (s % 4 === 0) {
+        Sfx.tone({ type: 'sine', f: this.MENU_BASS[chord], dur: 1.1, vol: 0.22, when, dest: Sfx.music });
+        Sfx.tone({ type: 'triangle', f: this.MENU_BASS[chord] * 2, dur: 0.9, vol: 0.08, when, dest: Sfx.music });
+      }
+      Sfx.tone({ type: 'triangle', f: this.MENU_ARP[s], dur: 0.32, vol: 0.07, when, dest: Sfx.music });
+      const m = this.MENU_MELODY[s];
+      if (m) Sfx.tone({ type: 'square', f: m, dur: 0.4, vol: 0.05, when, dest: Sfx.music });
+      return;
+    }
     const boss = this.intensity >= 4;
     const bass = (boss ? this.BASS_BOSS : this.BASS)[s];
     if (bass) {

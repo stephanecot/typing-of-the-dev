@@ -23,13 +23,27 @@ Tout fonctionne **offline** : Phaser, police et sons sont locaux/procéduraux.
   (sa saisie est remise à zéro). `F2` coupe le son.
 - 3 incidents (ennemis qui atteignent la PROD) → **LA PROD EST DOWN**.
 - **Boss** tous les 4 sprints : enchaîner plusieurs commandes terminal complètes.
+- **Pouvoirs ennemis** : certains mots arrivent **MINIFIÉS** (des lettres sont
+  masquées par des `?`, devine-les !) ; **LE RECRUTEUR** `[in]` spamme des
+  InMails-missiles (`cv ?`, `dispo ?`, `tjm ?`…) qu'il faut abattre aussi.
 - **Power-ups dorés** : `coffee` (ralenti), `git revert` (recul), `sudo reboot` (purge l'écran).
 - Combo : pas de faute = multiplicateur de score qui grimpe.
 - Chaque ennemi affiche son **niveau** (`niv.1 ▲` à `niv.3 ▲▲▲`) ; les points gagnés
-  (longueur du mot × 10 × niveau × multiplicateur) s'affichent à chaque kill.
-- Certains ennemis **lâchent un bonus** à leur mort : `+1 vie`, points, `combo +5`
-  ou slow-mo. Plus l'ennemi est haut niveau, plus la probabilité est forte
-  (élite 35 %, legacy 20 %, deadline 15 %, bug 8 %). Le boss lâche toujours une vie.
+  s'affichent à chaque kill : longueur du mot × 10 × niveau × multiplicateur de
+  combo × **bonus de vitesse** (chrono du verrouillage à la mort : ~3 caractères/s
+  = neutre, frappe éclair = jusqu'à ×3, mot long tapé vite = jackpot).
+- Certains ennemis **lâchent un bonus** à leur mort : `+1 vie`, points, `combo +5`,
+  slow-mo ou un item. Plus l'ennemi est haut niveau, plus la probabilité est forte
+  (élite 55 %, legacy 40 %, deadline 30 %, bug 18 %). Le boss lâche toujours une vie.
+- **Items** (on démarre avec 1 de chaque) :
+  - `ENTRÉE` → **KILL -9** (max 3) : tue le process ennemi le plus proche de la prod
+    (ne touche ni le boss ni les power-ups).
+  - `EFFACER` → **AUTOCOMPLETE** (max 5) : l'IA complète les 4 prochaines lettres
+    de la cible verrouillée (peut achever un mot, marche aussi sur le boss).
+- `H` sur l'écran d'accueil : aide complète avec toutes les règles.
+- 🥚 Il paraît qu'un certain code bien connu des joueurs rend invincible…
+  mais le jeu affiche alors `☠ GOD MODE = TRICHEUR ☠` à côté du score et
+  refuse d'enregistrer la partie. On n'aime pas les tricheurs.
 
 ### Ennemis
 

@@ -183,6 +183,17 @@ const WORDS = {
     'python3 -m http.server 8000', 'npx kill-port 3000', 'yes | head -1000000',
   ],
 
+  // Le RECRUTEUR : ennemi spammeur, et ses "missiles" InMail à abattre
+  spammers: [
+    'recruteur linkedin', 'chasseur de tetes', 'esn en chasse', 'staffing urgent',
+    'business developer', 'talent acquisition', 'sourceur fou', 'cabinet rh',
+  ],
+  missiles: [
+    'cv ?', 'dispo ?', 'ping', 'inmail', 'connect', 'tjm ?', 'urgent !',
+    'job de reve', 're: re: cv', 'opportunite', 'hello !!', 'un appel ?',
+    '5 min ?', 'mon reseau', 'profil top', 'come back',
+  ],
+
   // Power-ups (libellés fixes, dorés)
   powerups: {
     slowmo: 'coffee',

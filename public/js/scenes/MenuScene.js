@@ -6,22 +6,129 @@ class MenuScene extends Phaser.Scene {
 
   create() {
     this.selected = 1; // normal par défaut
+    this.helpOpen = false;
+    this.godArmed = false; // Konami Code ↑↑↓↓←→←→BA saisi ici, sur l'accueil
+    this.konamiIdx = 0;
     this.buildTitle();
     this.buildDifficulties();
     this.buildFooter();
+    this.buildHelp();
     this.loadTopScores();
 
     this.input.keyboard.on('keydown', (e) => {
       Sfx.ensure();
-      if (!Music.playing) Music.start(1);
-      if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') this.move(-1);
+      if (!Music.playing) Music.start(0); // ambiance d'accueil, plus douce
+      this.trackKonami(e.key);
+      if (this.helpOpen) {
+        if (e.key === 'h' || e.key === 'H' || e.key === 'Escape' || e.key === 'Enter') this.toggleHelp();
+        return;
+      }
+      if (e.key === 'h' || e.key === 'H') this.toggleHelp();
+      else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') this.move(-1);
       else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') this.move(1);
       else if (e.key === 'Enter' || e.key === ' ') this.launch();
-      else if (e.key === 'm' || e.key === 'M') Sfx.toggleMute();
+      else if (e.key === 'm' || e.key === 'M' || e.key === 'F2') Sfx.toggleMute();
       else if (e.key >= '1' && e.key <= String(DIFFICULTIES.length)) { this.selected = +e.key - 1; this.refreshDiff(); }
     });
 
     this.cameras.main.fadeIn(400, 5, 10, 7);
+  }
+
+  buildHelp() {
+    const cx = GAME_W / 2;
+    this.helpPanel = this.add.container(0, 0).setDepth(90).setVisible(false);
+
+    const sections = [
+      ['OBJECTIF', CSS.cyan, [
+        'Protège ta PROD : chaque ennemi qui l\'atteint = un INCIDENT. Trop d\'incidents = GAME OVER.',
+      ]],
+      ['COMMENT TUER UN BUG', CSS.green, [
+        'Tape la PREMIÈRE LETTRE d\'un ennemi pour le verrouiller, puis finis',
+        'son mot sans faute. Une faute remet le combo (= multiplicateur) à zéro.',
+      ]],
+      ['NIVEAUX & POINTS', CSS.amber, [
+        'niv.1 ▲ bugs · niv.2 ▲▲ deadlines (rapides !) et legacy · niv.3 ▲▲▲ élites.',
+        'Points = longueur × 10 × niveau × combo × VITESSE (rapide = jusqu\'à ×3 !).',
+        'Certains ennemis lâchent un bonus : +1 vie, points, combo +5, slow-mo, items.',
+      ]],
+      ['POUVOIRS ENNEMIS', CSS.cyan, [
+        'Mots MINIFIÉS : des lettres sont masquées (?), à toi de les deviner !',
+        'LE RECRUTEUR [in] spamme des messages : tape-les avant qu\'ils touchent la prod.',
+      ]],
+      ['ITEMS', CSS.red, [
+        'ENTRÉE : KILL -9 (max 3) — tue le process ennemi le plus proche de la prod.',
+        'EFFACER : AUTOCOMPLETE (max 5) — l\'IA complète les 4 lettres suivantes.',
+      ]],
+      ['POWER-UPS & BOSS', CSS.gold, [
+        'Mots dorés : coffee = ralenti · git revert = recul · sudo reboot = purge.',
+        'Tous les 4 sprints, un BOSS : enchaîne ses commandes. Il lâche +1 vie.',
+      ]],
+      ['TOUCHES', CSS.magenta, [
+        'TAB : relâcher la cible · ÉCHAP : pause (puis Q : quitter) · F2 : muet',
+      ]],
+    ];
+
+    const children = [
+      this.add.rectangle(cx, GAME_H / 2, GAME_W, GAME_H, 0x020503, 0.94),
+      this.add.text(cx, 60, '> AIDE — RÈGLES DU JEU_', {
+        fontFamily: FONT, fontSize: '48px', color: CSS.amber,
+      }).setOrigin(0.5),
+    ];
+
+    let y = 118;
+    for (const [title, color, lines] of sections) {
+      children.push(this.add.text(330, y, `-- ${title} --`, {
+        fontFamily: FONT, fontSize: '28px', color,
+      }).setOrigin(0, 0));
+      y += 34;
+      for (const line of lines) {
+        children.push(this.add.text(360, y, line, {
+          fontFamily: FONT, fontSize: '24px', color: CSS.white,
+        }).setOrigin(0, 0).setAlpha(0.92));
+        y += 27;
+      }
+      y += 11;
+    }
+
+    const closeHint = this.add.text(cx, GAME_H - 50, '[ H ou ÉCHAP : retour au menu ]', {
+      fontFamily: FONT, fontSize: '32px', color: CSS.green,
+    }).setOrigin(0.5);
+    this.tweens.add({ targets: closeHint, alpha: 0.3, duration: 600, yoyo: true, repeat: -1 });
+    children.push(closeHint);
+
+    this.helpPanel.add(children);
+  }
+
+  toggleHelp() {
+    this.helpOpen = !this.helpOpen;
+    this.helpPanel.setVisible(this.helpOpen);
+    Sfx.blip(this.helpOpen ? 20 : 5);
+  }
+
+  /* ↑↑↓↓←→←→BA sur l'écran d'accueil : arme le god mode pour la prochaine
+     partie. Invincible, mais marqué TRICHEUR et score non enregistré. */
+  trackKonami(key) {
+    if (this.godArmed) return;
+    const SEQ = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
+      'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+    if (key === SEQ[this.konamiIdx]) {
+      this.konamiIdx++;
+      if (this.konamiIdx >= SEQ.length) this.armGodMode();
+    } else {
+      this.konamiIdx = key === SEQ[0] ? 1 : 0;
+    }
+  }
+
+  armGodMode() {
+    this.godArmed = true;
+    Sfx.powerup();
+    Sfx.bossSpawn();
+    this.cameras.main.shake(300, 0.005);
+    const badge = this.add.text(GAME_W / 2, 320,
+      '☠ KONAMI CODE — GOD MODE ARMÉ — TRICHEUR REPÉRÉ ☠', {
+        fontFamily: FONT, fontSize: '34px', color: CSS.red,
+      }).setOrigin(0.5).setDepth(60);
+    this.tweens.add({ targets: badge, alpha: 0.35, duration: 400, yoyo: true, repeat: -1 });
   }
 
   buildTitle() {
@@ -109,7 +216,7 @@ class MenuScene extends Phaser.Scene {
     Music.stop();
     this.cameras.main.fadeOut(350, 5, 10, 7);
     this.cameras.main.once('camerafadeoutcomplete', () => {
-      this.scene.start('Game', { difficulty: DIFFICULTIES[this.selected] });
+      this.scene.start('Game', { difficulty: DIFFICULTIES[this.selected], godMode: this.godArmed });
     });
   }
 
@@ -120,7 +227,7 @@ class MenuScene extends Phaser.Scene {
     this.tweens.add({ targets: this.blink, alpha: 0.25, duration: 600, yoyo: true, repeat: -1 });
 
     this.add.text(GAME_W / 2, GAME_H - 24,
-      'flèches: choisir · ENTRÉE: jouer · ÉCHAP: pause/quitter · TAB: changer de cible · F2: muet', {
+      'H: aide & règles · flèches: choisir · ENTRÉE: jouer · ÉCHAP: pause · TAB: changer de cible · F2: muet', {
         fontFamily: FONT, fontSize: '20px', color: CSS.greenDim,
       }).setOrigin(0.5);
   }

@@ -109,16 +109,19 @@ html, body {
   z-index: 100;
   display: none;
   align-items: center;
-  justify-content: center;
-  background: rgba(2, 5, 3, 0.82);
+  justify-content: flex-end; /* à droite : les stats de la partie restent visibles à gauche */
+  padding-right: 6vw;
+  background: transparent;
+  pointer-events: none;
   cursor: auto;
 }
 #save-overlay.visible { display: flex; }
 
 #save-form {
-  width: min(640px, 92vw);
-  padding: 38px 44px;
-  background: #06120a;
+  pointer-events: auto;
+  width: min(580px, 46vw);
+  padding: 30px 36px;
+  background: rgba(4, 14, 8, 0.97);
   border: 2px solid var(--green-dim);
   border-radius: 10px;
   box-shadow: 0 0 50px rgba(57, 255, 122, 0.18), inset 0 0 30px rgba(0, 0, 0, 0.6);
