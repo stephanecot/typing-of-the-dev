@@ -75,8 +75,8 @@ class MenuScene extends Phaser.Scene {
     this.scene.restart();
   }
 
-  /* Aide en 3 pages : règles, niveaux de difficulté, bestiaire des ennemis.
-     Navigation aux flèches ←/→, fermeture H / ÉCHAP. */
+  /* Aide en 5 pages : règles, difficultés, bestiaire, boss, notes de version.
+     Navigation ←/→, défilement ↑/↓, fermeture H / ÉCHAP. */
   buildHelp() {
     const cx = GAME_W / 2;
     this.helpPage = 0;

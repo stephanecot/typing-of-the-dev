@@ -111,7 +111,7 @@ const WORDS = {
     'WildPointer', 'TornWrite', 'WriteSkew', 'DeadTupleBloat',
     'IndexCorruption', 'ReplicationLag', 'FailoverLoop', 'QuorumLost',
     'LeaderElectionStorm', 'NoisyNeighbor', 'ColdStart', 'VendorLockIn',
-    'DependencyHell', 'SchemaDrloft'.replace('rl', 'ri'), 'BrownoutAlert',
+    'DependencyHell', 'SchemaDrift', 'BrownoutAlert',
   ],
 
   // Zombies legacy : snippets de code + technos qui refusent de mourir
@@ -267,7 +267,7 @@ const WORDS = {
     'sort access.log | uniq -c', 'tar -czvf backup.tgz /data',
     'python3 -m http.server 8000', 'npx kill-port 3000', 'yes | head -1000000',
     // — extension 3 —
-    'git switch -c hotfix', 'git fetch --prune', 'git tag v1.3.0',
+    'git switch -c hotfix', 'git fetch --prune', 'git tag v2.0.0',
     'git push --tags', 'git blame -w app.js', 'git shortlog -sn',
     'docker compose logs -f', 'docker image prune -a', 'kubectl top pods',
     'kubectl get events -w', 'helm rollback api 1', 'terraform plan -out tf.plan',
@@ -460,6 +460,7 @@ const WORDS = {
     'du lundi matin', 'des hotfix'];
   for (const n of frNouns) for (const d of frDomains) WORDS.insults.push(`${n} ${d}`);
   WORDS.insults.push(...frNouns);
+  WORDS.insults = [...new Set(WORDS.insults)];
 
   const enDomains = ['cloud', 'backlog', 'regex', 'css', 'kanban', 'sql',
     'terminal', 'python', 'standup', 'yaml', 'monorepo', 'prod', 'sprint',
@@ -471,6 +472,7 @@ const WORDS = {
     'melon', 'wombat', 'sausage', 'puddle'];
   for (const d of enDomains) for (const n of enNouns) WORDS.en.insults.push(`${d} ${n}`);
   WORDS.en.insults.push(...enNouns);
+  WORDS.en.insults = [...new Set(WORDS.en.insults)];
 })();
 
 /* Banque éventuellement traduite : utilisée pour les banques qui ont une

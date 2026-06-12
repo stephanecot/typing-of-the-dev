@@ -47,7 +47,7 @@ class GameOverScene extends Phaser.Scene {
 
     if (r.godMode) {
       // pas de leaderboard pour les tricheurs : tout le monde doit le savoir
-      const shame = this.add.text(cx, 545,
+      const shame = this.add.text(cx, 660,
         T('shame'), {
           fontFamily: FONT, fontSize: '34px', color: CSS.red, align: 'center',
         }).setOrigin(0.5);

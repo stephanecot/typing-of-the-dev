@@ -129,7 +129,7 @@ function handleApi(req, res, url) {
       const lastName = contact(p.lastName, 60);
       const email = contact(p.email, 120);
       const phone = contact(p.phone, 20);
-      const difficulty = ['facile', 'normal', 'hard', 'cto'].includes(p.difficulty) ? p.difficulty : 'normal';
+      const difficulty = ['facile', 'normal', 'hard', 'cto', 'ultime'].includes(p.difficulty) ? p.difficulty : 'normal';
       const kills = p.kills || {};
       const missed = Array.isArray(p.missedWords)
         ? p.missedWords.slice(0, 200).map((w) => String(w).slice(0, 60))

@@ -4,7 +4,8 @@
   "description": "Arcade typing game — a tribute to The Typing of the Dead: zombie bugs march toward your PROD server, type their words to squash them. Phaser 3, procedural WebAudio music, zero npm dependencies.",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "check": "node scripts/check.mjs"
   },
   "engines": {
     "node": ">=22.5.0"

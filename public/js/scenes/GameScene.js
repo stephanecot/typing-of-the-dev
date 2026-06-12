@@ -102,6 +102,11 @@ class GameScene extends Phaser.Scene {
       kills: { bug: 0, legacy: 0, deadline: 0, boss: 0, powerup: 0 },
       missedWords: [],
     };
+    // caches d'affichage : à réinitialiser car l'instance de scène est réutilisée
+    this._shownTimeS = null;
+    this._shownLives = undefined;
+    this._fpsAt = 0;
+    this._discoAt = 0;
   }
 
   create() {
@@ -670,7 +675,7 @@ class GameScene extends Phaser.Scene {
     Sfx.bossSpawn();
     Music.setIntensity(4);
     this.cameras.main.shake(isFinal ? 800 : 500, isFinal ? 0.009 : 0.006);
-    // mode infini : 3 boss spéciaux tournent sur les vagues de boss
+    // mode infini : les boss spéciaux tournent sur les vagues de boss
     const variant = this.infinite ? INFINITE_BOSSES[(Math.max(Math.floor(this.wave / 4), 1) - 1) % INFINITE_BOSSES.length] : null;
     // le DSI énervé encaisse 2 commandes de plus que les boss ordinaires
     const cmdCount = Math.max(2, this.diff.bossCmds + (isFinal ? 2 : variant ? variant.cmdDelta : 0));
@@ -777,7 +782,7 @@ class GameScene extends Phaser.Scene {
     if (e.key === 'Enter') { this.useBomb(); return; }
     if (e.key === 'Backspace') { e.preventDefault(); this.useLaser(); return; }
     if (e.key === 'F2') { Sfx.toggleMute(); return; } // secours discret
-    if (e.key.length !== 1) return;
+    if (e.key.length !== 1 || e.metaKey || e.ctrlKey || e.altKey) return;
     e.preventDefault();
     Sfx.ensure();
     const char = e.key;
@@ -1357,7 +1362,6 @@ class GameScene extends Phaser.Scene {
     results.won = true;
     results.timeBonus = timeBonus;
     Sfx.waveClear();
-    Music.stop();
 
     const winTxt = this.add.text(GAME_W / 2, GAME_H / 2 - 40, T('prodSaved'), {
       fontFamily: FONT, fontSize: '110px', color: CSS.green, align: 'center',
