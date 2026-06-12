@@ -233,6 +233,14 @@ const WORDS = {
     'relance 2', 'derniere chance', 'exclu !', 'process rapide', 'call demain ?',
   ],
 
+  // L'OBFUSCATEUR (niv.4) : le jargon du code illisible
+  obfuscation: [
+    'minified', 'uglify', 'sourcemap', 'tree shaking', 'dead code',
+    'spaghetti code', 'eval', 'rot13', 'magic number', 'no comment',
+    'undocumented', 'write only', 'opaque', 'side effect', 'global state',
+    'var x2', 'tmp final', 'foo bar baz', 'wtf per minute', 'here be dragons',
+  ],
+
   // LE CONSULTANT (niv.4) : buzzwords de cabinet de conseil
   buzzwords: [
     'synergie', 'disruption', 'uberisation', 'transformation digitale',

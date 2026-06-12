@@ -335,6 +335,7 @@ class GameScene extends Phaser.Scene {
       // niv.4 et 5 : seulement en CTO BURNOUT et DIEU DU TERMINAL
       const hardcore = this.diff.key === 'cto' || this.diff.key === 'ultime';
       if (hardcore && n >= 3) for (let i = 0; i < Math.min(1 + Math.floor((n - 3) / 3), 3); i++) q.push('consultant');
+      if (hardcore && n >= 4) for (let i = 0; i < Math.min(1 + Math.floor((n - 4) / 4), 2); i++) q.push('obfuscator');
       if (this.diff.key === 'ultime' && n >= 4) for (let i = 0; i < Math.min(1 + Math.floor((n - 4) / 4), 2); i++) q.push('ransomware');
     }
     return Phaser.Utils.Array.Shuffle(q);
@@ -373,6 +374,7 @@ class GameScene extends Phaser.Scene {
       case 'microservice': return pickWord(WORDS.keywords, { exclude: ex, maxLen: Math.min(8, this.diff.maxLen) });
       case 'spec': return this.gibberish(Phaser.Math.Between(5, Math.min(9, this.diff.maxLen)));
       case 'consultant': return pickWord(wordBank('buzzwords'), { exclude: ex });
+      case 'obfuscator': return pickWord(WORDS.obfuscation, { exclude: ex });
       case 'ransomware': return pickWord(WORDS.commands, { exclude: ex });
       default: return pickWord(WORDS.keywords, opts);
     }
@@ -439,6 +441,7 @@ class GameScene extends Phaser.Scene {
       spec: { color: CSS.white, tint: PALETTE.white, speed: 40, art: 'spec', cls: 'deadline', size: 17, level: 3 },
       // niv.4 et 5 : réservés aux difficultés CTO BURNOUT et DIEU DU TERMINAL
       consultant: { color: CSS.gold, tint: PALETTE.gold, speed: 48, art: 'consultant', cls: 'deadline', size: 18, level: 4 },
+      obfuscator: { color: CSS.white, tint: PALETTE.white, speed: 45, art: 'obfuscator', cls: 'legacy', size: 18, level: 4 },
       ransomware: { color: CSS.red, tint: PALETTE.red, speed: 32, art: 'ransomware', cls: 'legacy', size: 18, level: 5 },
     }[kind];
     const label = this.labelFor(kind);
@@ -693,6 +696,29 @@ class GameScene extends Phaser.Scene {
     e.container.destroy();
   }
 
+  /* L'obfuscateur meurt en lâchant un écran de fumée : un nuage opaque
+     masque les ennemis dans la zone pendant 5 s, puis se dissipe. */
+  spawnSmokeCloud(x, y) {
+    this.scorePopup(x, y - 100, T('smokeScreen'), CSS.white, 28);
+    const cloud = this.add.container(x, y).setDepth(12);
+    for (let i = 0; i < 26; i++) {
+      const puff = this.add.circle(
+        Phaser.Math.Between(-280, 280), Phaser.Math.Between(-170, 170),
+        Phaser.Math.Between(60, 130), 0x18231c, Phaser.Math.FloatBetween(0.85, 0.96));
+      cloud.add(puff);
+      // chaque volute respire un peu, pour un rendu moins statique
+      this.tweens.add({
+        targets: puff, scaleX: 1.25, scaleY: 1.25,
+        duration: Phaser.Math.Between(900, 1600), yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+      });
+    }
+    this.tweens.add({ targets: cloud, x: x + 50, duration: 5000 });
+    this.time.delayedCall(4200, () => {
+      if (!cloud.active) return;
+      this.tweens.add({ targets: cloud, alpha: 0, duration: 800, onComplete: () => cloud.destroy() });
+    });
+  }
+
   /* Le virus se réplique : 2 mini-bugs apparaissent là où il meurt. */
   splitVirus(e) {
     this.scorePopup(e.container.x, e.container.y - 80, T('virusSplit'), CSS.red, 26);
@@ -772,6 +798,7 @@ class GameScene extends Phaser.Scene {
         fast ? CSS.gold : CSS.white, fast ? 34 : 30);
       this.sparks.explode(Math.min(14 + e.label.length * 2, 50), e.container.x, e.container.y);
       if (e.kind === 'virus') this.splitVirus(e);
+      if (e.kind === 'obfuscator') this.spawnSmokeCloud(e.container.x, e.container.y);
       this.rollDrop(e);
     }
     this.combo++;

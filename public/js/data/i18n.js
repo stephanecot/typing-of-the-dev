@@ -48,6 +48,7 @@ const I18N = {
       ]],
       ['NIVEAU 4 ▲▲▲▲', [
         ['consultant', 'LE CONSULTANT', 'buzzwords à rallonge, et il\naccélère vers la prod.', '★★★★ et ★★★★★'],
+        ['obfuscator', 'L\'OBFUSCATEUR', 'sa mort lâche un écran de fumée\nqui masque les bugs 5 s.', '★★★★ et ★★★★★'],
       ]],
       ['NIVEAU 5 ▲▲▲▲▲', [
         ['ransomware', 'LE RANSOMWARE', 'rechiffre son mot toutes les 6 s :\ntout est à refaire !', '★★★★★ uniquement'],
@@ -63,6 +64,7 @@ const I18N = {
     flippedBadge: ' [retourné]',
     virusSplit: 'RÉPLICATION !',
     microSplit: 'SCALE OUT !',
+    smokeScreen: 'ÉCRAN DE FUMÉE !',
     reEncrypted: 'rechiffré_',
     mutedTag: ' · 🔇 muet (F2)',
     konami: '☠ KONAMI CODE — GOD MODE ARMÉ — TRICHEUR REPÉRÉ ☠',
@@ -199,6 +201,7 @@ const I18N = {
       ]],
       ['LEVEL 4 ▲▲▲▲', [
         ['consultant', 'THE CONSULTANT', 'endless buzzwords, and it\naccelerates toward prod.', '★★★★ and ★★★★★'],
+        ['obfuscator', 'THE OBFUSCATOR', 'dies in a smoke screen that\nhides bugs for 5 s.', '★★★★ and ★★★★★'],
       ]],
       ['LEVEL 5 ▲▲▲▲▲', [
         ['ransomware', 'THE RANSOMWARE', 're-encrypts its word every 6 s:\nstart all over again!', '★★★★★ only'],
@@ -214,6 +217,7 @@ const I18N = {
     flippedBadge: ' [flipped]',
     virusSplit: 'REPLICATING!',
     microSplit: 'SCALING OUT!',
+    smokeScreen: 'SMOKE SCREEN!',
     reEncrypted: 're-encrypted_',
     mutedTag: ' · 🔇 muted (F2)',
     konami: '☠ KONAMI CODE — GOD MODE ARMED — CHEATER SPOTTED ☠',
