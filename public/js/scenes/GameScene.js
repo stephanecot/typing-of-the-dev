@@ -10,6 +10,34 @@ const SPAWN_X = GAME_W + 80;
 const LANE_TOP = 130;
 const LANE_BOTTOM = GAME_H - 90;
 
+/* Composition (déterministe) d'une vague pour une difficulté donnée.
+   Partagée avec l'aide du menu, qui s'en sert pour calculer les %
+   d'apparition des ennemis. */
+function waveQueueFor(diff, n, bossWave) {
+  const q = [];
+  const bugCount = bossWave ? 3 : Math.min(4 + n, 14);
+  for (let i = 0; i < bugCount; i++) q.push('bug');
+  if (!bossWave) {
+    if (n >= 2) for (let i = 0; i < Math.min(1 + Math.floor(n / 2), 6); i++) q.push('legacy');
+    if (n >= diff.deadlineWave) for (let i = 0; i < Math.min(Math.floor(n / 2), 7); i++) q.push('deadline');
+    if (n >= diff.eliteWave) for (let i = 0; i < Math.min(Math.floor(n / 3) + 1, 4); i++) q.push('elite');
+    if (n >= 3) for (let i = 0; i < Math.min(1 + Math.floor((n - 3) / 3), 2); i++) q.push('spammer');
+    if (n >= 4) for (let i = 0; i < Math.min(Math.floor((n - 2) / 3), 3); i++) q.push('ghost');
+    if (n >= 5) for (let i = 0; i < Math.min(Math.floor((n - 3) / 3), 3); i++) q.push('virus');
+    if (n >= 6) for (let i = 0; i < Math.min(1 + Math.floor((n - 6) / 4), 2); i++) q.push('monolith');
+    if (n >= 5) for (let i = 0; i < Math.min(1 + Math.floor((n - 5) / 3), 2); i++) q.push('microservice');
+    if (n >= 4) for (let i = 0; i < Math.min(1 + Math.floor((n - 4) / 3), 2); i++) q.push('spec');
+    if (n >= 5) for (let i = 0; i < Math.min(1 + Math.floor((n - 5) / 4), 2); i++) q.push('indep');
+    // niv.4 et 5 : seulement en CTO BURNOUT et DIEU DU TERMINAL
+    const hardcore = diff.key === 'cto' || diff.key === 'ultime';
+    if (hardcore && n >= 3) for (let i = 0; i < Math.min(1 + Math.floor((n - 3) / 3), 3); i++) q.push('consultant');
+    if (hardcore && n >= 4) for (let i = 0; i < Math.min(1 + Math.floor((n - 4) / 4), 2); i++) q.push('obfuscator');
+    if (diff.key === 'ultime' && n >= 4) for (let i = 0; i < Math.min(1 + Math.floor((n - 4) / 4), 2); i++) q.push('ransomware');
+    if (diff.key === 'ultime' && n >= 5) q.push('po'); // 1 seul PO à la fois suffit largement
+  }
+  return q;
+}
+
 class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
 
@@ -324,28 +352,7 @@ class GameScene extends Phaser.Scene {
   }
 
   buildWaveQueue(n, bossWave) {
-    const q = [];
-    const bugCount = bossWave ? 3 : Math.min(4 + n, 14);
-    for (let i = 0; i < bugCount; i++) q.push('bug');
-    if (!bossWave) {
-      if (n >= 2) for (let i = 0; i < Math.min(1 + Math.floor(n / 2), 6); i++) q.push('legacy');
-      if (n >= this.diff.deadlineWave) for (let i = 0; i < Math.min(Math.floor(n / 2), 7); i++) q.push('deadline');
-      if (n >= this.diff.eliteWave) for (let i = 0; i < Math.min(Math.floor(n / 3) + 1, 4); i++) q.push('elite');
-      if (n >= 3) for (let i = 0; i < Math.min(1 + Math.floor((n - 3) / 3), 2); i++) q.push('spammer');
-      if (n >= 4) for (let i = 0; i < Math.min(Math.floor((n - 2) / 3), 3); i++) q.push('ghost');
-      if (n >= 5) for (let i = 0; i < Math.min(Math.floor((n - 3) / 3), 3); i++) q.push('virus');
-      if (n >= 6) for (let i = 0; i < Math.min(1 + Math.floor((n - 6) / 4), 2); i++) q.push('monolith');
-      if (n >= 5) for (let i = 0; i < Math.min(1 + Math.floor((n - 5) / 3), 2); i++) q.push('microservice');
-      if (n >= 4) for (let i = 0; i < Math.min(1 + Math.floor((n - 4) / 3), 2); i++) q.push('spec');
-      if (n >= 5) for (let i = 0; i < Math.min(1 + Math.floor((n - 5) / 4), 2); i++) q.push('indep');
-      // niv.4 et 5 : seulement en CTO BURNOUT et DIEU DU TERMINAL
-      const hardcore = this.diff.key === 'cto' || this.diff.key === 'ultime';
-      if (hardcore && n >= 3) for (let i = 0; i < Math.min(1 + Math.floor((n - 3) / 3), 3); i++) q.push('consultant');
-      if (hardcore && n >= 4) for (let i = 0; i < Math.min(1 + Math.floor((n - 4) / 4), 2); i++) q.push('obfuscator');
-      if (this.diff.key === 'ultime' && n >= 4) for (let i = 0; i < Math.min(1 + Math.floor((n - 4) / 4), 2); i++) q.push('ransomware');
-      if (this.diff.key === 'ultime' && n >= 5) q.push('po'); // 1 seul PO à la fois suffit largement
-    }
-    return Phaser.Utils.Array.Shuffle(q);
+    return Phaser.Utils.Array.Shuffle(waveQueueFor(this.diff, n, bossWave));
   }
 
   scheduleSpawn() {

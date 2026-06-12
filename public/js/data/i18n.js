@@ -24,6 +24,7 @@ const I18N = {
     helpMaxLen: 'mots max',
     helpBossCmds: 'cmds boss',
     helpEnemiesTitle: '> BESTIAIRE — LES ENNEMIS_',
+    helpPctNote: '(~% : part des apparitions sur une partie complète en ★★★★★ — hors scissions et InMails)',
     helpBossesTitle: '> LES BOSS_',
     helpCont: '(suite)',
     /* Bestiaire groupé par niveau : [titre du groupe, [[kind, nom, desc, dispo], …]].
@@ -188,6 +189,7 @@ const I18N = {
     helpMaxLen: 'max word',
     helpBossCmds: 'boss cmds',
     helpEnemiesTitle: '> BESTIARY — THE ENEMIES_',
+    helpPctNote: '(~%: share of spawns over a full ★★★★★ run — splits and InMails excluded)',
     helpBossesTitle: '> THE BOSSES_',
     helpCont: '(cont.)',
     bestiaryGroups: [

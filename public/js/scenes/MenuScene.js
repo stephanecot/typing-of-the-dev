@@ -162,6 +162,26 @@ class MenuScene extends Phaser.Scene {
       fontFamily: FONT, fontSize: '48px', color: CSS.amber,
     }).setOrigin(0.5));
 
+    // % d'apparition : part de chaque ennemi dans les vagues d'une partie
+    // complète en difficulté max (la seule où toutes les classes existent)
+    const diffMax = DIFFICULTIES[DIFFICULTIES.length - 1];
+    const counts = {};
+    let totalSpawns = 0;
+    for (let n = 1; n <= GAME_CONFIG.maxSprints; n++) {
+      const bossWave = n === GAME_CONFIG.maxSprints || n % 4 === 0;
+      for (const k of waveQueueFor(diffMax, n, bossWave)) {
+        counts[k] = (counts[k] || 0) + 1;
+        totalSpawns++;
+      }
+    }
+    const pctFor = (kind) => {
+      if (!counts[kind]) return '';
+      return ` · ~${Math.max(1, Math.round((counts[kind] / totalSpawns) * 100))} %`;
+    };
+    page.add(this.add.text(cx, 88, T('helpPctNote'), {
+      fontFamily: FONT, fontSize: '18px', color: CSS.greenSoft,
+    }).setOrigin(0.5));
+
     const COLS = [110, 610, 1110];
     const TOP = 116, BOTTOM = 812;
     const ENTRY_H = 96, HEADER_H = 42;
@@ -188,6 +208,8 @@ class MenuScene extends Phaser.Scene {
           y = TOP;
           addHeader(`${groupTitle} ${T('helpCont')}`, color);
         }
+        // le sprite "bug" du groupe niv.3 est en réalité l'élite
+        const spawnKind = gi === 2 && kind === 'bug' ? 'elite' : kind;
         const x = COLS[col];
         const art = (ASCII[kind][0] || '').replace('<tech>', 'COBOL ');
         page.add(this.add.text(x, y, art, {
@@ -197,7 +219,7 @@ class MenuScene extends Phaser.Scene {
         page.add(this.add.text(x + 110, y, name, {
           fontFamily: FONT, fontSize: '24px', color: MenuScene.ART_COLORS[kind] || CSS.white,
         }).setOrigin(0, 0));
-        page.add(this.add.text(x + 110, y + 25, avail, {
+        page.add(this.add.text(x + 110, y + 25, avail + pctFor(spawnKind), {
           fontFamily: FONT, fontSize: '17px', color: CSS.gold,
         }).setOrigin(0, 0).setAlpha(0.9));
         page.add(this.add.text(x + 110, y + 45, desc, {
