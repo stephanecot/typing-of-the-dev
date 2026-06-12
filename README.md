@@ -12,6 +12,10 @@ bugs crawl out of the backlog and march toward your PROD server. Type their
 words to squash them before the incident. French & English UI, 100% offline,
 zero npm dependencies.
 
+**🎮 [Play it online](https://stephanecot.github.io/typing-of-the-dev/)** —
+static demo on GitHub Pages (the shared leaderboard and score saving need the
+local Node server).
+
 ![Main menu](docs/screenshot-menu.png)
 
 ![Gameplay — locked target and ASCII enemies](docs/screenshot-game.png)
