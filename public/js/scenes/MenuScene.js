@@ -208,7 +208,8 @@ class MenuScene extends Phaser.Scene {
     monolith: CSS.amber, consultant: CSS.gold, ransomware: CSS.red, microservice: CSS.cyan, spec: CSS.white, obfuscator: CSS.white, po: CSS.magenta, indep: CSS.cyan,
     boss: CSS.red, finalBoss: CSS.magenta,
     mainframe: CSS.cyan, dette: CSS.amber, stagiaireBoss: CSS.green,
-    commercial: CSS.gold, datacenter: CSS.red,
+    commercial: CSS.gold, datacenter: CSS.red, reunion: CSS.magenta,
+    framework: CSS.green, certificat: CSS.red, audit: CSS.white, facture: CSS.gold,
   };
 
   // page 3 : bestiaire — ennemis groupés par niveau, sur 3 colonnes remplies
@@ -325,8 +326,8 @@ class MenuScene extends Phaser.Scene {
       fontFamily: FONT, fontSize: '26px', color: CSS.cyan,
     }).setOrigin(0.5));
     T('bestiaryBossesInf').forEach(([kind, name, desc], i) => {
-      const cx2 = 190 + i * 305;
-      const y = 488;
+      const cx2 = 190 + (i % 5) * 305;
+      const y = 488 + Math.floor(i / 5) * 300;
       page.add(this.add.text(cx2, y + 140, ASCII[kind][0], {
         fontFamily: FONT, fontSize: '13px',
         color: MenuScene.ART_COLORS[kind] || CSS.white, align: 'center', lineSpacing: -3,

@@ -53,6 +53,11 @@ const INFINITE_BOSSES = [
   { art: 'stagiaireBoss', nameKey: 'bossStagiaire', cmdDelta: -1, speedMult: 1.8, color: '#39ff7a' },
   { art: 'commercial', nameKey: 'bossCommercial', cmdDelta: 0, speedMult: 1.2, color: '#ffd76a', spawnOnHit: 'deadline' },
   { art: 'datacenter', nameKey: 'bossDatacenter', cmdDelta: 2, speedMult: 1.1, color: '#ff3b3b', smokeOnHit: true },
+  { art: 'reunion', nameKey: 'bossReunion', cmdDelta: 4, speedMult: 0.5, color: '#ff5cf0' },
+  { art: 'framework', nameKey: 'bossFramework', cmdDelta: 0, speedMult: 1.3, color: '#39ff7a', rerollOnHit: true },
+  { art: 'certificat', nameKey: 'bossCertificat', cmdDelta: -1, speedMult: 1.5, color: '#ff3b3b', damage: 3 },
+  { art: 'audit', nameKey: 'bossAudit', cmdDelta: 1, speedMult: 0.9, color: '#eafff0', spawnOnHit: 'consultant' },
+  { art: 'facture', nameKey: 'bossFacture', cmdDelta: 2, speedMult: 0.8, color: '#ffd76a', costPerHit: 150 },
 ];
 
 class GameScene extends Phaser.Scene {
@@ -734,6 +739,16 @@ class GameScene extends Phaser.Scene {
     // boss du mode infini : certains ripostent quand ils encaissent
     if (b.variant && b.variant.spawnOnHit) this.spawnEnemy(b.variant.spawnOnHit);
     if (b.variant && b.variant.smokeOnHit) this.spawnSmokeCloud(b.container.x - 320, b.container.y);
+    if (b.variant && b.variant.rerollOnHit) {
+      // le framework du jour pivote : la commande suivante change
+      b.cmds[b.cmdIndex] = pickWord(GINES_MODE ? wordBank('insults') : WORDS.commands,
+        { exclude: new Set(b.cmds) });
+    }
+    if (b.variant && b.variant.costPerHit) {
+      // la facture cloud : chaque coup encaissé se paie
+      this.score = Math.max(0, this.score - b.variant.costPerHit);
+      this.scorePopup(b.container.x, b.container.y - 170, `-${b.variant.costPerHit}`, CSS.gold, 28);
+    }
     b.container.x = Math.min(b.container.x + 170, SPAWN_X);
     b.label = b.cmds[b.cmdIndex];
     b.progress = 0;
@@ -1239,7 +1254,7 @@ class GameScene extends Phaser.Scene {
       return;
     }
     if (e.cls !== 'powerup') {
-      this.lives -= e.kind === 'boss' ? 2 : 1;
+      this.lives -= e.kind === 'boss' ? ((e.variant && e.variant.damage) || 2) : 1;
       this.combo = 0;
       this.runStarTier = 0;
       this.stats.missedWords.push(e.label);

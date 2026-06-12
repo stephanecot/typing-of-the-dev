@@ -1,7 +1,7 @@
 /* Configuration globale + lancement Phaser. */
 'use strict';
 
-const APP_VERSION = 'v1.3.0';
+const APP_VERSION = 'v1.4.0';
 
 const GAME_W = 1600;
 const GAME_H = 900;
