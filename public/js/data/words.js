@@ -362,6 +362,30 @@ const WORDS = {
   },
 };
 
+/* MODE GINÈS : la combinatoire fait l'abondance — on génère plusieurs
+   centaines d'insultes supplémentaires (nom × domaine) dans chaque langue,
+   plus les noms seuls en version courte pour la difficulté STAGIAIRE. */
+(function expandInsults() {
+  const frNouns = ['boulet', 'tocard', 'quiche', 'brele', 'andouille', 'gland',
+    'naze', 'patate', 'cornichon', 'truffe', 'moule', 'banane', 'nouille',
+    'courge', 'gourde', 'buse', 'cruche', 'manche', 'tanche', 'mollusque'];
+  const frDomains = ['du cloud', 'du backlog', 'en regex', 'en css', 'du kanban',
+    'en sql', 'du terminal', 'en python', 'du daily', 'des migrations',
+    'du sprint', 'en yaml', 'du monorepo', 'en prod', 'du vendredi',
+    'en typescript', 'du refacto', 'des reviews'];
+  for (const n of frNouns) for (const d of frDomains) WORDS.insults.push(`${n} ${d}`);
+  WORDS.insults.push(...frNouns);
+
+  const enDomains = ['cloud', 'backlog', 'regex', 'css', 'kanban', 'sql',
+    'terminal', 'python', 'standup', 'yaml', 'monorepo', 'prod', 'sprint',
+    'docker', 'friday', 'refactor', 'review', 'typescript'];
+  const enNouns = ['muppet', 'donut', 'numpty', 'plonker', 'dimwit', 'nitwit',
+    'potato', 'clown', 'goblin', 'walnut', 'pickle', 'noodle', 'dunce',
+    'turnip', 'wally', 'twit', 'doofus', 'lemon', 'gremlin', 'clod'];
+  for (const d of enDomains) for (const n of enNouns) WORDS.en.insults.push(`${d} ${n}`);
+  WORDS.en.insults.push(...enNouns);
+})();
+
 /* Banque éventuellement traduite : utilisée pour les banques qui ont une
    variante dans WORDS.en quand la langue n'est pas le français. */
 function wordBank(name) {

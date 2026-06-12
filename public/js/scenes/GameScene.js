@@ -56,6 +56,12 @@ class GameScene extends Phaser.Scene {
     this.maxCombo = 0;
     this.lives = this.diff.lives;
     this.wave = 0;
+    // SUPER COMBO ULTIME (difficultés ★★★ et plus) : des étoiles de combat
+    // gagnées aux paliers de combo 10/20/30 (+1/+2/+3, max 6). Elles ne se
+    // perdent pas quand le combo retombe. Leurs pouvoirs : à venir.
+    this.superComboEnabled = ['hard', 'cto', 'ultime'].includes(this.diff.key);
+    this.comboStars = 0;
+    this.runStarTier = 0; // paliers déjà payés dans la série de combo en cours
     this.spawnQueue = [];
     this.boss = null;
     this.bossPending = false;
@@ -127,7 +133,7 @@ class GameScene extends Phaser.Scene {
     }
 
     // serveur PROD + dev à défendre
-    this.add.text(PROD_X, GAME_H / 2, ASCII.prod, {
+    this.prodArt = this.add.text(PROD_X, GAME_H / 2, ASCII.prod, {
       fontFamily: FONT, fontSize: '24px', color: CSS.cyan, align: 'center', lineSpacing: -4,
     }).setOrigin(0.5).setAlpha(0.95);
     this.player = this.add.text(PLAYER_X, GAME_H / 2 + 150, ASCII.player, {
@@ -153,6 +159,7 @@ class GameScene extends Phaser.Scene {
     this.hudScore = this.add.text(24, 16, '', styleSm).setDepth(40);
     this.hudCombo = this.add.text(24, 50, '', { ...styleSm, color: CSS.amber }).setDepth(40);
     this.hudBombs = this.add.text(24, 84, '', { ...styleSm, color: CSS.gold }).setDepth(40);
+    this.hudStars = this.add.text(24, 118, '', { ...styleSm, color: CSS.gold }).setDepth(40);
     this.hudWave = this.add.text(GAME_W / 2, 22, '', {
       fontFamily: FONT, fontSize: '32px', color: CSS.white,
     }).setOrigin(0.5, 0.5).setDepth(40);
@@ -237,6 +244,9 @@ class GameScene extends Phaser.Scene {
     const mult = this.multiplier();
     this.hudCombo.setText(this.combo > 1 ? `COMBO x${this.combo}  (×${mult})` : '');
     this.hudBombs.setText(T('hudItems')(this.bombs, this.lasers));
+    this.hudStars.setText(this.superComboEnabled
+      ? `${T('hudStars')} ${'★'.repeat(this.comboStars)}${'☆'.repeat(6 - this.comboStars)}`
+      : '');
     this.hudWave.setText(`SPRINT ${this.wave}/${this.maxSprints}`);
     this.refreshSprintBar();
     this.refreshLives();
@@ -315,6 +325,24 @@ class GameScene extends Phaser.Scene {
   }
 
   multiplier() { return (1 + Math.floor(this.combo / 5)) * this.diff.scoreMult; }
+
+  /* Paliers du SUPER COMBO ULTIME : 10 → +1 ★, 20 → +2 ★, 30 → +3 ★ (max 6).
+     Chaque palier n'est payé qu'une fois par série ; les étoiles acquises
+     survivent à la perte du combo. */
+  checkComboStars() {
+    if (!this.superComboEnabled || this.comboStars >= 6) return;
+    const tiers = [10, 20, 30];
+    const gains = [1, 2, 3];
+    while (this.runStarTier < tiers.length && this.combo >= tiers[this.runStarTier]) {
+      const gain = Math.min(gains[this.runStarTier], 6 - this.comboStars);
+      this.runStarTier++;
+      if (gain <= 0) continue;
+      this.comboStars += gain;
+      Sfx.powerup();
+      this.scorePopup(PLAYER_X + 200, this.player.y - 120,
+        `${T('starGain')(gain)} ${'★'.repeat(this.comboStars)}`, CSS.gold, 36);
+    }
+  }
 
   /* Bonus vitesse : ~3 caractères/s = neutre (×1), frappe éclair = jusqu'à ×3.
      Proportionnel au mot : un long mot tapé vite rapporte beaucoup plus. */
@@ -810,6 +838,7 @@ class GameScene extends Phaser.Scene {
   typoOn(t) {
     this.stats.errors++;
     this.combo = 0;
+    this.runStarTier = 0; // nouvelle série — les étoiles, elles, restent
     Sfx.error();
     this.cameras.main.shake(90, 0.002);
     if (!this.stats.missedWords.includes(t.label) || Math.random() < 0.5) {
@@ -871,6 +900,7 @@ class GameScene extends Phaser.Scene {
     }
     this.combo++;
     this.maxCombo = Math.max(this.maxCombo, this.combo);
+    this.checkComboStars();
     Sfx.kill();
     this.explodeLetters(e);
     if (e.cls === 'powerup') this.applyPowerup(e.effect);
@@ -980,6 +1010,7 @@ class GameScene extends Phaser.Scene {
     } else if (type === 'combo') {
       this.combo += 5;
       this.maxCombo = Math.max(this.maxCombo, this.combo);
+      this.checkComboStars();
       this.scorePopup(x, y, 'COMBO +5', CSS.amber, 34);
     } else if (type === 'slowmo') {
       this.timeScale = 0.35;
@@ -1069,6 +1100,7 @@ class GameScene extends Phaser.Scene {
     if (e.cls !== 'powerup') {
       this.lives -= e.kind === 'boss' ? 2 : 1;
       this.combo = 0;
+      this.runStarTier = 0;
       this.stats.missedWords.push(e.label);
       Sfx.incident();
       this.cameras.main.shake(350, 0.01);
@@ -1113,15 +1145,37 @@ class GameScene extends Phaser.Scene {
     const accuracy = total ? Math.round((this.stats.typedOK / total) * 1000) / 10 : 100;
     return {
       score: this.score, wave: this.wave, wpm, accuracy,
-      maxCombo: this.maxCombo, durationS: Math.round(duration),
+      maxCombo: this.maxCombo, comboStars: this.comboStars, durationS: Math.round(duration),
       kills: this.stats.kills, missedWords: this.stats.missedWords.slice(0, 100),
       godMode: this.godMode,
     };
   }
 
+  /* La prod est down : le serveur part en fumée — sprite carbonisé,
+     braises qui montent et panache de fumée jusqu'au changement de scène. */
+  burnProd() {
+    this.prodArt.setText(ASCII.prodBurnt).setColor('#6b4226');
+    if (REDUCED_MOTION) return;
+    this.tweens.add({ targets: this.prodArt, alpha: 0.55, duration: 160, yoyo: true, repeat: -1 });
+    this.add.particles(0, 0, 'px', {
+      x: { min: PROD_X - 45, max: PROD_X + 45 },
+      y: { min: GAME_H / 2 - 80, max: GAME_H / 2 + 90 },
+      speedY: { min: -160, max: -60 }, speedX: { min: -20, max: 20 },
+      lifespan: { min: 400, max: 900 }, scale: { start: 2.6, end: 0 },
+      tint: [PALETTE.red, PALETTE.amber, PALETTE.gold], frequency: 18,
+    }).setDepth(35);
+    this.add.particles(0, 0, 'px', {
+      x: { min: PROD_X - 40, max: PROD_X + 40 }, y: GAME_H / 2 - 95,
+      speedY: { min: -90, max: -40 }, speedX: { min: -15, max: 25 },
+      lifespan: { min: 900, max: 1700 }, scale: { start: 3.2, end: 0.6 },
+      tint: [0x222222, 0x3a3a3a], alpha: { start: 0.8, end: 0 }, frequency: 40,
+    }).setDepth(34);
+  }
+
   gameOver() {
     const results = this.endRun();
     Sfx.gameOver();
+    this.burnProd();
 
     const downTxt = this.add.text(GAME_W / 2, GAME_H / 2, T('prodDown'), {
       fontFamily: FONT, fontSize: '120px', color: CSS.red, align: 'center',

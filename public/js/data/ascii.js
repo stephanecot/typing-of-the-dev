@@ -94,6 +94,8 @@ const ASCII = {
     '  (o_o)\n<)   )>\n /   \\\n[#####]',
   prod:
     '[==PROD==]\n[ ###### ]\n[ :::::: ]\n[ ###### ]\n[ :::::: ]\n[ ###### ]\n[________]',
+  prodBurnt:
+    '[==pr0d==]\n[ %;%.;% ]\n[ x.. .x ]\n[ ;%,;%, ]\n[  ..;.  ]\n[ ,%;.%; ]\n[__/_,___]',
 };
 
 function pickArt(kind, techName) {
