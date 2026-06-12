@@ -5,6 +5,7 @@
 [![phaser](https://img.shields.io/badge/Phaser-3.87-9cf)](https://phaser.io)
 [![dependencies](https://img.shields.io/badge/npm%20dependencies-0-success)](package.json)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![built with Claude](https://img.shields.io/badge/built%20with-Claude%20Fable%205-d97757)](https://claude.com/claude-code)
 
 A booth/arcade typing game and a tribute to *The Typing of the Dead*: zombie
 bugs crawl out of the backlog and march toward your PROD server. Type their
@@ -14,6 +15,8 @@ zero npm dependencies.
 ![Main menu](docs/screenshot-menu.png)
 
 ![Gameplay — locked target and ASCII enemies](docs/screenshot-game.png)
+
+![The bestiary — 17 enemy kinds across 5 levels](docs/screenshot-bestiary.png)
 
 ## Requirements
 
@@ -148,6 +151,12 @@ number of sprints needed to face the final boss.
 - `node:http` + `node:sqlite` server — zero npm dependency
 - Accessibility: WCAG AA contrasts, reduced-motion support, color-blind-safe
   enemy design (shape + badge redundancy), no `{ } [ ]` in typed words
+
+## Built with AI
+
+This entire game — code, ASCII art, word banks, procedural music and this
+README — was developed with **[Claude Fable 5](https://claude.com/claude-code)**
+(Anthropic) in about **2 hours** of iterative pair-programming.
 
 ## License
 
