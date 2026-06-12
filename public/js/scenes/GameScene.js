@@ -176,7 +176,7 @@ class GameScene extends Phaser.Scene {
       fontFamily: FONT, fontSize: '26px', color: CSS.greenSoft,
     }).setOrigin(0.5, 0.5).setDepth(40);
     this.hudDiff = this.add.text(GAME_W - 24, 16, diffLabel(this.diff), {
-      fontFamily: FONT, fontSize: '26px', color: CSS.magenta,
+      fontFamily: FONT, fontSize: '26px', color: this.diff.color || CSS.magenta,
     }).setOrigin(1, 0).setDepth(40);
     // PV : une icône carrée par vie, pleine tant que la vie est là
     const n = this.diff.lives;

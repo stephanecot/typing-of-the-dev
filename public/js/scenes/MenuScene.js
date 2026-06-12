@@ -135,7 +135,7 @@ class MenuScene extends Phaser.Scene {
     let y = 220;
     DIFFICULTIES.forEach((d, i) => {
       page.add(this.add.text(330, y, `${diffLabel(d)}  ${'★'.repeat(i + 1)}`, {
-        fontFamily: FONT, fontSize: '36px', color: CSS.gold,
+        fontFamily: FONT, fontSize: '36px', color: d.color,
       }).setOrigin(0, 0));
       page.add(this.add.text(900, y + 6, `« ${diffTagline(d)} »`, {
         fontFamily: FONT, fontSize: '22px', color: CSS.greenSoft,
@@ -398,14 +398,17 @@ class MenuScene extends Phaser.Scene {
     DIFFICULTIES.forEach((d, i) => {
       const { label, stars, tag } = this.diffTexts[i];
       const on = i === this.selected;
+      // chaque grade porte sa couleur : la progression du danger se lit
+      // vert → cyan → ambre → rouge → magenta
       label.setText(on ? `[ ${diffLabel(d)} ]` : diffLabel(d));
-      label.setColor(on ? CSS.amber : CSS.greenDim);
+      label.setColor(d.color);
+      label.setAlpha(on ? 1 : 0.55);
       label.setFontSize(on ? 40 : 32);
       stars.setX(cx + label.width / 2 + 18);
-      stars.setColor(on ? CSS.gold : CSS.greenDim);
-      stars.setAlpha(on ? 1 : 0.6);
-      tag.setAlpha(on ? 0.9 : 0);
-      tag.setColor(on ? CSS.amber : CSS.greenDim);
+      stars.setColor(d.color);
+      stars.setAlpha(on ? 1 : 0.5);
+      tag.setAlpha(on ? 0.95 : 0);
+      tag.setColor(d.color);
     });
   }
 

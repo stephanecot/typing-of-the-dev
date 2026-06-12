@@ -46,31 +46,31 @@ const REDUCED_MOTION = typeof window.matchMedia === 'function'
 const DIFFICULTIES = [
   {
     key: 'facile', label: 'STAGIAIRE', tagline: 'Le café est offert',
-    labelEn: 'INTERN', taglineEn: 'Free coffee included',
+    labelEn: 'INTERN', taglineEn: 'Free coffee included', color: '#39ff7a',
     speed: 0.62, spawnMs: 2500, lives: 4, scoreMult: 1, maxLen: 10,
     bossCmds: 2, eliteWave: 4, deadlineWave: 5,
   },
   {
     key: 'normal', label: 'DEV CONFIRMÉ', tagline: 'La prod attend',
-    labelEn: 'MID-LEVEL DEV', taglineEn: 'Prod is waiting',
+    labelEn: 'MID-LEVEL DEV', taglineEn: 'Prod is waiting', color: '#41f2ff',
     speed: 1.0, spawnMs: 1800, lives: 3, scoreMult: 1.5, maxLen: 18,
     bossCmds: 3, eliteWave: 3, deadlineWave: 3,
   },
   {
     key: 'hard', label: 'SENIOR 10X', tagline: 'MEP un vendredi à 18h59',
-    labelEn: 'SENIOR 10X', taglineEn: 'Deploying on Friday at 6:59pm',
+    labelEn: 'SENIOR 10X', taglineEn: 'Deploying on Friday at 6:59pm', color: '#ffb000',
     speed: 1.35, spawnMs: 1250, lives: 2, scoreMult: 2, maxLen: 99,
     bossCmds: 4, eliteWave: 2, deadlineWave: 2,
   },
   {
     key: 'cto', label: 'CTO BURNOUT', tagline: 'Une seule vie. On-call depuis 1999.',
-    labelEn: 'CTO BURNOUT', taglineEn: 'One life. On-call since 1999.',
+    labelEn: 'CTO BURNOUT', taglineEn: 'One life. On-call since 1999.', color: '#ff3b3b',
     speed: 1.7, spawnMs: 950, lives: 1, scoreMult: 3, maxLen: 99,
     bossCmds: 5, eliteWave: 1, deadlineWave: 1,
   },
   {
     key: 'ultime', label: 'DIEU DU TERMINAL', tagline: 'Même vim a peur de vous.',
-    labelEn: 'TERMINAL GOD', taglineEn: 'Even vim fears you.',
+    labelEn: 'TERMINAL GOD', taglineEn: 'Even vim fears you.', color: '#ff5cf0',
     speed: 2.1, spawnMs: 750, lives: 1, scoreMult: 4, maxLen: 99,
     bossCmds: 6, eliteWave: 1, deadlineWave: 1,
   },

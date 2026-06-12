@@ -20,7 +20,7 @@ class GameOverScene extends Phaser.Scene {
       fontFamily: FONT, fontSize: '72px', color: r.won ? CSS.green : CSS.red,
     }).setOrigin(0.5);
     this.add.text(cx, 140, `${T('goDiff')} ${diffLabel(this.diff)}`, {
-      fontFamily: FONT, fontSize: '26px', color: CSS.magenta,
+      fontFamily: FONT, fontSize: '26px', color: this.diff.color || CSS.magenta,
     }).setOrigin(0.5);
 
     const kills = r.kills;
