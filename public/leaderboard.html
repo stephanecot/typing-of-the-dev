@@ -37,21 +37,29 @@
     td { padding: 0.45vh 1.6vw; white-space: nowrap; }
     tr:first-child td { color: #ffd76a; text-shadow: 0 0 18px rgba(255, 215, 106, 0.6); }
     tr:nth-child(2) td, tr:nth-child(3) td { color: #ffb000; }
-    .rank { color: #1d7a44; }
+    .rank { color: #2da55e; }
     .score { text-align: right; }
     .diff { color: #ff5cf0; font-size: 0.7em; }
     .foot {
       position: fixed; bottom: 2vh;
-      color: #1d7a44; font-size: clamp(14px, 1.5vw, 24px);
+      color: #2da55e; font-size: clamp(14px, 1.5vw, 24px);
       animation: blink 1.4s steps(1) infinite;
     }
     @keyframes blink { 50% { opacity: 0.4; } }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .foot { animation: none; }
+      body::after { background: none; }
+    }
   </style>
 </head>
 <body>
   <h1>★ HALL OF FAME ★</h1>
   <div class="sub">TYPING OF THE DEV — DEVFEST TOULOUSE 2026</div>
-  <table id="board"><tbody></tbody></table>
+  <table id="board"><caption class="sr-only">Top 10 des scores, toutes difficultés</caption><tbody></tbody></table>
   <div class="foot">Venez taper du bug sur le stand &gt;_</div>
   <script>
     async function refresh() {

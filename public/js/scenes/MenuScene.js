@@ -35,6 +35,7 @@ class MenuScene extends Phaser.Scene {
       else if (e.key >= '1' && e.key <= String(DIFFICULTIES.length)) { this.selected = +e.key - 1; this.refreshDiff(); }
     });
 
+    if (REDUCED_MOTION) this.cameras.main.shake = () => this.cameras.main;
     this.cameras.main.fadeIn(400, 5, 10, 7);
   }
 
@@ -121,7 +122,7 @@ class MenuScene extends Phaser.Scene {
         fontFamily: FONT, fontSize: '36px', color: CSS.gold,
       }).setOrigin(0, 0));
       page.add(this.add.text(900, y + 6, `« ${diffTagline(d)} »`, {
-        fontFamily: FONT, fontSize: '22px', color: CSS.greenDim,
+        fontFamily: FONT, fontSize: '22px', color: CSS.greenSoft,
       }).setOrigin(0, 0));
       const stats = [
         `${T('helpLives')}: ${d.lives}`,
@@ -252,11 +253,11 @@ class MenuScene extends Phaser.Scene {
       fontFamily: FONT, fontSize: '30px', color: CSS.amber, letterSpacing: 6,
     }).setOrigin(0.5);
     this.add.text(cx, 274, T('menuTagline'), {
-      fontFamily: FONT, fontSize: '26px', color: CSS.greenDim,
+      fontFamily: FONT, fontSize: '26px', color: CSS.greenSoft,
     }).setOrigin(0.5);
 
-    // glitch périodique du titre
-    this.time.addEvent({
+    // glitch périodique du titre (coupé en animations réduites)
+    if (!REDUCED_MOTION) this.time.addEvent({
       delay: 1700, loop: true, callback: () => {
         const dx = Phaser.Math.Between(2, 6);
         this.titleR.setX(GAME_W / 2 - dx); this.titleC.setX(GAME_W / 2 + dx);
@@ -343,21 +344,21 @@ class MenuScene extends Phaser.Scene {
 
     this.add.text(GAME_W / 2, GAME_H - 24,
       T('menuFooter'), {
-        fontFamily: FONT, fontSize: '20px', color: CSS.greenDim,
+        fontFamily: FONT, fontSize: '20px', color: CSS.greenSoft,
       }).setOrigin(0.5);
 
     // version du jeu, discrète en bas à gauche
     this.add.text(16, GAME_H - 12, APP_VERSION, {
-      fontFamily: FONT, fontSize: '20px', color: CSS.greenDim,
-    }).setOrigin(0, 1).setAlpha(0.7);
+      fontFamily: FONT, fontSize: '20px', color: CSS.greenSoft,
+    }).setOrigin(0, 1).setAlpha(0.85);
 
     // FPS en haut à gauche
     const fps = this.add.text(4, 0, '', {
-      fontFamily: FONT, fontSize: '16px', color: CSS.greenDim,
-    }).setAlpha(0.7).setDepth(95);
+      fontFamily: FONT, fontSize: '16px', color: CSS.greenSoft,
+    }).setAlpha(0.85).setDepth(95);
     this.time.addEvent({
       delay: 250, loop: true,
-      callback: () => fps.setText(`${Math.round(this.game.loop.actualFps)} fps`),
+      callback: () => fps.setText(`${Math.round(this.game.loop.actualFps)} fps${Sfx.muted ? T('mutedTag') : ''}`),
     });
 
     // choix de la langue (touche L), en bas à droite

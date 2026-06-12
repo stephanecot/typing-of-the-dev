@@ -49,6 +49,7 @@ const I18N = {
     virusSplit: 'RÉPLICATION !',
     microSplit: 'SCALE OUT !',
     reEncrypted: 'rechiffré_',
+    mutedTag: ' · 🔇 muet (F2)',
     konami: '☠ KONAMI CODE — GOD MODE ARMÉ — TRICHEUR REPÉRÉ ☠',
     helpSections: [
       ['OBJECTIF', [
@@ -186,6 +187,7 @@ const I18N = {
     virusSplit: 'REPLICATING!',
     microSplit: 'SCALING OUT!',
     reEncrypted: 're-encrypted_',
+    mutedTag: ' · 🔇 muted (F2)',
     konami: '☠ KONAMI CODE — GOD MODE ARMED — CHEATER SPOTTED ☠',
     helpSections: [
       ['GOAL', [
@@ -293,6 +295,7 @@ function diffTagline(d) { return LANG === 'en' && d.taglineEn ? d.taglineEn : d.
 function setLang(lang) {
   LANG = lang;
   localStorage.setItem('totd-lang', lang);
+  document.documentElement.lang = lang;
   applyFormLang();
 }
 
@@ -316,4 +319,5 @@ function applyFormLang() {
 }
 
 // scripts chargés en fin de body : le DOM du formulaire existe déjà
+document.documentElement.lang = LANG;
 applyFormLang();

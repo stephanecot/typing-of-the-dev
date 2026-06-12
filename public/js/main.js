@@ -27,7 +27,15 @@ const PALETTE = {
 const CSS = {
   green: '#39ff7a', greenDim: '#1d7a44', amber: '#ffb000', red: '#ff3b3b',
   magenta: '#ff5cf0', gold: '#ffd76a', cyan: '#41f2ff', white: '#eafff0',
+  // même teinte que greenDim mais contraste AA (≥4.5:1) : pour le petit texte
+  // informatif ; greenDim reste réservé au décor et aux grands textes
+  greenSoft: '#2da55e',
 };
+
+/* Accessibilité : coupe secousses de caméra et glitchs cosmétiques quand
+   l'OS demande de réduire les animations. */
+const REDUCED_MOTION = typeof window.matchMedia === 'function'
+  && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* Niveaux de difficulté : vitesse, cadence de spawn, vies (incidents avant
    PROD DOWN), multiplicateur de score, longueur max des mots, commandes du boss. */

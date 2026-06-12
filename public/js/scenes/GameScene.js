@@ -46,6 +46,7 @@ class GameScene extends Phaser.Scene {
 
   create() {
     this.stats.startTime = this.time.now;
+    if (REDUCED_MOTION) this.cameras.main.shake = () => this.cameras.main;
     this.buildDecor();
     this.buildHud();
     this.buildEmitters();
@@ -119,8 +120,8 @@ class GameScene extends Phaser.Scene {
   buildHud() {
     const styleSm = { fontFamily: FONT, fontSize: '28px', color: CSS.green };
     this.hudFps = this.add.text(4, 0, '', {
-      fontFamily: FONT, fontSize: '16px', color: CSS.greenDim,
-    }).setDepth(40).setAlpha(0.7);
+      fontFamily: FONT, fontSize: '16px', color: CSS.greenSoft,
+    }).setDepth(40).setAlpha(0.85);
     this.hudScore = this.add.text(24, 16, '', styleSm).setDepth(40);
     this.hudCombo = this.add.text(24, 50, '', { ...styleSm, color: CSS.amber }).setDepth(40);
     this.hudBombs = this.add.text(24, 84, '', { ...styleSm, color: CSS.gold }).setDepth(40);
@@ -130,7 +131,7 @@ class GameScene extends Phaser.Scene {
     // progression des sprints (barre sous le titre) + temps de jeu restant
     this.sprintBar = this.add.graphics().setDepth(40);
     this.hudTime = this.add.text(GAME_W / 2, 66, '', {
-      fontFamily: FONT, fontSize: '26px', color: CSS.greenDim,
+      fontFamily: FONT, fontSize: '26px', color: CSS.greenSoft,
     }).setOrigin(0.5, 0.5).setDepth(40);
     this.hudDiff = this.add.text(GAME_W - 24, 16, diffLabel(this.diff), {
       fontFamily: FONT, fontSize: '26px', color: CSS.magenta,
@@ -162,7 +163,7 @@ class GameScene extends Phaser.Scene {
         fontFamily: FONT, fontSize: '96px', color: CSS.amber,
       }).setOrigin(0.5),
       this.add.text(cx, GAME_H / 2 - 50, T('pauseSub'), {
-        fontFamily: FONT, fontSize: '26px', color: CSS.greenDim,
+        fontFamily: FONT, fontSize: '26px', color: CSS.greenSoft,
       }).setOrigin(0.5),
       this.add.text(cx, GAME_H / 2 + 60, T('pauseResume'), {
         fontFamily: FONT, fontSize: '36px', color: CSS.green,
@@ -233,7 +234,7 @@ class GameScene extends Phaser.Scene {
     const mm = String(Math.floor(leftS / 60)).padStart(2, '0');
     const ss = String(leftS % 60).padStart(2, '0');
     this.hudTime.setText(`${T('hudTime')} ${mm}:${ss}`);
-    this.hudTime.setColor(leftS === 0 ? CSS.red : leftS <= 60 ? CSS.amber : CSS.greenDim);
+    this.hudTime.setColor(leftS === 0 ? CSS.red : leftS <= 60 ? CSS.amber : CSS.greenSoft);
   }
 
   refreshLives() {
@@ -479,7 +480,7 @@ class GameScene extends Phaser.Scene {
       align: 'center', lineSpacing: -3,
     }).setOrigin(0.5, 1);
     if (spec.level) {
-      const lvlColor = [CSS.greenDim, CSS.amber, CSS.red][spec.level - 1] || CSS.red;
+      const lvlColor = [CSS.greenSoft, CSS.amber, CSS.red][spec.level - 1] || CSS.red;
       let badge = `${T('lvl')}${spec.level} ${'▲'.repeat(spec.level)}`;
       if (spec.masked) badge += T('minified');
       if (spec.flipped) badge += T('flippedBadge');
@@ -566,7 +567,7 @@ class GameScene extends Phaser.Scene {
       kind: 'boss', cls: 'boss', isFinal, container: c, art, typedText: typed, restText: rest,
       hpText: hp, cmds, cmdIndex: 0, label: cmds[0], progress: 0,
       x: SPAWN_X + 100, y: GAME_H / 2, baseY: GAME_H / 2, phase: 0,
-      speed: 14 * this.diff.speed, color: CSS.red,
+      speed: 18 * this.diff.speed, color: CSS.red,
       glitchAt: this.time.now + 500,
       cmdStart: this.time.now,
     };
@@ -1079,7 +1080,7 @@ class GameScene extends Phaser.Scene {
     // FPS, rafraîchi 4 fois par seconde
     if (!this._fpsAt || time > this._fpsAt) {
       this._fpsAt = time + 250;
-      this.hudFps.setText(`${Math.round(this.game.loop.actualFps)} fps`);
+      this.hudFps.setText(`${Math.round(this.game.loop.actualFps)} fps${Sfx.muted ? T('mutedTag') : ''}`);
     }
 
     // pluie de fond
@@ -1092,8 +1093,8 @@ class GameScene extends Phaser.Scene {
       e.container.x -= e.speed * dt;
       e.phase += dt * 2.2;
       e.container.y = e.baseY + Math.sin(e.phase) * 9;
-      // glitch visuel périodique
-      if (time > e.glitchAt) {
+      // glitch visuel périodique (cosmétique : coupé en animations réduites)
+      if (!REDUCED_MOTION && time > e.glitchAt) {
         e.glitchAt = time + Phaser.Math.Between(900, 2600);
         e.art.setX(Phaser.Math.Between(-4, 4));
         e.art.setAlpha(0.55);

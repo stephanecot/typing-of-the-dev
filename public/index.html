@@ -8,17 +8,18 @@
 </head>
 <body>
   <div class="crt-frame">
-    <div id="game-container"></div>
-    <div class="crt-scanlines"></div>
-    <div class="crt-rgb"></div>
-    <div class="crt-vignette"></div>
-    <div class="crt-flicker"></div>
+    <div id="game-container" role="application"
+         aria-label="Typing of the Dev — jeu de dactylographie, entièrement au clavier"></div>
+    <div class="crt-scanlines" aria-hidden="true"></div>
+    <div class="crt-rgb" aria-hidden="true"></div>
+    <div class="crt-vignette" aria-hidden="true"></div>
+    <div class="crt-flicker" aria-hidden="true"></div>
   </div>
 
   <!-- Formulaire de fin de partie (DOM par-dessus le canvas) -->
-  <div id="save-overlay">
+  <div id="save-overlay" role="dialog" aria-modal="true" aria-labelledby="save-title">
     <form id="save-form" autocomplete="off">
-      <h2>&gt; ENREGISTRER TON SCORE_</h2>
+      <h2 id="save-title">&gt; ENREGISTRER TON SCORE_</h2>
       <label for="input-pseudo">pseudo *</label>
       <input id="input-pseudo" type="text" minlength="2" maxlength="20" required
              placeholder="xX_DevSlayer_Xx" spellcheck="false">

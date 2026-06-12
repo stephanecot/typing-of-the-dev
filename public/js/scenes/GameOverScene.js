@@ -83,6 +83,12 @@ class GameOverScene extends Phaser.Scene {
       overlay.classList.remove('visible');
       form.onsubmit = null;
       skipBtn.onclick = null;
+      overlay.onkeydown = null;
+    };
+
+    // accessibilité : ÉCHAP ferme le dialogue (équivaut à « passer »)
+    overlay.onkeydown = (e) => {
+      if (e.key === 'Escape') { e.stopPropagation(); close(); this.showLeaderboard(null, null); }
     };
 
     form.onsubmit = async (e) => {
@@ -124,7 +130,7 @@ class GameOverScene extends Phaser.Scene {
     const rows = await Api.leaderboard('all', 10);
     if (!rows.length) {
       panel.add(this.add.text(0, 300, T('offline'), {
-        fontFamily: FONT, fontSize: '26px', color: CSS.greenDim,
+        fontFamily: FONT, fontSize: '26px', color: CSS.greenSoft,
       }).setOrigin(0.5));
     }
     rows.forEach((row, i) => {

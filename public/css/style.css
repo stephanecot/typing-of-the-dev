@@ -17,7 +17,8 @@
 
 :root {
   --green: #39ff7a;
-  --green-dim: #1d7a44;
+  --green-dim: #1d7a44;       /* décor uniquement (contraste insuffisant pour du petit texte) */
+  --green-dim-text: #2da55e;  /* même teinte, contraste AA pour le petit texte */
   --amber: #ffb000;
   --red: #ff3b3b;
   --bg: #020503;
@@ -149,7 +150,7 @@ html, body {
   margin: 14px 0 4px;
   color: var(--green);
 }
-#save-form .opt { color: var(--green-dim); font-size: 20px; }
+#save-form .opt { color: var(--green-dim-text); font-size: 20px; }
 
 #save-form input[type="text"],
 #save-form input[type="email"],
@@ -173,7 +174,7 @@ html, body {
   align-items: flex-start;
   margin-top: 18px;
   font-size: 19px;
-  color: var(--green-dim);
+  color: var(--green-dim-text);
   line-height: 1.25;
 }
 #save-form .consent input {
@@ -203,4 +204,18 @@ html, body {
   color: #03140a;
 }
 .form-actions button:hover { box-shadow: 0 0 16px rgba(57, 255, 122, 0.5); }
-#btn-skip { border-color: var(--green-dim); color: var(--green-dim); }
+#btn-skip { border-color: var(--green-dim); color: var(--green-dim-text); }
+
+/* focus clavier visible sur les boutons (les inputs ont déjà leur style :focus) */
+.form-actions button:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 3px;
+  box-shadow: 0 0 16px rgba(57, 255, 122, 0.5);
+}
+
+/* ------------------------------------------------ animations réduites */
+@media (prefers-reduced-motion: reduce) {
+  .crt-flicker { display: none; }
+  .crt-rgb { opacity: 0.2; }
+  #save-form h2 { animation: none; }
+}
