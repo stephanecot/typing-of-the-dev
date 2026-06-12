@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>ADMIN — Typing of the Dev</title>
+  <style>
+    @font-face { font-family: 'VT323'; src: url('fonts/vt323-latin.woff2') format('woff2'); }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh; background: #020503; color: #39ff7a;
+      font-family: 'VT323', monospace; padding: 30px 40px;
+    }
+    h1 { font-weight: 400; font-size: 44px; color: #ffb000; margin-bottom: 6px; }
+    .hint { color: #1d7a44; font-size: 20px; margin-bottom: 24px; }
+    .cards { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 28px; }
+    .card {
+      border: 1px solid #1d7a44; border-radius: 8px; padding: 14px 22px; min-width: 150px;
+      background: #06120a;
+    }
+    .card .v { font-size: 40px; color: #41f2ff; }
+    .card .k { font-size: 18px; color: #1d7a44; }
+    .actions { margin-bottom: 28px; display: flex; gap: 14px; flex-wrap: wrap; }
+    .actions a {
+      font-size: 24px; color: #03140a; background: #39ff7a; text-decoration: none;
+      padding: 8px 18px; border-radius: 4px;
+    }
+    .actions a.secondary { background: transparent; color: #39ff7a; border: 1px solid #39ff7a; }
+    h2 { font-weight: 400; font-size: 30px; color: #ffb000; margin: 26px 0 10px; }
+    table { border-collapse: collapse; font-size: 21px; width: 100%; }
+    th { text-align: left; color: #41f2ff; border-bottom: 1px solid #1d7a44; padding: 4px 10px; }
+    td { padding: 3px 10px; border-bottom: 1px solid #0a2415; }
+    tr:hover td { background: #06180d; }
+    .missed { display: flex; gap: 10px; flex-wrap: wrap; }
+    .missed span {
+      border: 1px solid #ff5cf0; color: #ff5cf0; border-radius: 4px;
+      padding: 2px 10px; font-size: 22px;
+    }
+    .missed b { color: #ffd76a; font-weight: 400; }
+  </style>
+</head>
+<body>
+  <h1>&gt; ADMIN — TYPING OF THE DEV_</h1>
+  <div class="hint">Tableau de bord du stand · rafraîchissement auto toutes les 15 s</div>
+
+  <div class="cards" id="cards"></div>
+
+  <div class="actions">
+    <a href="/api/export.csv">⬇ EXPORT CSV (tout)</a>
+    <a href="/api/export.json" class="secondary">⬇ export JSON</a>
+    <a href="/api/export-emails.csv" class="secondary">⬇ emails consentis (RGPD)</a>
+    <a href="/leaderboard.html" class="secondary" target="_blank">📺 leaderboard plein écran</a>
+  </div>
+
+  <h2>Le mur de la honte — mots les plus ratés</h2>
+  <div class="missed" id="missed"></div>
+
+  <h2>Dernières parties</h2>
+  <table>
+    <thead><tr>
+      <th>#</th><th>pseudo</th><th>difficulté</th><th>score</th><th>sprint</th>
+      <th>wpm</th><th>précision</th><th>combo</th><th>email</th><th>date</th>
+    </tr></thead>
+    <tbody id="games"></tbody>
+  </table>
+
+  <script>
+    const esc = (s) => String(s ?? '').replace(/</g, '&lt;');
+    async function refresh() {
+      try {
+        const [stats, games] = await Promise.all([
+          (await fetch('/api/stats')).json(),
+          (await fetch('/api/leaderboard?difficulty=all&limit=100')).json(),
+        ]);
+        const t = stats.totals;
+        document.getElementById('cards').innerHTML = [
+          [t.games, 'parties'], [t.players, 'joueurs'], [t.bestScore, 'meilleur score'],
+          [t.avgWpm, 'wpm moyen'], [t.avgAccuracy + '%', 'précision moy.'],
+          [t.totalKills, 'bugs écrasés'], [t.emails, 'emails collectés'],
+        ].map(([v, k]) => `<div class="card"><div class="v">${v}</div><div class="k">${k}</div></div>`).join('');
+        document.getElementById('missed').innerHTML = stats.topMissed
+          .map((m) => `<span>${esc(m.word)} <b>×${m.count}</b></span>`).join('') || '<i>aucun raté… pour l\'instant</i>';
+        document.getElementById('games').innerHTML = games.map((g, i) => `
+          <tr><td>${i + 1}</td><td>${esc(g.pseudo)}</td><td>${esc(g.difficulty)}</td>
+          <td>${g.score}</td><td>${g.wave}</td><td>${g.wpm}</td><td>${g.accuracy}%</td>
+          <td>x${g.max_combo}</td><td>—</td><td>${esc(g.created_at)}</td></tr>`).join('');
+      } catch (e) { console.warn(e); }
+    }
+    refresh();
+    setInterval(refresh, 15000);
+  </script>
+</body>
+</html>

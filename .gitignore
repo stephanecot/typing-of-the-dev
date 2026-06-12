@@ -1,0 +1,17 @@
+# Base de données du stand : données joueurs (emails RGPD !) — jamais sur GitHub.
+# Le dossier est recréé automatiquement par server.js au premier lancement.
+db/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# NB : public/lib/phaser.min.js et public/fonts/ sont volontairement versionnés
+# (vendorés pour que le stand fonctionne offline, sans npm install)

@@ -1,0 +1,13 @@
+{
+  "name": "typing-of-the-dev",
+  "version": "1.0.0",
+  "description": "Typing of the Dev — jeu de stand DevFest Toulouse 2026. Tuez les bugs zombies en tapant du code.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "license": "MIT"
+}

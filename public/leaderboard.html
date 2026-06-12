@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>HALL OF FAME — Typing of the Dev</title>
+  <style>
+    @font-face {
+      font-family: 'VT323';
+      src: url('fonts/vt323-latin.woff2') format('woff2');
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      height: 100vh;
+      background: radial-gradient(ellipse at center, #07120b 0%, #020503 80%);
+      font-family: 'VT323', monospace;
+      color: #39ff7a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow: hidden;
+    }
+    body::after { /* scanlines */
+      content: '';
+      position: fixed; inset: 0; pointer-events: none;
+      background: repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0,0,0,.25) 2px 4px);
+    }
+    h1 {
+      margin-top: 5vh;
+      font-size: clamp(40px, 6vw, 90px);
+      font-weight: 400;
+      color: #41f2ff;
+      text-shadow: 0 0 22px rgba(65, 242, 255, 0.55);
+      letter-spacing: 4px;
+    }
+    .sub { color: #ffb000; font-size: clamp(18px, 2vw, 30px); margin-bottom: 4vh; }
+    table { border-collapse: collapse; font-size: clamp(22px, 2.6vw, 42px); }
+    td { padding: 0.45vh 1.6vw; white-space: nowrap; }
+    tr:first-child td { color: #ffd76a; text-shadow: 0 0 18px rgba(255, 215, 106, 0.6); }
+    tr:nth-child(2) td, tr:nth-child(3) td { color: #ffb000; }
+    .rank { color: #1d7a44; }
+    .score { text-align: right; }
+    .diff { color: #ff5cf0; font-size: 0.7em; }
+    .foot {
+      position: fixed; bottom: 2vh;
+      color: #1d7a44; font-size: clamp(14px, 1.5vw, 24px);
+      animation: blink 1.4s steps(1) infinite;
+    }
+    @keyframes blink { 50% { opacity: 0.4; } }
+  </style>
+</head>
+<body>
+  <h1>★ HALL OF FAME ★</h1>
+  <div class="sub">TYPING OF THE DEV — DEVFEST TOULOUSE 2026</div>
+  <table id="board"><tbody></tbody></table>
+  <div class="foot">Venez taper du bug sur le stand &gt;_</div>
+  <script>
+    async function refresh() {
+      try {
+        const rows = await (await fetch('/api/leaderboard?difficulty=all&limit=10')).json();
+        document.querySelector('#board tbody').innerHTML = rows.map((r, i) => `
+          <tr>
+            <td class="rank">${String(i + 1).padStart(2, '0')}.</td>
+            <td>${r.pseudo.replace(/</g, '&lt;').slice(0, 14)}</td>
+            <td class="score">${r.score.toLocaleString('fr-FR')}</td>
+            <td class="diff">${r.difficulty.toUpperCase()}</td>
+            <td class="diff">${r.wpm} wpm</td>
+          </tr>`).join('');
+      } catch (e) { /* serveur down : on garde l'affichage précédent */ }
+    }
+    refresh();
+    setInterval(refresh, 8000);
+  </script>
+</body>
+</html>

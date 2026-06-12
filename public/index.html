@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TYPING OF THE DEV — DevFest Toulouse 2026</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="crt-frame">
+    <div id="game-container"></div>
+    <div class="crt-scanlines"></div>
+    <div class="crt-rgb"></div>
+    <div class="crt-vignette"></div>
+    <div class="crt-flicker"></div>
+  </div>
+
+  <!-- Formulaire de fin de partie (DOM par-dessus le canvas) -->
+  <div id="save-overlay">
+    <form id="save-form" autocomplete="off">
+      <h2>&gt; ENREGISTRER TON SCORE_</h2>
+      <label for="input-pseudo">pseudo *</label>
+      <input id="input-pseudo" type="text" minlength="2" maxlength="20" required
+             placeholder="xX_DevSlayer_Xx" spellcheck="false">
+      <label for="input-email">email <span class="opt">(optionnel — tirage au sort)</span></label>
+      <input id="input-email" type="email" maxlength="120" placeholder="toi@exemple.dev" spellcheck="false">
+      <label class="consent">
+        <input id="input-consent" type="checkbox">
+        <span>J'accepte d'être recontacté·e après le DevFest (RGPD : données
+        supprimées après le tirage, jamais cédées).</span>
+      </label>
+      <div class="form-actions">
+        <button type="submit">[ ENREGISTRER ]</button>
+        <button type="button" id="btn-skip">[ passer ]</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="lib/phaser.min.js"></script>
+  <!-- main.js d'abord : il définit les constantes globales (GAME_W, PALETTE…)
+       et ne référence les scènes qu'à l'évènement window load -->
+  <script src="js/main.js"></script>
+  <script src="js/data/words.js"></script>
+  <script src="js/data/ascii.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/scenes/BootScene.js"></script>
+  <script src="js/scenes/MenuScene.js"></script>
+  <script src="js/scenes/GameScene.js"></script>
+  <script src="js/scenes/GameOverScene.js"></script>
+</body>
+</html>
