@@ -30,6 +30,7 @@ class MenuScene extends Phaser.Scene {
       }
       if (e.key === 'h' || e.key === 'H') this.toggleHelp();
       else if (e.key === 'l' || e.key === 'L') this.toggleLang();
+      else if (e.key === 'b' || e.key === 'B') this.cycleMusic();
       else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') this.move(-1);
       else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') this.move(1);
       else if (e.key === 'Enter' || e.key === ' ') this.launch();
@@ -41,6 +42,15 @@ class MenuScene extends Phaser.Scene {
     this.ginesBadge = null;
     this.refreshGinesBadge();
     this.cameras.main.fadeIn(400, 5, 10, 7);
+  }
+
+  /* B : fait défiler les 5 pistes musicales — pré-écoute immédiate, persistée. */
+  cycleMusic() {
+    Sfx.ensure();
+    const name = Music.setTrack(Music.trackIndex + 1);
+    if (!Music.playing) Music.start(0);
+    Sfx.blip(16);
+    if (this.musicLabel) this.musicLabel.setText(T('menuMusic')(name));
   }
 
   /* Bascule FR ⇄ EN puis reconstruit le menu (tous les textes sont recréés). */
@@ -58,7 +68,8 @@ class MenuScene extends Phaser.Scene {
     this.helpPanel = this.add.container(0, 0).setDepth(90).setVisible(false);
     this.helpPanel.add(this.add.rectangle(cx, GAME_H / 2, GAME_W, GAME_H, 0x020503, 0.94));
 
-    this.helpPages = [this.buildHelpRules(), this.buildHelpDiffs(), this.buildHelpEnemies(), this.buildHelpBosses()];
+    this.helpPages = [this.buildHelpRules(), this.buildHelpDiffs(), this.buildHelpEnemies(),
+      this.buildHelpBosses(), this.buildHelpNotes()];
     this.helpPages.forEach((p) => this.helpPanel.add(p));
 
     this.helpHint = this.add.text(cx, GAME_H - 50, '', {
@@ -272,6 +283,34 @@ class MenuScene extends Phaser.Scene {
     return page;
   }
 
+  // page 5 : notes de version
+  buildHelpNotes() {
+    const cx = GAME_W / 2;
+    const page = this.add.container(0, 0);
+    page.add(this.add.text(cx, 56, T('helpNotesTitle'), {
+      fontFamily: FONT, fontSize: '48px', color: CSS.amber,
+    }).setOrigin(0.5));
+
+    let y = 124;
+    const versionColors = [CSS.green, CSS.cyan, CSS.greenSoft];
+    T('releaseNotes').forEach(([version, lines], vi) => {
+      page.add(this.add.text(240, y, `-- ${version}${vi === 0 ? ` ${T('helpCurrent')}` : ''} --`, {
+        fontFamily: FONT, fontSize: '30px', color: versionColors[vi] || CSS.white,
+      }).setOrigin(0, 0));
+      y += 40;
+      for (const line of lines) {
+        const t = this.add.text(270, y, `· ${line}`, {
+          fontFamily: FONT, fontSize: '22px', color: CSS.white,
+          wordWrap: { width: 1100 },
+        }).setOrigin(0, 0).setAlpha(0.92);
+        page.add(t);
+        y += t.height + 4;
+      }
+      y += 18;
+    });
+    return page;
+  }
+
   toggleHelp() {
     this.helpOpen = !this.helpOpen;
     if (this.helpOpen) { this.helpPage = 0; this.refreshHelpPage(); }
@@ -454,6 +493,11 @@ class MenuScene extends Phaser.Scene {
 
     // choix de la langue (touche L), en bas à droite
     this.add.text(GAME_W - 16, GAME_H - 12, T('menuLang'), {
+      fontFamily: FONT, fontSize: '22px', color: CSS.cyan,
+    }).setOrigin(1, 1).setAlpha(0.85);
+
+    // choix de la musique (touche B), juste au-dessus
+    this.musicLabel = this.add.text(GAME_W - 16, GAME_H - 40, T('menuMusic')(Music.track().name), {
       fontFamily: FONT, fontSize: '22px', color: CSS.cyan,
     }).setOrigin(1, 1).setAlpha(0.85);
   }

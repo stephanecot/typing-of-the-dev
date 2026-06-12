@@ -88,7 +88,7 @@ Tout fonctionne **offline** : Phaser, police et sons sont locaux/procéduraux.
 | | STAGIAIRE | DEV CONFIRMÉ | SENIOR 10X | CTO BURNOUT | DIEU DU TERMINAL |
 |---|---|---|---|---|---|
 | Vitesse | ×0.62 | ×1.0 | ×1.35 | ×1.7 | ×2.1 |
-| Incidents tolérés | 4 | 3 | 2 | **1** | **1** |
+| Incidents tolérés | 4 | 3 | 2 | 2 | **1** |
 | Multiplicateur score | ×1 | ×1.5 | ×2 | ×3 | ×4 |
 | Commandes du boss | 2 | 3 | 4 | 5 | 6 |
 
@@ -116,5 +116,7 @@ L'admin affiche aussi les stats fun de fin de salon : WPM moyen, total de bugs
 
 - [Phaser 3.87](https://phaser.io) local (`public/lib/`)
 - Police VT323 locale, esthétique CRT (scanlines/vignette/glitch en CSS)
-- Audio 100 % procédural en WebAudio (SFX + musique générative, intensité par vague)
+- Audio 100 % procédural en WebAudio (SFX + musique générative, intensité par
+  vague) — **5 pistes au choix** (touche `B` au menu, persistée) : MATRIX,
+  SYNTHWAVE, LOUNGE, RAVE, 8-BIT HERO
 - Serveur `node:http` + `node:sqlite` — aucun `npm install`

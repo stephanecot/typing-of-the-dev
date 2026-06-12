@@ -124,33 +124,178 @@ const Sfx = {
   },
 };
 
-/* Musique générative : séquenceur pas-à-pas avec lookahead.
-   4 niveaux d'intensité — basse seule, + hats, + arpège, boss. */
+/* Musique générative : séquenceur pas-à-pas avec lookahead, 5 pistes
+   procédurales très différentes (choisies avec B au menu, persistées).
+   Chaque piste gère les intensités 0 (menu, doux) à 4 (boss). */
+
+const TRACKS = [
+  {
+    name: 'MATRIX', // chiptune sombre en La mineur (la piste historique)
+    BASS: [55, 0, 55, 0, 65.4, 0, 55, 0, 41.2, 0, 55, 0, 49, 0, 55, 0],
+    BASS_BOSS: [55, 55, 51.9, 51.9, 55, 55, 61.7, 49, 55, 55, 51.9, 51.9, 65.4, 0, 49, 0],
+    ARP: [220, 261.6, 329.6, 392, 440, 392, 329.6, 261.6, 220, 261.6, 329.6, 523.3, 440, 392, 329.6, 261.6],
+    MENU_BASS: [110, 87.3, 130.8, 98],
+    MENU_ARP: [220, 261.6, 329.6, 440, 174.6, 220, 261.6, 349.2, 261.6, 329.6, 392, 523.3, 196, 246.9, 293.7, 392],
+    MENU_MELODY: [440, 0, 523.3, 0, 440, 392, 0, 329.6, 0, 0, 392, 0, 440, 0, 0, 0],
+    bpm(i) { return i === 0 ? 82 : i >= 4 ? 150 : 104 + i * 10; },
+    step(s, when, I) {
+      if (I === 0) {
+        const chord = Math.floor(s / 4);
+        if (s % 4 === 0) {
+          Sfx.tone({ type: 'sine', f: this.MENU_BASS[chord], dur: 1.1, vol: 0.22, when, dest: Sfx.music });
+          Sfx.tone({ type: 'triangle', f: this.MENU_BASS[chord] * 2, dur: 0.9, vol: 0.08, when, dest: Sfx.music });
+        }
+        Sfx.tone({ type: 'triangle', f: this.MENU_ARP[s], dur: 0.32, vol: 0.07, when, dest: Sfx.music });
+        const m = this.MENU_MELODY[s];
+        if (m) Sfx.tone({ type: 'square', f: m, dur: 0.4, vol: 0.05, when, dest: Sfx.music });
+        return;
+      }
+      const boss = I >= 4;
+      const bass = (boss ? this.BASS_BOSS : this.BASS)[s];
+      if (bass) {
+        Sfx.tone({ type: 'sawtooth', f: bass, dur: 0.22, vol: boss ? 0.34 : 0.26, when, dest: Sfx.music });
+        Sfx.tone({ type: 'square', f: bass / 2, dur: 0.22, vol: 0.12, when, dest: Sfx.music });
+      }
+      if (I >= 2 && s % 2 === 0) {
+        Sfx.noise({ dur: 0.04, vol: s % 8 === 4 ? 0.12 : 0.05, filterF: 8000, type: 'highpass', when, dest: Sfx.music });
+      }
+      if (I >= 3 && s % 2 === 1) {
+        Sfx.tone({ type: 'triangle', f: this.ARP[s], dur: 0.14, vol: 0.1, when, dest: Sfx.music });
+      }
+      if (boss && s % 4 === 0) {
+        Sfx.tone({ type: 'sine', f: 120, f2: 40, dur: 0.18, vol: 0.4, when, dest: Sfx.music });
+      }
+    },
+  },
+
+  {
+    name: 'SYNTHWAVE', // nappes planantes en Fa mineur, kick régulier, arpège cristallin
+    ROOTS: [43.7, 51.9, 38.9, 34.7], // F1, Ab1, Eb1, Db1
+    PADS: [
+      [174.6, 207.7, 261.6], // Fm
+      [207.7, 261.6, 311.1], // Ab
+      [155.6, 196, 233.1],   // Eb
+      [138.6, 174.6, 220],   // Db
+    ],
+    bpm(i) { return i === 0 ? 74 : i >= 4 ? 138 : 96 + i * 10; },
+    step(s, when, I) {
+      const chord = Math.floor(s / 4);
+      if (s % 4 === 0) {
+        Sfx.tone({ type: 'sawtooth', f: this.ROOTS[chord], dur: I >= 4 ? 0.3 : 0.55, vol: 0.24, when, dest: Sfx.music });
+        this.PADS[chord].forEach((f) =>
+          Sfx.tone({ type: 'triangle', f, dur: 1.2, vol: I === 0 ? 0.05 : 0.06, when, dest: Sfx.music }));
+      }
+      if (I === 0) {
+        if (s % 2 === 1) Sfx.tone({ type: 'sine', f: this.PADS[chord][(s >> 1) % 3] * 2, dur: 0.4, vol: 0.04, when, dest: Sfx.music });
+        return;
+      }
+      if (I >= 2 && s % 4 === 0) Sfx.tone({ type: 'sine', f: 110, f2: 35, dur: 0.16, vol: 0.38, when, dest: Sfx.music });
+      if (I >= 2 && s % 8 === 4) Sfx.noise({ dur: 0.18, vol: 0.1, filterF: 3200, when, dest: Sfx.music });
+      if (I >= 3 && s % 2 === 1) {
+        Sfx.tone({ type: 'triangle', f: this.PADS[chord][(s >> 1) % 3] * 2, dur: 0.18, vol: 0.09, when, dest: Sfx.music });
+      }
+      if (I >= 4 && s % 2 === 0) {
+        Sfx.tone({ type: 'square', f: this.ROOTS[chord] * 4, dur: 0.1, vol: 0.1, when, dest: Sfx.music });
+      }
+    },
+  },
+
+  {
+    name: 'LOUNGE', // jazz d'ascenseur swingué : walking bass et mélodie pentatonique
+    WALK: [65.4, 0, 82.4, 0, 55, 0, 65.4, 0, 73.4, 0, 87.3, 0, 49, 0, 61.7, 0],
+    MEL: [330, 0, 392, 0, 440, 0, 392, 330, 0, 294, 0, 262, 0, 294, 330, 0],
+    bpm(i) { return i === 0 ? 80 : i >= 4 ? 132 : 88 + i * 8; },
+    step(s, when, I) {
+      const bass = this.WALK[s];
+      if (bass) Sfx.tone({ type: 'sine', f: bass, dur: 0.34, vol: I === 0 ? 0.18 : 0.26, when, dest: Sfx.music });
+      if (I === 0) {
+        const m = this.MEL[s];
+        if (m) Sfx.tone({ type: 'triangle', f: m, dur: 0.35, vol: 0.06, when, dest: Sfx.music });
+        return;
+      }
+      // balai/rim feutré en contretemps swing
+      if (I >= 2 && (s % 4 === 2 || s % 8 === 7)) {
+        Sfx.noise({ dur: 0.05, vol: 0.05, filterF: 6500, type: 'highpass', when, dest: Sfx.music });
+      }
+      if (I >= 3) {
+        const m = this.MEL[s];
+        if (m) Sfx.tone({ type: 'triangle', f: m, dur: 0.28, vol: 0.1, when, dest: Sfx.music });
+      }
+      if (I >= 4) { // le boss fait monter la jam : cuivre sawtooth à l'octave
+        const m = this.MEL[s];
+        if (m) Sfx.tone({ type: 'sawtooth', f: m * 2, dur: 0.18, vol: 0.07, when, dest: Sfx.music });
+        if (s % 4 === 0) Sfx.tone({ type: 'sine', f: 100, f2: 45, dur: 0.14, vol: 0.3, when, dest: Sfx.music });
+      }
+    },
+  },
+
+  {
+    name: 'RAVE', // techno acide en Mi phrygien : kick 4/4 et basse 16e
+    ACID: [41.2, 41.2, 43.7, 41.2, 41.2, 49, 41.2, 55, 41.2, 41.2, 43.7, 41.2, 61.7, 55, 49, 43.7],
+    bpm(i) { return i === 0 ? 92 : i >= 4 ? 160 : 122 + i * 8; },
+    step(s, when, I) {
+      if (I === 0) {
+        if (s % 4 === 0) Sfx.tone({ type: 'sine', f: this.ACID[s], dur: 0.6, vol: 0.2, when, dest: Sfx.music });
+        if (s % 4 === 2) Sfx.tone({ type: 'triangle', f: this.ACID[s] * 4, dur: 0.3, vol: 0.05, when, dest: Sfx.music });
+        return;
+      }
+      Sfx.tone({ type: 'sawtooth', f: this.ACID[s], f2: this.ACID[s] * 1.4, dur: 0.11, vol: 0.24, when, dest: Sfx.music });
+      if (s % 4 === 0) Sfx.tone({ type: 'sine', f: 150, f2: 40, dur: 0.2, vol: 0.45, when, dest: Sfx.music });
+      if (I >= 2 && s % 4 === 2) Sfx.noise({ dur: 0.12, vol: 0.1, filterF: 9000, type: 'highpass', when, dest: Sfx.music });
+      if (I >= 3 && (s === 4 || s === 12)) {
+        [164.8, 220].forEach((f) => Sfx.tone({ type: 'square', f, dur: 0.16, vol: 0.11, when, dest: Sfx.music }));
+      }
+      if (I >= 4 && s % 8 === 4) Sfx.noise({ dur: 0.2, vol: 0.16, filterF: 2000, when, dest: Sfx.music });
+    },
+  },
+
+  {
+    name: '8-BIT HERO', // hymne majeur héroïque : C-F-Am-G qui pulse à l'octave
+    ROOTS: [65.4, 87.3, 110, 98],
+    MEL: [523.3, 0, 659.3, 784, 698.5, 0, 659.3, 587.3, 659.3, 0, 523.3, 440, 493.9, 523.3, 587.3, 0],
+    bpm(i) { return i === 0 ? 84 : i >= 4 ? 160 : 110 + i * 10; },
+    step(s, when, I) {
+      const root = this.ROOTS[Math.floor(s / 4)];
+      if (I === 0) {
+        if (s % 4 === 0) Sfx.tone({ type: 'sine', f: root, dur: 1.0, vol: 0.2, when, dest: Sfx.music });
+        const m = this.MEL[s];
+        if (m) Sfx.tone({ type: 'triangle', f: m / 2, dur: 0.4, vol: 0.06, when, dest: Sfx.music });
+        return;
+      }
+      Sfx.tone({ type: 'square', f: s % 2 ? root * 2 : root, dur: 0.14, vol: 0.2, when, dest: Sfx.music });
+      if (I >= 2 && s % 8 === 4) Sfx.noise({ dur: 0.12, vol: 0.12, filterF: 4000, when, dest: Sfx.music });
+      if (I >= 3) {
+        const m = this.MEL[s];
+        if (m) Sfx.tone({ type: 'square', f: m, dur: 0.2, vol: 0.1, when, dest: Sfx.music });
+      }
+      if (I >= 4) {
+        const m = this.MEL[s];
+        if (m) Sfx.tone({ type: 'triangle', f: m * 2, dur: 0.16, vol: 0.07, when, dest: Sfx.music });
+        if (s % 4 === 0) Sfx.tone({ type: 'sine', f: 130, f2: 45, dur: 0.15, vol: 0.32, when, dest: Sfx.music });
+      }
+    },
+  },
+];
+
 const Music = {
   playing: false,
   intensity: 1,
   step: 0,
   nextTime: 0,
   timer: null,
+  trackIndex: Math.min(TRACKS.length - 1, Math.max(0, Number(localStorage.getItem('totd-music')) || 0)),
 
-  // gammes en La mineur (fréquences)
-  BASS: [55, 0, 55, 0, 65.4, 0, 55, 0, 41.2, 0, 55, 0, 49, 0, 55, 0],
-  BASS_BOSS: [55, 55, 51.9, 51.9, 55, 55, 61.7, 49, 55, 55, 51.9, 51.9, 65.4, 0, 49, 0],
-  ARP: [220, 261.6, 329.6, 392, 440, 392, 329.6, 261.6, 220, 261.6, 329.6, 523.3, 440, 392, 329.6, 261.6],
-  // accueil (intensité 0) : ballade chiptune douce — Am / F / C / G
-  MENU_BASS: [110, 87.3, 130.8, 98],
-  MENU_ARP: [
-    220, 261.6, 329.6, 440, // Am
-    174.6, 220, 261.6, 349.2, // F
-    261.6, 329.6, 392, 523.3, // C
-    196, 246.9, 293.7, 392, // G
-  ],
-  MENU_MELODY: [440, 0, 523.3, 0, 440, 392, 0, 329.6, 0, 0, 392, 0, 440, 0, 0, 0],
+  track() { return TRACKS[this.trackIndex]; },
 
-  bpm() {
-    if (this.intensity === 0) return 82;
-    return this.intensity >= 4 ? 150 : 104 + this.intensity * 10;
+  /* Change de piste (B au menu) : prend effet immédiatement, persiste. */
+  setTrack(i) {
+    this.trackIndex = ((i % TRACKS.length) + TRACKS.length) % TRACKS.length;
+    localStorage.setItem('totd-music', String(this.trackIndex));
+    this.step = 0;
+    return this.track().name;
   },
+
+  bpm() { return this.track().bpm(this.intensity); },
 
   start(intensity = 1) {
     Sfx.ensure();
@@ -173,39 +318,9 @@ const Music = {
     if (!this.playing || !Sfx.ctx) return;
     const stepDur = 60 / this.bpm() / 2; // croches
     while (this.nextTime < Sfx.ctx.currentTime + 0.12) {
-      this.playStep(this.step % 16, this.nextTime - Sfx.ctx.currentTime);
+      this.track().step(this.step % 16, this.nextTime - Sfx.ctx.currentTime, this.intensity);
       this.nextTime += stepDur;
       this.step++;
-    }
-  },
-
-  playStep(s, when) {
-    if (this.intensity === 0) {
-      // écran d'accueil : ballade chiptune douce, sans agressivité
-      const chord = Math.floor(s / 4);
-      if (s % 4 === 0) {
-        Sfx.tone({ type: 'sine', f: this.MENU_BASS[chord], dur: 1.1, vol: 0.22, when, dest: Sfx.music });
-        Sfx.tone({ type: 'triangle', f: this.MENU_BASS[chord] * 2, dur: 0.9, vol: 0.08, when, dest: Sfx.music });
-      }
-      Sfx.tone({ type: 'triangle', f: this.MENU_ARP[s], dur: 0.32, vol: 0.07, when, dest: Sfx.music });
-      const m = this.MENU_MELODY[s];
-      if (m) Sfx.tone({ type: 'square', f: m, dur: 0.4, vol: 0.05, when, dest: Sfx.music });
-      return;
-    }
-    const boss = this.intensity >= 4;
-    const bass = (boss ? this.BASS_BOSS : this.BASS)[s];
-    if (bass) {
-      Sfx.tone({ type: 'sawtooth', f: bass, dur: 0.22, vol: boss ? 0.34 : 0.26, when, dest: Sfx.music });
-      Sfx.tone({ type: 'square', f: bass / 2, dur: 0.22, vol: 0.12, when, dest: Sfx.music });
-    }
-    if (this.intensity >= 2 && s % 2 === 0) {
-      Sfx.noise({ dur: 0.04, vol: s % 8 === 4 ? 0.12 : 0.05, filterF: 8000, type: 'highpass', when, dest: Sfx.music });
-    }
-    if (this.intensity >= 3 && s % 2 === 1) {
-      Sfx.tone({ type: 'triangle', f: this.ARP[s], dur: 0.14, vol: 0.1, when, dest: Sfx.music });
-    }
-    if (boss && s % 4 === 0) { // kick sur le boss
-      Sfx.tone({ type: 'sine', f: 120, f2: 40, dur: 0.18, vol: 0.4, when, dest: Sfx.music });
     }
   },
 };

@@ -13,6 +13,7 @@ const I18N = {
     menuDeploy: '[ ENTRÉE pour déployer en prod ]',
     menuFooter: 'H: aide & règles · flèches: choisir · ENTRÉE: jouer · ÉCHAP: pause · TAB: changer de cible · F2: muet',
     menuLang: '[ L ] langue : FRANÇAIS',
+    menuMusic: (name) => `[ B ] musique : ${name}`,
     helpTitle: '> AIDE — RÈGLES DU JEU_',
     helpClose: '[ H ou ÉCHAP : retour au menu ]',
     helpPageHint: (cur, total) => `[ ←/→ : page ${cur}/${total} · H ou ÉCHAP : retour au menu ]`,
@@ -26,6 +27,27 @@ const I18N = {
     helpEnemiesTitle: '> BESTIAIRE — LES ENNEMIS_',
     helpPctNote: '(~% : part des apparitions sur une partie complète en ★★★★★ — hors scissions et InMails)',
     helpBossesTitle: '> LES BOSS_',
+    helpNotesTitle: '> NOTES DE VERSION_',
+    helpCurrent: '(actuelle)',
+    releaseNotes: [
+      ['v1.2.0', [
+        '5 musiques procédurales au choix : MATRIX, SYNTHWAVE, LOUNGE, RAVE, 8-BIT HERO (touche B au menu)',
+        'SUPER COMBO ULTIME dès ★★★ : étoiles de combat aux paliers 5/10/15, pouvoirs A bouclier · Z +1 vie · E frappe',
+        '10 nouveaux ennemis du niv.1 au niv.5 (fantôme, virus, microservice, monolithe, spec foireuse, indép, obfuscateur, consultant, ransomware, PO inspiré)',
+        'Bestiaire par niveau avec % d\'apparition · +15 % d\'ennemis spéciaux · pouvoir RETOURNÉ',
+        'Couleurs par difficulté · CTO BURNOUT passe à 2 vies · le serveur brûle au game over',
+        'Accessibilité : contrastes AA, animations réduites, plus de mots avec accolades/crochets',
+        'Un certain prénom tapé sur l\'accueil rend les bugs très impolis…',
+      ]],
+      ['v1.1.0', [
+        'Objectif : tenir 10 sprints (réglable depuis l\'admin) puis battre LE DSI ÉNERVÉ — bonus de temps à la victoire',
+        'Interface FR/EN (touche L), aide multi-pages, chrono et progression de sprints dans le HUD',
+        'PV en icônes, fond CRT, espaces facultatifs à la frappe, 5e difficulté DIEU DU TERMINAL',
+      ]],
+      ['v1.0.0', [
+        'Le jeu du stand : tapez pour écraser les bugs, leaderboard plein écran, admin, formulaire RGPD',
+      ]],
+    ],
     helpCont: '(suite)',
     /* Bestiaire groupé par niveau : [titre du groupe, [[kind, nom, desc, dispo], …]].
        Ajouter un ennemi = une ligne dans le bon groupe, la mise en page suit. */
@@ -109,7 +131,7 @@ const I18N = {
         'Tous les 4 sprints, un BOSS : enchaîne ses commandes. Il lâche +1 vie.',
       ]],
       ['TOUCHES', [
-        'TAB : relâcher la cible · ÉCHAP : pause (puis Q : quitter) · F2 : muet · L (menu) : langue',
+        'TAB : relâcher la cible · ÉCHAP : pause (puis Q : quitter) · F2 : muet · L (menu) : langue · B (menu) : musique',
       ]],
     ],
     // ---- jeu
@@ -189,6 +211,7 @@ const I18N = {
     menuDeploy: '[ ENTER to deploy to prod ]',
     menuFooter: 'H: help & rules · arrows: select · ENTER: play · ESC: pause · TAB: switch target · F2: mute',
     menuLang: '[ L ] language: ENGLISH',
+    menuMusic: (name) => `[ B ] music: ${name}`,
     helpTitle: '> HELP — HOW TO PLAY_',
     helpClose: '[ H or ESC: back to menu ]',
     helpPageHint: (cur, total) => `[ ←/→: page ${cur}/${total} · H or ESC: back to menu ]`,
@@ -202,6 +225,27 @@ const I18N = {
     helpEnemiesTitle: '> BESTIARY — THE ENEMIES_',
     helpPctNote: '(~%: share of spawns over a full ★★★★★ run — splits and InMails excluded)',
     helpBossesTitle: '> THE BOSSES_',
+    helpNotesTitle: '> RELEASE NOTES_',
+    helpCurrent: '(current)',
+    releaseNotes: [
+      ['v1.2.0', [
+        '5 procedural music tracks: MATRIX, SYNTHWAVE, LOUNGE, RAVE, 8-BIT HERO (B key in the menu)',
+        'ULTIMATE SUPER COMBO from ★★★: combat stars at combo 5/10/15, powers A shield · Z +1 life · E smite',
+        '10 new enemies from lvl.1 to lvl.5 (ghost, virus, microservice, monolith, botched spec, freelancer, obfuscator, consultant, ransomware, inspired PO)',
+        'Bestiary by level with spawn % · +15% special enemies · FLIPPED words power',
+        'Colors per difficulty · CTO BURNOUT now has 2 lives · the server burns on game over',
+        'Accessibility: AA contrast, reduced motion, no more words with braces/brackets',
+        'A certain first name typed on the home screen makes the bugs very rude…',
+      ]],
+      ['v1.1.0', [
+        'Goal: survive 10 sprints (admin-configurable) then beat THE FURIOUS CIO — time bonus on victory',
+        'FR/EN interface (L key), multi-page help, timer and sprint progression in the HUD',
+        'HP as icons, CRT background, optional spaces while typing, 5th difficulty TERMINAL GOD',
+      ]],
+      ['v1.0.0', [
+        'The booth game: type to squash bugs, fullscreen leaderboard, admin, GDPR form',
+      ]],
+    ],
     helpCont: '(cont.)',
     bestiaryGroups: [
       ['LEVEL 1 ▲', [
@@ -283,7 +327,7 @@ const I18N = {
         'Every 4 sprints, a BOSS: chain its commands. It always drops +1 life.',
       ]],
       ['KEYS', [
-        'TAB: release target · ESC: pause (then Q: quit) · F2: mute · L (menu): language',
+        'TAB: release target · ESC: pause (then Q: quit) · F2: mute · L (menu): language · B (menu): music',
       ]],
     ],
     // ---- game

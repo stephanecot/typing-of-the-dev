@@ -1,7 +1,7 @@
 /* Configuration globale + lancement Phaser. */
 'use strict';
 
-const APP_VERSION = 'v1.1.0';
+const APP_VERSION = 'v1.2.0';
 
 const GAME_W = 1600;
 const GAME_H = 900;
@@ -63,9 +63,9 @@ const DIFFICULTIES = [
     bossCmds: 4, eliteWave: 2, deadlineWave: 2,
   },
   {
-    key: 'cto', label: 'CTO BURNOUT', tagline: 'Une seule vie. On-call depuis 1999.',
-    labelEn: 'CTO BURNOUT', taglineEn: 'One life. On-call since 1999.', color: '#ff3b3b',
-    speed: 1.7, spawnMs: 950, lives: 1, scoreMult: 3, maxLen: 99,
+    key: 'cto', label: 'CTO BURNOUT', tagline: 'Deux vies. On-call depuis 1999.',
+    labelEn: 'CTO BURNOUT', taglineEn: 'Two lives. On-call since 1999.', color: '#ff3b3b',
+    speed: 1.7, spawnMs: 950, lives: 2, scoreMult: 3, maxLen: 99,
     bossCmds: 5, eliteWave: 1, deadlineWave: 1,
   },
   {
