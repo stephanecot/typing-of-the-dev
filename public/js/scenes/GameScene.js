@@ -27,6 +27,7 @@ class GameScene extends Phaser.Scene {
     this.bossPending = false;
     this.timeScale = 1;
     this.over = false;
+    this.paused = false;
     this.stats = {
       typedOK: 0, errors: 0, startTime: 0,
       kills: { bug: 0, legacy: 0, deadline: 0, boss: 0, powerup: 0 },
@@ -101,7 +102,51 @@ class GameScene extends Phaser.Scene {
     this.banner = this.add.text(GAME_W / 2, GAME_H / 2 - 60, '', {
       fontFamily: FONT, fontSize: '64px', color: CSS.amber, align: 'center',
     }).setOrigin(0.5).setDepth(45).setAlpha(0);
+    this.buildPauseOverlay();
     this.refreshHud();
+  }
+
+  buildPauseOverlay() {
+    const cx = GAME_W / 2;
+    this.pauseOverlay = this.add.container(0, 0).setDepth(100).setVisible(false);
+    this.pauseOverlay.add([
+      this.add.rectangle(cx, GAME_H / 2, GAME_W, GAME_H, 0x020503, 0.86),
+      this.add.text(cx, GAME_H / 2 - 130, '|| PAUSE ||', {
+        fontFamily: FONT, fontSize: '96px', color: CSS.amber,
+      }).setOrigin(0.5),
+      this.add.text(cx, GAME_H / 2 - 50, 'les bugs attendent patiemment...', {
+        fontFamily: FONT, fontSize: '26px', color: CSS.greenDim,
+      }).setOrigin(0.5),
+      this.add.text(cx, GAME_H / 2 + 60, '[ ÉCHAP ou ENTRÉE : reprendre ]', {
+        fontFamily: FONT, fontSize: '36px', color: CSS.green,
+      }).setOrigin(0.5),
+      this.add.text(cx, GAME_H / 2 + 120, '[ Q : quitter la partie — score non sauvegardé ]', {
+        fontFamily: FONT, fontSize: '30px', color: CSS.red,
+      }).setOrigin(0.5),
+    ]);
+  }
+
+  togglePause() {
+    if (this.over) return;
+    this.paused = !this.paused;
+    if (this.paused) {
+      this.time.paused = true;       // gèle spawns, power-ups, banners
+      this.tweens.pauseAll();
+      Music.stop();
+      this.pauseOverlay.setVisible(true);
+    } else {
+      this.time.paused = false;
+      this.tweens.resumeAll();
+      Music.start(1);
+      Music.setIntensity(this.boss ? 4 : Math.min(3, 1 + Math.floor(this.wave / 3)));
+      this.pauseOverlay.setVisible(false);
+      Sfx.blip(10);
+    }
+  }
+
+  quitToMenu() {
+    Music.stop();
+    this.scene.start('Menu');
   }
 
   refreshHud() {
@@ -193,15 +238,15 @@ class GameScene extends Phaser.Scene {
 
   spawnEnemy(kind) {
     const conf = {
-      bug: { color: CSS.green, tint: PALETTE.green, speed: 42, art: 'bug', cls: 'bug', size: 18 },
-      elite: { color: CSS.green, tint: PALETTE.green, speed: 34, art: 'bug', cls: 'bug', size: 22 },
-      legacy: { color: CSS.amber, tint: PALETTE.amber, speed: 26, art: 'legacy', cls: 'legacy', size: 18 },
-      deadline: { color: CSS.magenta, tint: PALETTE.magenta, speed: 75, art: 'deadline', cls: 'deadline', size: 17 },
+      bug: { color: CSS.green, tint: PALETTE.green, speed: 42, art: 'bug', cls: 'bug', size: 18, level: 1 },
+      deadline: { color: CSS.magenta, tint: PALETTE.magenta, speed: 75, art: 'deadline', cls: 'deadline', size: 17, level: 2 },
+      legacy: { color: CSS.amber, tint: PALETTE.amber, speed: 26, art: 'legacy', cls: 'legacy', size: 18, level: 2 },
+      elite: { color: CSS.green, tint: PALETTE.green, speed: 34, art: 'bug', cls: 'bug', size: 22, level: 3 },
     }[kind];
     const label = this.labelFor(kind);
     const techName = conf.art === 'legacy' ? label : null;
     this.addEnemy({
-      kind, cls: conf.cls, label,
+      kind, cls: conf.cls, label, level: conf.level,
       x: SPAWN_X, y: Phaser.Math.Between(LANE_TOP, LANE_BOTTOM),
       speed: conf.speed * this.diff.speed * (1 + this.wave * 0.04) * Phaser.Math.FloatBetween(0.9, 1.1),
       color: conf.color, artKind: conf.art, techName, artSize: conf.size,
@@ -229,6 +274,12 @@ class GameScene extends Phaser.Scene {
       fontFamily: FONT, fontSize: `${spec.artSize}px`, color: spec.color,
       align: 'center', lineSpacing: -3,
     }).setOrigin(0.5, 1);
+    if (spec.level) {
+      const lvlColor = [CSS.greenDim, CSS.amber, CSS.red][spec.level - 1] || CSS.red;
+      c.add(this.add.text(0, -art.height - 16, `niv.${spec.level} ${'▲'.repeat(spec.level)}`, {
+        fontFamily: FONT, fontSize: '19px', color: lvlColor,
+      }).setOrigin(0.5));
+    }
     const typed = this.add.text(0, 8, '', {
       fontFamily: FONT, fontSize: '30px', color: CSS.amber,
     }).setOrigin(0, 0);
@@ -306,7 +357,9 @@ class GameScene extends Phaser.Scene {
     this.cameras.main.shake(220, 0.005);
     this.sparks.explode(40, b.container.x, b.container.y - 60);
     b.cmdIndex++;
-    this.score += Math.round(b.label.length * 15 * this.multiplier());
+    const pts = Math.round(b.label.length * 15 * this.multiplier());
+    this.score += pts;
+    this.scorePopup(b.container.x, b.container.y - 140, `+${pts}`, CSS.amber, 36);
     if (b.cmdIndex >= b.cmds.length) return this.killEnemy(b);
     b.container.x = Math.min(b.container.x + 170, SPAWN_X);
     b.label = b.cmds[b.cmdIndex];
@@ -321,7 +374,14 @@ class GameScene extends Phaser.Scene {
   // ------------------------------------------------------------ frappe
   onKey(e) {
     if (this.over) return;
-    if (e.key === 'Escape') { this.releaseTarget(); return; }
+    if (this.paused) {
+      if (e.key === 'Escape' || e.key === 'Enter') this.togglePause();
+      else if (e.key === 'q' || e.key === 'Q') this.quitToMenu();
+      return;
+    }
+    if (e.key === 'Escape') { this.togglePause(); return; }
+    // TAB relâche la cible ; ÉCHAP est pris par la pause
+    if (e.key === 'Tab') { e.preventDefault(); this.releaseTarget(); return; }
     // F2 et pas M : les mots à taper peuvent contenir un m
     if (e.key === 'F2') { Sfx.toggleMute(); return; }
     if (e.key.length !== 1) return;
@@ -395,11 +455,17 @@ class GameScene extends Phaser.Scene {
       Music.setIntensity(Math.min(3, 1 + Math.floor(this.wave / 3)));
       this.cameras.main.shake(400, 0.008);
       this.sparks.explode(120, e.container.x, e.container.y - 80);
-      this.score += Math.round(500 * this.multiplier());
+      const pts = Math.round(500 * this.multiplier());
+      this.score += pts;
+      this.scorePopup(e.container.x, e.container.y - 80, `+${pts}`, CSS.gold, 44);
+      this.dropBonus(e, 'life'); // le boss lâche toujours une vie
     } else {
       this.stats.kills[e.cls] = (this.stats.kills[e.cls] || 0) + 1;
-      this.score += Math.round(e.label.length * 10 * this.multiplier());
+      const pts = Math.round(e.label.length * 10 * (e.level || 1) * this.multiplier());
+      this.score += pts;
+      this.scorePopup(e.container.x, e.container.y - 50, `+${pts}`, CSS.white, 30);
       this.sparks.explode(Math.min(14 + e.label.length * 2, 50), e.container.x, e.container.y);
+      this.rollDrop(e);
     }
     this.combo++;
     this.maxCombo = Math.max(this.maxCombo, this.combo);
@@ -409,6 +475,53 @@ class GameScene extends Phaser.Scene {
     e.container.destroy();
     this.refreshHud();
     this.checkWaveEnd();
+  }
+
+  /* Texte flottant : points gagnés, bonus ramassés... */
+  scorePopup(x, y, text, color, size = 30) {
+    const t = this.add.text(x, y, text, {
+      fontFamily: FONT, fontSize: `${size}px`, color,
+    }).setOrigin(0.5).setDepth(38);
+    this.tweens.add({
+      targets: t, y: y - 70, alpha: 0, duration: 900, ease: 'Cubic.easeOut',
+      onComplete: () => t.destroy(),
+    });
+  }
+
+  /* Certains ennemis lâchent un bonus à leur mort, selon leur classe. */
+  rollDrop(e) {
+    const chance = { elite: 0.35, legacy: 0.2, deadline: 0.15, bug: 0.08 }[e.kind] || 0;
+    if (Math.random() >= chance) return;
+    const pool = ['life', 'score', 'combo', 'slowmo'];
+    this.dropBonus(e, Phaser.Utils.Array.GetRandom(pool));
+  }
+
+  dropBonus(e, type) {
+    const x = e.container.x;
+    const y = e.container.y - 90;
+    Sfx.powerup();
+    if (type === 'life' && this.lives < this.diff.lives) {
+      this.lives++;
+      this.scorePopup(x, y, '+1 VIE — PROD RESTAURÉE', CSS.cyan, 34);
+    } else if (type === 'life') {
+      // vies au max : converti en points
+      const pts = Math.round(300 * this.diff.scoreMult);
+      this.score += pts;
+      this.scorePopup(x, y, `PROD SAINE +${pts}`, CSS.cyan, 32);
+    } else if (type === 'score') {
+      const pts = Math.round(250 * this.multiplier());
+      this.score += pts;
+      this.scorePopup(x, y, `BONUS +${pts}`, CSS.gold, 36);
+    } else if (type === 'combo') {
+      this.combo += 5;
+      this.maxCombo = Math.max(this.maxCombo, this.combo);
+      this.scorePopup(x, y, 'COMBO +5', CSS.amber, 34);
+    } else if (type === 'slowmo') {
+      this.timeScale = 0.35;
+      this.time.delayedCall(3000, () => { this.timeScale = 1; });
+      this.scorePopup(x, y, '☕ SLOW-MO 3s', CSS.gold, 34);
+    }
+    this.refreshHud();
   }
 
   explodeLetters(e) {
@@ -489,6 +602,11 @@ class GameScene extends Phaser.Scene {
 
   gameOver() {
     this.over = true;
+    // si la fin arrive dans un état suspendu (pause, slowmo), tout rétablir
+    this.paused = false;
+    this.time.paused = false;
+    this.tweens.resumeAll();
+    this.pauseOverlay.setVisible(false);
     Music.stop();
     Sfx.gameOver();
     this.input.keyboard.off('keydown', this.keyHandler);
@@ -522,7 +640,7 @@ class GameScene extends Phaser.Scene {
 
   // ------------------------------------------------------------ update
   update(time, delta) {
-    if (this.over) return;
+    if (this.over || this.paused) return;
     // clamp : au retour d'un onglet en pause, delta peut valoir plusieurs
     // secondes et téléporter tous les ennemis sur la prod
     const dt = (Math.min(delta, 50) / 1000) * this.timeScale;

@@ -18,7 +18,7 @@ class MenuScene extends Phaser.Scene {
       else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') this.move(1);
       else if (e.key === 'Enter' || e.key === ' ') this.launch();
       else if (e.key === 'm' || e.key === 'M') Sfx.toggleMute();
-      else if (e.key >= '1' && e.key <= '3') { this.selected = +e.key - 1; this.refreshDiff(); }
+      else if (e.key >= '1' && e.key <= String(DIFFICULTIES.length)) { this.selected = +e.key - 1; this.refreshDiff(); }
     });
 
     this.cameras.main.fadeIn(400, 5, 10, 7);
@@ -74,7 +74,7 @@ class MenuScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     this.diffTexts = DIFFICULTIES.map((d, i) => {
-      const y = 420 + i * 62;
+      const y = 408 + i * 58;
       const label = this.add.text(cx, y, '', {
         fontFamily: FONT, fontSize: '40px', color: CSS.greenDim, align: 'center',
       }).setOrigin(0.5);
@@ -114,13 +114,13 @@ class MenuScene extends Phaser.Scene {
   }
 
   buildFooter() {
-    this.blink = this.add.text(GAME_W / 2, 652, '[ ENTRÉE pour déployer en prod ]', {
+    this.blink = this.add.text(GAME_W / 2, 672, '[ ENTRÉE pour déployer en prod ]', {
       fontFamily: FONT, fontSize: '30px', color: CSS.green,
     }).setOrigin(0.5);
     this.tweens.add({ targets: this.blink, alpha: 0.25, duration: 600, yoyo: true, repeat: -1 });
 
     this.add.text(GAME_W / 2, GAME_H - 24,
-      'flèches: choisir · ENTRÉE: jouer · F2: muet · ÉCHAP en jeu: changer de cible', {
+      'flèches: choisir · ENTRÉE: jouer · ÉCHAP: pause/quitter · TAB: changer de cible · F2: muet', {
         fontFamily: FONT, fontSize: '20px', color: CSS.greenDim,
       }).setOrigin(0.5);
   }

@@ -38,6 +38,11 @@ const DIFFICULTIES = [
     speed: 1.35, spawnMs: 1250, lives: 2, scoreMult: 2, maxLen: 99,
     bossCmds: 4, eliteWave: 2, deadlineWave: 2,
   },
+  {
+    key: 'cto', label: 'CTO BURNOUT', tagline: 'Une seule vie. On-call depuis 1999.',
+    speed: 1.7, spawnMs: 950, lives: 1, scoreMult: 3, maxLen: 99,
+    bossCmds: 5, eliteWave: 1, deadlineWave: 1,
+  },
 ];
 
 const FONT = '"VT323", monospace';

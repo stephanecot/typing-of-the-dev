@@ -54,12 +54,15 @@ class GameOverScene extends Phaser.Scene {
     const overlay = document.getElementById('save-overlay');
     const form = document.getElementById('save-form');
     const pseudoInput = document.getElementById('input-pseudo');
+    const firstNameInput = document.getElementById('input-firstname');
+    const lastNameInput = document.getElementById('input-lastname');
     const emailInput = document.getElementById('input-email');
+    const phoneInput = document.getElementById('input-phone');
     const consentInput = document.getElementById('input-consent');
     const skipBtn = document.getElementById('btn-skip');
     overlay.classList.add('visible');
-    pseudoInput.value = '';
-    emailInput.value = '';
+    [pseudoInput, firstNameInput, lastNameInput, emailInput, phoneInput]
+      .forEach((i) => { i.value = ''; });
     consentInput.checked = false;
     setTimeout(() => pseudoInput.focus(), 50);
 
@@ -75,7 +78,10 @@ class GameOverScene extends Phaser.Scene {
       this.saved = true;
       const payload = {
         pseudo: pseudoInput.value.trim() || 'ANONYME',
+        firstName: firstNameInput.value.trim() || null,
+        lastName: lastNameInput.value.trim() || null,
         email: emailInput.value.trim() || null,
+        phone: phoneInput.value.trim() || null,
         consent: consentInput.checked,
         difficulty: this.diff.key,
         ...this.results,

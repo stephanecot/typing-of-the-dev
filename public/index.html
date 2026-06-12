@@ -22,11 +22,30 @@
       <label for="input-pseudo">pseudo *</label>
       <input id="input-pseudo" type="text" minlength="2" maxlength="20" required
              placeholder="xX_DevSlayer_Xx" spellcheck="false">
-      <label for="input-email">email <span class="opt">(optionnel — tirage au sort)</span></label>
-      <input id="input-email" type="email" maxlength="120" placeholder="toi@exemple.dev" spellcheck="false">
+      <div class="row">
+        <div>
+          <label for="input-firstname">prénom <span class="opt">(optionnel)</span></label>
+          <input id="input-firstname" type="text" maxlength="60" placeholder="Ada" spellcheck="false">
+        </div>
+        <div>
+          <label for="input-lastname">nom <span class="opt">(optionnel)</span></label>
+          <input id="input-lastname" type="text" maxlength="60" placeholder="Lovelace" spellcheck="false">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="input-email">email <span class="opt">(optionnel)</span></label>
+          <input id="input-email" type="email" maxlength="120" placeholder="toi@exemple.dev" spellcheck="false">
+        </div>
+        <div>
+          <label for="input-phone">téléphone <span class="opt">(optionnel)</span></label>
+          <input id="input-phone" type="tel" maxlength="20" placeholder="06 12 34 56 78" pattern="[0-9 +().-]*">
+        </div>
+      </div>
       <label class="consent">
         <input id="input-consent" type="checkbox">
-        <span>J'accepte d'être recontacté·e après le DevFest (RGPD : données
+        <span>J'accepte d'être recontacté·e après le DevFest. Sans cette case,
+        nom, prénom, email et téléphone ne sont pas conservés (RGPD : données
         supprimées après le tirage, jamais cédées).</span>
       </label>
       <div class="form-actions">

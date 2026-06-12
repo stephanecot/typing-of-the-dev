@@ -22,7 +22,10 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS games (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     pseudo        TEXT    NOT NULL,
+    first_name    TEXT,
+    last_name     TEXT,
     email         TEXT,
+    phone         TEXT,
     consent       INTEGER NOT NULL DEFAULT 0,
     difficulty    TEXT    NOT NULL,
     score         INTEGER NOT NULL DEFAULT 0,
@@ -42,11 +45,17 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_games_score ON games (score DESC);
 `);
 
+// migration : ajoute les colonnes manquantes sur une BDD créée avant leur introduction
+const existingCols = new Set(db.prepare('PRAGMA table_info(games)').all().map((c) => c.name));
+for (const col of ['first_name', 'last_name', 'phone']) {
+  if (!existingCols.has(col)) db.exec(`ALTER TABLE games ADD COLUMN ${col} TEXT`);
+}
+
 const insertGame = db.prepare(`
-  INSERT INTO games (pseudo, email, consent, difficulty, score, wave, wpm, accuracy,
-                     max_combo, duration_s, kills_bug, kills_legacy, kills_deadline,
-                     kills_boss, kills_powerup, missed_words)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  INSERT INTO games (pseudo, first_name, last_name, email, phone, consent, difficulty,
+                     score, wave, wpm, accuracy, max_combo, duration_s, kills_bug,
+                     kills_legacy, kills_deadline, kills_boss, kills_powerup, missed_words)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
 // ---------------------------------------------------------------- Helpers
@@ -104,14 +113,19 @@ function handleApi(req, res, url) {
       const p = JSON.parse(raw);
       const pseudo = String(p.pseudo || 'ANONYME').trim().slice(0, 20) || 'ANONYME';
       const consent = p.consent ? 1 : 0;
-      const email = consent && p.email ? String(p.email).trim().slice(0, 120) : null;
-      const difficulty = ['facile', 'normal', 'hard'].includes(p.difficulty) ? p.difficulty : 'normal';
+      // RGPD : les données de contact ne sont conservées qu'avec consentement
+      const contact = (v, max) => (consent && v ? String(v).trim().slice(0, max) : null);
+      const firstName = contact(p.firstName, 60);
+      const lastName = contact(p.lastName, 60);
+      const email = contact(p.email, 120);
+      const phone = contact(p.phone, 20);
+      const difficulty = ['facile', 'normal', 'hard', 'cto'].includes(p.difficulty) ? p.difficulty : 'normal';
       const kills = p.kills || {};
       const missed = Array.isArray(p.missedWords)
         ? p.missedWords.slice(0, 200).map((w) => String(w).slice(0, 60))
         : [];
       const result = insertGame.run(
-        pseudo, email, consent, difficulty,
+        pseudo, firstName, lastName, email, phone, consent, difficulty,
         clampInt(p.score, 0, 1e9), clampInt(p.wave, 0, 999),
         clampFloat(p.wpm, 0, 500), clampFloat(p.accuracy, 0, 100),
         clampInt(p.maxCombo, 0, 1e6), clampFloat(p.durationS, 0, 86400),
@@ -170,9 +184,10 @@ function handleApi(req, res, url) {
       });
       return res.end(JSON.stringify(rows, null, 2));
     }
-    const columns = ['id', 'pseudo', 'email', 'consent', 'difficulty', 'score', 'wave', 'wpm',
-      'accuracy', 'max_combo', 'duration_s', 'kills_bug', 'kills_legacy', 'kills_deadline',
-      'kills_boss', 'kills_powerup', 'missed_words', 'created_at'];
+    const columns = ['id', 'pseudo', 'first_name', 'last_name', 'email', 'phone', 'consent',
+      'difficulty', 'score', 'wave', 'wpm', 'accuracy', 'max_combo', 'duration_s',
+      'kills_bug', 'kills_legacy', 'kills_deadline', 'kills_boss', 'kills_powerup',
+      'missed_words', 'created_at'];
     res.writeHead(200, {
       'Content-Type': 'text/csv; charset=utf-8',
       'Content-Disposition': 'attachment; filename="typing-of-the-dev-export.csv"',
@@ -182,14 +197,19 @@ function handleApi(req, res, url) {
 
   // GET /api/export-emails.csv — uniquement les contacts ayant consenti (RGPD)
   if (req.method === 'GET' && url.pathname === '/api/export-emails.csv') {
-    const rows = db.prepare(`SELECT pseudo, email, MAX(score) AS best_score, COUNT(*) AS games
-                             FROM games WHERE consent = 1 AND email IS NOT NULL
-                             GROUP BY email ORDER BY best_score DESC`).all();
+    const rows = db.prepare(`SELECT pseudo, first_name, last_name, email, phone,
+                                    MAX(score) AS best_score, COUNT(*) AS games
+                             FROM games
+                             WHERE consent = 1
+                               AND (email IS NOT NULL OR phone IS NOT NULL
+                                    OR first_name IS NOT NULL OR last_name IS NOT NULL)
+                             GROUP BY COALESCE(email, phone, first_name || last_name)
+                             ORDER BY best_score DESC`).all();
     res.writeHead(200, {
       'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': 'attachment; filename="typing-of-the-dev-emails.csv"',
+      'Content-Disposition': 'attachment; filename="typing-of-the-dev-contacts.csv"',
     });
-    return res.end(toCsv(rows, ['pseudo', 'email', 'best_score', 'games']));
+    return res.end(toCsv(rows, ['pseudo', 'first_name', 'last_name', 'email', 'phone', 'best_score', 'games']));
   }
 
   return sendJson(res, 404, { error: 'not found' });

@@ -134,6 +134,12 @@ html, body {
 }
 @keyframes cursor-blink { 50% { opacity: 0.55; } }
 
+#save-form .row {
+  display: flex;
+  gap: 16px;
+}
+#save-form .row > div { flex: 1; min-width: 0; }
+
 #save-form label {
   display: block;
   font-size: 24px;
@@ -143,7 +149,8 @@ html, body {
 #save-form .opt { color: var(--green-dim); font-size: 20px; }
 
 #save-form input[type="text"],
-#save-form input[type="email"] {
+#save-form input[type="email"],
+#save-form input[type="tel"] {
   width: 100%;
   padding: 10px 14px;
   font-family: 'VT323', monospace;
