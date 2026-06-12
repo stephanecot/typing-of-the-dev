@@ -90,7 +90,7 @@ const I18N = {
         'niv.1 ▲ bugs · niv.2 ▲▲ deadlines (rapides !) et legacy · niv.3 ▲▲▲ élites.',
         'Points = longueur × 10 × niveau × combo × VITESSE (rapide = jusqu\'à ×3 !).',
         'Certains ennemis lâchent un bonus : +1 vie, points, combo +5, slow-mo, items.',
-        'Dès ★★★ : SUPER COMBO ULTIME — combo 10/20/30 = +1/+2/+3 étoiles de combat',
+        'Dès ★★★ : SUPER COMBO ULTIME — combo 5/10/15 = +1/+2/+3 étoiles de combat',
         '(max 6). Une faute casse le combo, jamais les étoiles. Pouvoirs à venir !',
       ]],
       ['POUVOIRS ENNEMIS', [
@@ -257,7 +257,7 @@ const I18N = {
         'lvl.1 ▲ bugs · lvl.2 ▲▲ deadlines (fast!) and legacy · lvl.3 ▲▲▲ elites.',
         'Points = length × 10 × level × combo × SPEED (fast typing = up to ×3!).',
         'Some enemies drop a bonus: +1 life, points, combo +5, slow-mo, items.',
-        'From ★★★: ULTIMATE SUPER COMBO — combo 10/20/30 = +1/+2/+3 combat stars',
+        'From ★★★: ULTIMATE SUPER COMBO — combo 5/10/15 = +1/+2/+3 combat stars',
         '(max 6). A typo breaks the combo, never the stars. Powers coming soon!',
       ]],
       ['ENEMY POWERS', [

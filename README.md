@@ -34,7 +34,7 @@ Tout fonctionne **offline** : Phaser, police et sons sont locaux/procéduraux.
 - **Power-ups dorés** : `coffee` (ralenti), `git revert` (recul), `sudo reboot` (purge l'écran).
 - Combo : pas de faute = multiplicateur de score qui grimpe.
 - **Super combo ultime** (difficultés ★★★ et plus) : aux paliers de combo
-  10/20/30, on gagne +1/+2/+3 **étoiles de combat** (max 6). Une faute remet
+  5/10/15, on gagne +1/+2/+3 **étoiles de combat** (max 6). Une faute remet
   le combo à zéro mais les étoiles acquises sont conservées. Leurs pouvoirs
   arrivent dans une prochaine version.
 - Chaque ennemi affiche son **niveau** (`niv.1 ▲` à `niv.3 ▲▲▲`) ; les points gagnés

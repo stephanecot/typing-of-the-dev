@@ -57,7 +57,7 @@ class GameScene extends Phaser.Scene {
     this.lives = this.diff.lives;
     this.wave = 0;
     // SUPER COMBO ULTIME (difficultés ★★★ et plus) : des étoiles de combat
-    // gagnées aux paliers de combo 10/20/30 (+1/+2/+3, max 6). Elles ne se
+    // gagnées aux paliers de combo 5/10/15 (+1/+2/+3, max 6). Elles ne se
     // perdent pas quand le combo retombe. Leurs pouvoirs : à venir.
     this.superComboEnabled = ['hard', 'cto', 'ultime'].includes(this.diff.key);
     this.comboStars = 0;
@@ -326,12 +326,12 @@ class GameScene extends Phaser.Scene {
 
   multiplier() { return (1 + Math.floor(this.combo / 5)) * this.diff.scoreMult; }
 
-  /* Paliers du SUPER COMBO ULTIME : 10 → +1 ★, 20 → +2 ★, 30 → +3 ★ (max 6).
+  /* Paliers du SUPER COMBO ULTIME : 5 → +1 ★, 10 → +2 ★, 15 → +3 ★ (max 6).
      Chaque palier n'est payé qu'une fois par série ; les étoiles acquises
      survivent à la perte du combo. */
   checkComboStars() {
     if (!this.superComboEnabled || this.comboStars >= 6) return;
-    const tiers = [10, 20, 30];
+    const tiers = [5, 10, 15];
     const gains = [1, 2, 3];
     while (this.runStarTier < tiers.length && this.combo >= tiers[this.runStarTier]) {
       const gain = Math.min(gains[this.runStarTier], 6 - this.comboStars);
