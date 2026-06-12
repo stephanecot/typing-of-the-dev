@@ -15,23 +15,25 @@ class GameOverScene extends Phaser.Scene {
     const r = this.results;
     const cx = GAME_W / 2;
 
-    this.add.text(cx, 80, 'POST-MORTEM', {
-      fontFamily: FONT, fontSize: '72px', color: CSS.red,
+    // victoire (DSI vaincu) ou post-mortem classique
+    this.add.text(cx, 80, r.won ? T('goWin') : 'POST-MORTEM', {
+      fontFamily: FONT, fontSize: '72px', color: r.won ? CSS.green : CSS.red,
     }).setOrigin(0.5);
-    this.add.text(cx, 140, `difficulté : ${this.diff.label}`, {
+    this.add.text(cx, 140, `${T('goDiff')} ${diffLabel(this.diff)}`, {
       fontFamily: FONT, fontSize: '26px', color: CSS.magenta,
     }).setOrigin(0.5);
 
     const kills = r.kills;
     const lines = [
       ['SCORE', String(r.score)],
-      ['SPRINTS TENUS', String(r.wave)],
-      ['VITESSE', `${r.wpm} mots/min`],
-      ['PRÉCISION', `${r.accuracy}%`],
+      [T('statSprints'), String(r.wave)],
+      [T('statSpeed'), `${r.wpm} ${T('wpmUnit')}`],
+      [T('statAccuracy'), `${r.accuracy}%`],
       ['COMBO MAX', `x${r.maxCombo}`],
-      ['BUGS ÉCRASÉS', String((kills.bug || 0) + (kills.legacy || 0) + (kills.deadline || 0))],
-      ['BOSS VAINCUS', String(kills.boss || 0)],
+      [T('statBugs'), String((kills.bug || 0) + (kills.legacy || 0) + (kills.deadline || 0))],
+      [T('statBosses'), String(kills.boss || 0)],
     ];
+    if (r.won && r.timeBonus) lines.push([T('timeBonus'), `+${r.timeBonus}`]);
     // stats dans la moitié gauche : le formulaire s'affiche à droite, sur le même écran
     lines.forEach(([k, v], i) => {
       const y = 250 + i * 52;
@@ -46,7 +48,7 @@ class GameOverScene extends Phaser.Scene {
     if (r.godMode) {
       // pas de leaderboard pour les tricheurs : tout le monde doit le savoir
       const shame = this.add.text(cx, 545,
-        '☠ GOD MODE DÉTECTÉ — SCORE DE TRICHEUR, NON ENREGISTRÉ ☠', {
+        T('shame'), {
           fontFamily: FONT, fontSize: '34px', color: CSS.red, align: 'center',
         }).setOrigin(0.5);
       this.tweens.add({ targets: shame, alpha: 0.3, duration: 450, yoyo: true, repeat: -1 });
@@ -114,14 +116,14 @@ class GameOverScene extends Phaser.Scene {
       fontFamily: FONT, fontSize: '56px', color: CSS.cyan,
     }).setOrigin(0.5));
     if (rank) {
-      panel.add(this.add.text(0, 150, `Tu es classé #${rank} du DevFest !`, {
+      panel.add(this.add.text(0, 150, T('ranked')(rank), {
         fontFamily: FONT, fontSize: '32px', color: CSS.gold,
       }).setOrigin(0.5));
     }
 
     const rows = await Api.leaderboard('all', 10);
     if (!rows.length) {
-      panel.add(this.add.text(0, 300, '(serveur injoignable — score non enregistré)', {
+      panel.add(this.add.text(0, 300, T('offline'), {
         fontFamily: FONT, fontSize: '26px', color: CSS.greenDim,
       }).setOrigin(0.5));
     }
@@ -133,7 +135,7 @@ class GameOverScene extends Phaser.Scene {
         }).setOrigin(0.5));
     });
 
-    const replay = this.add.text(0, GAME_H - 90, '[ ENTRÉE : rejouer ]    [ M : menu ]', {
+    const replay = this.add.text(0, GAME_H - 90, T('replay'), {
       fontFamily: FONT, fontSize: '34px', color: CSS.white,
     }).setOrigin(0.5);
     panel.add(replay);

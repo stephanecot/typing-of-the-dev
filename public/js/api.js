@@ -17,6 +17,19 @@ const Api = {
     }
   },
 
+  /* Réglages serveur (admin). Met à jour GAME_CONFIG, avec valeurs par défaut
+     si le backend est absent. */
+  async loadConfig() {
+    try {
+      const res = await fetch('/api/config');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      Object.assign(GAME_CONFIG, await res.json());
+    } catch (e) {
+      console.warn('[api] config indisponible, valeurs par défaut :', e.message);
+    }
+    return GAME_CONFIG;
+  },
+
   async leaderboard(difficulty = 'all', limit = 10) {
     try {
       const res = await fetch(`/api/leaderboard?difficulty=${difficulty}&limit=${limit}`);

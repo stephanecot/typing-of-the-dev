@@ -51,6 +51,16 @@
     <a href="/leaderboard.html" class="secondary" target="_blank">📺 leaderboard plein écran</a>
   </div>
 
+  <h2>Réglages du jeu</h2>
+  <div class="actions" style="align-items: center;">
+    <label for="max-sprints" style="font-size: 24px;">Sprints pour gagner (boss final : LE DSI ÉNERVÉ) :</label>
+    <input id="max-sprints" type="number" min="1" max="99" value="10"
+           style="font-family: inherit; font-size: 24px; width: 80px; background: #06120a;
+                  color: #41f2ff; border: 1px solid #1d7a44; border-radius: 4px; padding: 4px 8px;">
+    <a href="#" id="save-config">💾 enregistrer</a>
+    <span id="config-status" style="font-size: 20px; color: #1d7a44;"></span>
+  </div>
+
   <h2>Le mur de la honte — mots les plus ratés</h2>
   <div class="missed" id="missed"></div>
 
@@ -87,6 +97,29 @@
     }
     refresh();
     setInterval(refresh, 15000);
+
+    // réglages du jeu
+    const sprintsInput = document.getElementById('max-sprints');
+    const statusEl = document.getElementById('config-status');
+    fetch('/api/config').then((r) => r.json())
+      .then((c) => { sprintsInput.value = c.maxSprints; })
+      .catch(() => {});
+    document.getElementById('save-config').onclick = async (e) => {
+      e.preventDefault();
+      try {
+        const res = await fetch('/api/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ maxSprints: Number(sprintsInput.value) }),
+        });
+        const c = await res.json();
+        sprintsInput.value = c.maxSprints;
+        statusEl.textContent = `✓ enregistré (${c.maxSprints} sprints)`;
+      } catch (err) {
+        statusEl.textContent = '✗ erreur : ' + err.message;
+      }
+      setTimeout(() => { statusEl.textContent = ''; }, 4000);
+    };
   </script>
 </body>
 </html>

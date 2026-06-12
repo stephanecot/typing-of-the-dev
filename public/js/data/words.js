@@ -47,6 +47,15 @@ const WORDS = {
     'recursion', 'bigO', 'quicksort', 'btree', 'trie', 'graphe', 'dijkstra',
     'backtrack', 'greedy', 'memoize', 'currying', 'thunk', 'effect', 'signal',
     'store', 'reducer', 'selector', 'hook', 'props', 'state', 'context', 'portal',
+    // — extension 2 —
+    'zig', 'elixir', 'erlang', 'haskell', 'ocaml', 'clojure', 'htmx', 'preact',
+    'solidjs', 'electron', 'tauri', 'flutter', 'dart', 'redux', 'zustand',
+    'prisma', 'supabase', 'firebase', 'vercel', 'netlify', 'terraform', 'pulumi',
+    'minikube', 'k9s', 'podman', 'traefik', 'caddy', 'keycloak', 'stripe',
+    'turbo', 'biome', 'prettier', 'husky', 'semver', 'changelog', 'dotfiles',
+    'neovim', 'lazygit', 'starship', 'ohmyzsh', 'fzf', 'ripgrep', 'jq', 'yq',
+    'httpie', 'ngrok', 'localhost', 'boilerplate', 'refactor', 'rubber duck',
+    'yak shaving', 'bikeshed', 'cargo cult', 'feature flag', 'dark launch',
   ],
 
   // Bugs d'élite : exceptions CamelCase (les majuscules font partie du challenge)
@@ -72,6 +81,14 @@ const WORDS = {
     'PhantomRead', 'DirtyRead', 'SplitBrain', 'ThunderingHerd', 'CascadingFailure',
     'BitFlip', 'ClockSkew', 'LeapSecondBug', 'Y2K38Problem', 'TimezoneHell',
     'UnicodeNightmare', 'EncodingMismatch', 'LocaleSurprise', 'FloatEquality',
+    // — extension 2 —
+    'BusFactorZero', 'SilentFailure', 'HeapCorruption', 'StaleCache',
+    'CacheStampede', 'ZombieThread', 'LivelockDetected', 'PriorityInversion',
+    'FalseSharing', 'UndefinedBehavior', 'NullDereference', 'PoolExhausted',
+    'TooManyOpenFiles', 'DiskFull', 'InodeExhausted', 'SSLHandshakeFailed',
+    'PreflightFailed', 'CSRFMismatch', 'XSSDetected', 'SQLInjection',
+    'PathTraversal', 'PrototypePollution', 'RegexDoS', 'BillionLaughs',
+    'OffByTwoError', 'CopyPasteBug', 'MidnightDeploy', 'FridayCommit',
   ],
 
   // Zombies legacy : snippets de code + technos qui refusent de mourir
@@ -110,6 +127,14 @@ const WORDS = {
     'docker run -it --rm', 'FROM scratch', 'COPY . .', 'EXPOSE 8080', 'CMD ["node"]',
     'HEALTHCHECK CMD curl', 'replicas: 3', 'imagePullPolicy: Always', 'kind: Deployment',
     'apiVersion: apps/v1', 'livenessProbe:', 'kubectl apply -f .',
+    // — extension 2 —
+    'console.table(rows)', 'process.exit(1)', 'Promise.allSettled(ps)',
+    'queueMicrotask(fn)', 'localStorage.clear()', 'IntersectionObserver',
+    'WITH cte AS (SELECT 1)', 'COALESCE(a, b, 0)', 'LIMIT 10 OFFSET 90',
+    'pip install -r req.txt', 'async with session:', '@lru_cache(None)',
+    '#[derive(Debug)]', 'let mut acc = 0;', 'tokio::spawn(async {})',
+    'sync.WaitGroup{}', 'errors.Is(err, io.EOF)', 'set -euo pipefail',
+    'trap cleanup EXIT', '2>&1 | tee log.txt', '$(date +%F)',
   ],
   legacyNames: [
     'cobol', 'fortran', 'pascal', 'delphi', 'vb6', 'flash', 'silverlight', 'ie6',
@@ -124,6 +149,12 @@ const WORDS = {
     'edifact', 'x25', 'transpac', 'bal x400', 'usenet', 'gopher', 'mosaic',
     'netscape 4', 'hotjava', 'vbscript', 'jscript', 'dhtml', 'framesets',
     'imagemap', 'webring', 'compteur gif', 'sous msn', 'caramail', 'multimania',
+    // — extension 2 —
+    'powerbuilder', 'crystal reports', 'access 97', 'windows me', 'zune',
+    'palm pilot', 'blackberry', 'geocities', 'altavista', 'lycos', 'kazaa',
+    'napster', 'winamp', 'clippy', 'msn messenger', 'icq', 'myspace', 'skyblog',
+    'python 2', 'php5 en prod', 'angularjs', 'bower', 'grunt', 'coffeescript',
+    'spacer gif', 'comic sans',
   ],
 
   // Faucheuses deadline : l'horreur du quotidien (rapides !)
@@ -149,6 +180,11 @@ const WORDS = {
     'audit secu', 'pentest 16h', 'certif iso', 'plan b', 'plan com',
     'slack a 2h', 'teams down', 'visio sans son', 'tu mes muet', 'on t entend pas',
     'partage ecran', 'cest pas moi', 'ca marchait hier', 'cest la faute au reseau',
+    // — extension 2 —
+    'note de cadrage', 'plan de charge', 'comite projet', 'refinement',
+    'daily a rallonge', 'demo qui plante', 'wifi du client', 'badge oublie',
+    'salle occupee', 'gel des changements', 'cloture comptable', 'ticket bloque',
+    'escalade n3', 'comite de crise', 'war room', 'plan daction', 'points bloquants',
   ],
 
   // Boss : commandes terminal complètes
@@ -192,6 +228,20 @@ const WORDS = {
     'cv ?', 'dispo ?', 'ping', 'inmail', 'connect', 'tjm ?', 'urgent !',
     'job de reve', 're: re: cv', 'opportunite', 'hello !!', 'un appel ?',
     '5 min ?', 'mon reseau', 'profil top', 'come back',
+    // — extension 2 —
+    'top profil', 'match !', 'offre en or', 'full remote ?', 'relance',
+    'relance 2', 'derniere chance', 'exclu !', 'process rapide', 'call demain ?',
+  ],
+
+  // LE CONSULTANT (niv.4) : buzzwords de cabinet de conseil
+  buzzwords: [
+    'synergie', 'disruption', 'uberisation', 'transformation digitale',
+    'conduite du changement', 'time to market', 'mindset agile',
+    'proposition de valeur', 'business case', 'quick wins', 'best practices',
+    'paradigm shift', 'thought leader', 'matrice swot', 'feuille de route',
+    'alignement strategique', 'montee en competence', 'pool de ressources',
+    'vision 360', 'cost killing', 'lean six sigma', 'top management',
+    'deep dive', 'core business', 'growth hacking', 'scalabilite',
   ],
 
   // Power-ups (libellés fixes, dorés)
@@ -200,7 +250,52 @@ const WORDS = {
     knockback: 'git revert',
     nuke: 'sudo reboot',
   },
+
+  /* Variantes anglaises des banques très françaises — les autres banques
+     (jargon, commandes, code) sont communes aux deux langues. */
+  en: {
+    deadlines: [
+      'daily standup', 'deadline', 'jira-1337', 'gdpr', 'audit', 'budget',
+      'reporting', 'kpi', 'okr', 'roadmap', 'backlog', 'client demo', 'go nogo',
+      'estimate', 'vague spec', 'urgent email', 'p1 ticket', 'asap', '8am call',
+      'slides', 'powerpoint', 'excel', 'vba macro', '5pm meeting', 'sync point',
+      'workshop', 'brainstorm', 'team building', 'steering co', 'exec board',
+      'retro', 'timesheet', 'on-call', 'quick win', 'low hanging fruit',
+      'best effort', 'as designed', 'out of scope', 'over budget', 'tech debt',
+      'quick and dirty', 'workaround', 'process', 'governance', 'alignment',
+      'raci matrix', 'agile transfo', 'pi planning', 'feature team', 'squad',
+      'tribe', 'chapter', 'guild', 'staffing', 'pre sales', 'benchmark',
+      'security audit', 'pentest at 4pm', 'plan b', 'teams down', 'you are muted',
+      'cant hear you', 'screen share', 'not my fault', 'worked yesterday',
+      'blame the network', 'war room', 'crisis meeting', 'change freeze',
+    ],
+    missiles: [
+      'cv ?', 'open to work', 'ping', 'inmail', 'connect', 'rate ?', 'urgent !',
+      'dream job', 're: re: cv', 'opportunity', 'hello !!', 'quick call ?',
+      '5 min ?', 'my network', 'top profile', 'come back', 'last chance',
+      'gold offer', 'full remote ?', 'follow up 2',
+    ],
+    spammers: [
+      'linkedin recruiter', 'head hunter', 'agency hunting', 'urgent staffing',
+      'business developer', 'talent acquisition', 'crazy sourcer', 'hr agency',
+    ],
+    buzzwords: [
+      'synergy', 'disruption', 'uberization', 'digital transformation',
+      'change management', 'time to market', 'agile mindset', 'value proposition',
+      'business case', 'quick wins', 'best practices', 'paradigm shift',
+      'thought leader', 'swot matrix', 'roadmap alignment', 'upskilling',
+      'resource pool', '360 vision', 'cost killing', 'lean six sigma',
+      'c-level deep dive', 'core business', 'growth hacking', 'scalability',
+    ],
+  },
 };
+
+/* Banque éventuellement traduite : utilisée pour les banques qui ont une
+   variante dans WORDS.en quand la langue n'est pas le français. */
+function wordBank(name) {
+  if (typeof LANG !== 'undefined' && LANG !== 'fr' && WORDS.en[name]) return WORDS.en[name];
+  return WORDS[name];
+}
 
 /* Tire un mot au hasard dans une banque, en évitant les doublons à l'écran
    et en respectant une longueur max (selon la difficulté). */

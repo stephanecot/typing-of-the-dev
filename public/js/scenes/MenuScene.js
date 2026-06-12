@@ -9,6 +9,7 @@ class MenuScene extends Phaser.Scene {
     this.helpOpen = false;
     this.godArmed = false; // Konami Code ↑↑↓↓←→←→BA saisi ici, sur l'accueil
     this.konamiIdx = 0;
+    Api.loadConfig(); // recharge les réglages admin à chaque passage au menu
     this.buildTitle();
     this.buildDifficulties();
     this.buildFooter();
@@ -20,10 +21,13 @@ class MenuScene extends Phaser.Scene {
       if (!Music.playing) Music.start(0); // ambiance d'accueil, plus douce
       this.trackKonami(e.key);
       if (this.helpOpen) {
-        if (e.key === 'h' || e.key === 'H' || e.key === 'Escape' || e.key === 'Enter') this.toggleHelp();
+        if (e.key === 'ArrowLeft') this.changeHelpPage(-1);
+        else if (e.key === 'ArrowRight') this.changeHelpPage(1);
+        else if (e.key === 'h' || e.key === 'H' || e.key === 'Escape' || e.key === 'Enter') this.toggleHelp();
         return;
       }
       if (e.key === 'h' || e.key === 'H') this.toggleHelp();
+      else if (e.key === 'l' || e.key === 'L') this.toggleLang();
       else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') this.move(-1);
       else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') this.move(1);
       else if (e.key === 'Enter' || e.key === ' ') this.launch();
@@ -34,73 +38,176 @@ class MenuScene extends Phaser.Scene {
     this.cameras.main.fadeIn(400, 5, 10, 7);
   }
 
+  /* Bascule FR ⇄ EN puis reconstruit le menu (tous les textes sont recréés). */
+  toggleLang() {
+    setLang(LANG === 'fr' ? 'en' : 'fr');
+    Sfx.blip(14);
+    this.scene.restart();
+  }
+
+  /* Aide en 3 pages : règles, niveaux de difficulté, bestiaire des ennemis.
+     Navigation aux flèches ←/→, fermeture H / ÉCHAP. */
   buildHelp() {
     const cx = GAME_W / 2;
+    this.helpPage = 0;
     this.helpPanel = this.add.container(0, 0).setDepth(90).setVisible(false);
+    this.helpPanel.add(this.add.rectangle(cx, GAME_H / 2, GAME_W, GAME_H, 0x020503, 0.94));
 
-    const sections = [
-      ['OBJECTIF', CSS.cyan, [
-        'Protège ta PROD : chaque ennemi qui l\'atteint = un INCIDENT. Trop d\'incidents = GAME OVER.',
-      ]],
-      ['COMMENT TUER UN BUG', CSS.green, [
-        'Tape la PREMIÈRE LETTRE d\'un ennemi pour le verrouiller, puis finis',
-        'son mot sans faute. Une faute remet le combo (= multiplicateur) à zéro.',
-      ]],
-      ['NIVEAUX & POINTS', CSS.amber, [
-        'niv.1 ▲ bugs · niv.2 ▲▲ deadlines (rapides !) et legacy · niv.3 ▲▲▲ élites.',
-        'Points = longueur × 10 × niveau × combo × VITESSE (rapide = jusqu\'à ×3 !).',
-        'Certains ennemis lâchent un bonus : +1 vie, points, combo +5, slow-mo, items.',
-      ]],
-      ['POUVOIRS ENNEMIS', CSS.cyan, [
-        'Mots MINIFIÉS : des lettres sont masquées (?), à toi de les deviner !',
-        'LE RECRUTEUR [in] spamme des messages : tape-les avant qu\'ils touchent la prod.',
-      ]],
-      ['ITEMS', CSS.red, [
-        'ENTRÉE : KILL -9 (max 3) — tue le process ennemi le plus proche de la prod.',
-        'EFFACER : AUTOCOMPLETE (max 5) — l\'IA complète les 4 lettres suivantes.',
-      ]],
-      ['POWER-UPS & BOSS', CSS.gold, [
-        'Mots dorés : coffee = ralenti · git revert = recul · sudo reboot = purge.',
-        'Tous les 4 sprints, un BOSS : enchaîne ses commandes. Il lâche +1 vie.',
-      ]],
-      ['TOUCHES', CSS.magenta, [
-        'TAB : relâcher la cible · ÉCHAP : pause (puis Q : quitter) · F2 : muet',
-      ]],
-    ];
+    this.helpPages = [this.buildHelpRules(), this.buildHelpDiffs(), this.buildHelpEnemies(), this.buildHelpBosses()];
+    this.helpPages.forEach((p) => this.helpPanel.add(p));
 
-    const children = [
-      this.add.rectangle(cx, GAME_H / 2, GAME_W, GAME_H, 0x020503, 0.94),
-      this.add.text(cx, 60, '> AIDE — RÈGLES DU JEU_', {
-        fontFamily: FONT, fontSize: '48px', color: CSS.amber,
-      }).setOrigin(0.5),
-    ];
+    this.helpHint = this.add.text(cx, GAME_H - 50, '', {
+      fontFamily: FONT, fontSize: '32px', color: CSS.green,
+    }).setOrigin(0.5);
+    this.tweens.add({ targets: this.helpHint, alpha: 0.3, duration: 600, yoyo: true, repeat: -1 });
+    this.helpPanel.add(this.helpHint);
+    this.refreshHelpPage();
+  }
+
+  refreshHelpPage() {
+    this.helpPages.forEach((p, i) => p.setVisible(i === this.helpPage));
+    this.helpHint.setText(T('helpPageHint')(this.helpPage + 1, this.helpPages.length));
+  }
+
+  changeHelpPage(dir) {
+    this.helpPage = Phaser.Math.Wrap(this.helpPage + dir, 0, this.helpPages.length);
+    Sfx.blip(12);
+    this.refreshHelpPage();
+  }
+
+  // page 1 : règles
+  buildHelpRules() {
+    const cx = GAME_W / 2;
+    const page = this.add.container(0, 0);
+    // textes dans i18n.js ; les couleurs suivent l'ordre des sections
+    const colors = [CSS.cyan, CSS.green, CSS.amber, CSS.cyan, CSS.red, CSS.gold, CSS.magenta];
+    const sections = T('helpSections').map(([title, lines], i) => [title, colors[i] || CSS.white, lines]);
+
+    page.add(this.add.text(cx, 60, T('helpTitle'), {
+      fontFamily: FONT, fontSize: '48px', color: CSS.amber,
+    }).setOrigin(0.5));
 
     let y = 118;
     for (const [title, color, lines] of sections) {
-      children.push(this.add.text(330, y, `-- ${title} --`, {
+      page.add(this.add.text(330, y, `-- ${title} --`, {
         fontFamily: FONT, fontSize: '28px', color,
       }).setOrigin(0, 0));
       y += 34;
       for (const line of lines) {
-        children.push(this.add.text(360, y, line, {
+        page.add(this.add.text(360, y, line, {
           fontFamily: FONT, fontSize: '24px', color: CSS.white,
         }).setOrigin(0, 0).setAlpha(0.92));
         y += 27;
       }
       y += 11;
     }
+    return page;
+  }
 
-    const closeHint = this.add.text(cx, GAME_H - 50, '[ H ou ÉCHAP : retour au menu ]', {
-      fontFamily: FONT, fontSize: '32px', color: CSS.green,
-    }).setOrigin(0.5);
-    this.tweens.add({ targets: closeHint, alpha: 0.3, duration: 600, yoyo: true, repeat: -1 });
-    children.push(closeHint);
+  // page 2 : ce qui change d'une difficulté à l'autre
+  buildHelpDiffs() {
+    const cx = GAME_W / 2;
+    const page = this.add.container(0, 0);
+    page.add(this.add.text(cx, 60, T('helpDiffTitle'), {
+      fontFamily: FONT, fontSize: '48px', color: CSS.amber,
+    }).setOrigin(0.5));
+    page.add(this.add.text(cx, 130, T('helpGoal')(GAME_CONFIG.maxSprints), {
+      fontFamily: FONT, fontSize: '26px', color: CSS.cyan, align: 'center',
+    }).setOrigin(0.5));
 
-    this.helpPanel.add(children);
+    let y = 220;
+    DIFFICULTIES.forEach((d, i) => {
+      page.add(this.add.text(330, y, `${diffLabel(d)}  ${'★'.repeat(i + 1)}`, {
+        fontFamily: FONT, fontSize: '36px', color: CSS.gold,
+      }).setOrigin(0, 0));
+      page.add(this.add.text(900, y + 6, `« ${diffTagline(d)} »`, {
+        fontFamily: FONT, fontSize: '22px', color: CSS.greenDim,
+      }).setOrigin(0, 0));
+      const stats = [
+        `${T('helpLives')}: ${d.lives}`,
+        `${T('helpSpeed')}: ×${d.speed}`,
+        `${T('helpSpawn')}: ${(d.spawnMs / 1000).toFixed(1)}s`,
+        `${T('helpMaxLen')}: ${d.maxLen >= 99 ? '∞' : d.maxLen}`,
+        `${T('helpBossCmds')}: ${d.bossCmds}`,
+        `score: ×${d.scoreMult}`,
+      ].join('   ·   ');
+      page.add(this.add.text(360, y + 42, stats, {
+        fontFamily: FONT, fontSize: '26px', color: CSS.white,
+      }).setOrigin(0, 0).setAlpha(0.92));
+      y += 110;
+    });
+    return page;
+  }
+
+  // couleur de sprite par type d'ennemi (aide pages 3 et 4)
+  static ART_COLORS = {
+    bug: CSS.green, legacy: CSS.amber, deadline: CSS.magenta, spammer: CSS.cyan,
+    missile: CSS.red, powerup: CSS.gold, ghost: CSS.white, virus: CSS.red,
+    monolith: CSS.amber, consultant: CSS.gold, ransomware: CSS.red, microservice: CSS.cyan,
+    boss: CSS.red, finalBoss: CSS.magenta,
+  };
+
+  // page 3 : bestiaire — les ennemis de base, classés par niveau
+  buildHelpEnemies() {
+    const cx = GAME_W / 2;
+    const page = this.add.container(0, 0);
+    page.add(this.add.text(cx, 56, T('helpEnemiesTitle'), {
+      fontFamily: FONT, fontSize: '48px', color: CSS.amber,
+    }).setOrigin(0.5));
+
+    T('bestiary').forEach(([kind, name, desc, avail], i) => {
+      const col = i < 7 ? 0 : 1;
+      const x = 220 + col * 660;
+      const y = 108 + (i % 7) * 104;
+      const art = (ASCII[kind][0] || '').replace('<tech>', 'COBOL ');
+      page.add(this.add.text(x, y, art, {
+        fontFamily: FONT, fontSize: '14px',
+        color: MenuScene.ART_COLORS[kind] || CSS.white, align: 'center', lineSpacing: -3,
+      }).setOrigin(0, 0));
+      page.add(this.add.text(x + 150, y, name, {
+        fontFamily: FONT, fontSize: '27px', color: MenuScene.ART_COLORS[kind] || CSS.white,
+      }).setOrigin(0, 0));
+      page.add(this.add.text(x + 150, y + 28, avail, {
+        fontFamily: FONT, fontSize: '19px', color: CSS.gold,
+      }).setOrigin(0, 0).setAlpha(0.9));
+      page.add(this.add.text(x + 150, y + 50, desc, {
+        fontFamily: FONT, fontSize: '20px', color: CSS.white,
+      }).setOrigin(0, 0).setAlpha(0.9));
+    });
+    return page;
+  }
+
+  // page 4 : les boss
+  buildHelpBosses() {
+    const cx = GAME_W / 2;
+    const page = this.add.container(0, 0);
+    page.add(this.add.text(cx, 56, T('helpBossesTitle'), {
+      fontFamily: FONT, fontSize: '48px', color: CSS.amber,
+    }).setOrigin(0.5));
+
+    T('bestiaryBosses').forEach(([kind, name, desc, avail], i) => {
+      const x = 300 + i * 660;
+      const y = 180;
+      page.add(this.add.text(x + 110, y + 230, ASCII[kind][0], {
+        fontFamily: FONT, fontSize: '20px',
+        color: MenuScene.ART_COLORS[kind] || CSS.white, align: 'center', lineSpacing: -3,
+      }).setOrigin(0.5, 1));
+      page.add(this.add.text(x + 110, y + 280, name, {
+        fontFamily: FONT, fontSize: '36px', color: MenuScene.ART_COLORS[kind] || CSS.white, align: 'center',
+      }).setOrigin(0.5, 0));
+      page.add(this.add.text(x + 110, y + 322, avail, {
+        fontFamily: FONT, fontSize: '24px', color: CSS.gold, align: 'center',
+      }).setOrigin(0.5, 0));
+      page.add(this.add.text(x + 110, y + 360, desc, {
+        fontFamily: FONT, fontSize: '24px', color: CSS.white, align: 'center',
+      }).setOrigin(0.5, 0).setAlpha(0.92));
+    });
+    return page;
   }
 
   toggleHelp() {
     this.helpOpen = !this.helpOpen;
+    if (this.helpOpen) { this.helpPage = 0; this.refreshHelpPage(); }
     this.helpPanel.setVisible(this.helpOpen);
     Sfx.blip(this.helpOpen ? 20 : 5);
   }
@@ -125,7 +232,7 @@ class MenuScene extends Phaser.Scene {
     Sfx.bossSpawn();
     this.cameras.main.shake(300, 0.005);
     const badge = this.add.text(GAME_W / 2, 320,
-      '☠ KONAMI CODE — GOD MODE ARMÉ — TRICHEUR REPÉRÉ ☠', {
+      T('konami'), {
         fontFamily: FONT, fontSize: '34px', color: CSS.red,
       }).setOrigin(0.5).setDepth(60);
     this.tweens.add({ targets: badge, alpha: 0.35, duration: 400, yoyo: true, repeat: -1 });
@@ -144,7 +251,7 @@ class MenuScene extends Phaser.Scene {
     this.add.text(cx, 228, '— DEVFEST TOULOUSE 2026 —', {
       fontFamily: FONT, fontSize: '30px', color: CSS.amber, letterSpacing: 6,
     }).setOrigin(0.5);
-    this.add.text(cx, 274, 'Les bugs sont sortis du backlog. Tapez pour survivre.', {
+    this.add.text(cx, 274, T('menuTagline'), {
       fontFamily: FONT, fontSize: '26px', color: CSS.greenDim,
     }).setOrigin(0.5);
 
@@ -176,30 +283,38 @@ class MenuScene extends Phaser.Scene {
 
   buildDifficulties() {
     const cx = GAME_W / 2;
-    this.add.text(cx, 360, '> SÉLECTIONNEZ VOTRE GRADE <', {
+    this.add.text(cx, 360, T('menuSelect'), {
       fontFamily: FONT, fontSize: '28px', color: CSS.white,
     }).setOrigin(0.5);
 
     this.diffTexts = DIFFICULTIES.map((d, i) => {
-      const y = 408 + i * 58;
+      const y = 400 + i * 52;
       const label = this.add.text(cx, y, '', {
         fontFamily: FONT, fontSize: '40px', color: CSS.greenDim, align: 'center',
       }).setOrigin(0.5);
-      const tag = this.add.text(cx, y + 26, d.tagline, {
-        fontFamily: FONT, fontSize: '20px', color: CSS.greenDim,
+      // étoiles à droite du grade : 1 ★ par niveau de difficulté
+      const stars = this.add.text(cx, y, '★'.repeat(i + 1), {
+        fontFamily: FONT, fontSize: '24px', color: CSS.greenDim,
+      }).setOrigin(0, 0.5);
+      const tag = this.add.text(cx, y + 24, diffTagline(d), {
+        fontFamily: FONT, fontSize: '19px', color: CSS.greenDim,
       }).setOrigin(0.5).setAlpha(0);
-      return { label, tag };
+      return { label, stars, tag };
     });
     this.refreshDiff();
   }
 
   refreshDiff() {
+    const cx = GAME_W / 2;
     DIFFICULTIES.forEach((d, i) => {
-      const { label, tag } = this.diffTexts[i];
+      const { label, stars, tag } = this.diffTexts[i];
       const on = i === this.selected;
-      label.setText(on ? `[ ${d.label} ]` : d.label);
+      label.setText(on ? `[ ${diffLabel(d)} ]` : diffLabel(d));
       label.setColor(on ? CSS.amber : CSS.greenDim);
-      label.setFontSize(on ? 44 : 36);
+      label.setFontSize(on ? 40 : 32);
+      stars.setX(cx + label.width / 2 + 18);
+      stars.setColor(on ? CSS.gold : CSS.greenDim);
+      stars.setAlpha(on ? 1 : 0.6);
       tag.setAlpha(on ? 0.9 : 0);
       tag.setColor(on ? CSS.amber : CSS.greenDim);
     });
@@ -221,15 +336,34 @@ class MenuScene extends Phaser.Scene {
   }
 
   buildFooter() {
-    this.blink = this.add.text(GAME_W / 2, 672, '[ ENTRÉE pour déployer en prod ]', {
+    this.blink = this.add.text(GAME_W / 2, 700, T('menuDeploy'), {
       fontFamily: FONT, fontSize: '30px', color: CSS.green,
     }).setOrigin(0.5);
     this.tweens.add({ targets: this.blink, alpha: 0.25, duration: 600, yoyo: true, repeat: -1 });
 
     this.add.text(GAME_W / 2, GAME_H - 24,
-      'H: aide & règles · flèches: choisir · ENTRÉE: jouer · ÉCHAP: pause · TAB: changer de cible · F2: muet', {
+      T('menuFooter'), {
         fontFamily: FONT, fontSize: '20px', color: CSS.greenDim,
       }).setOrigin(0.5);
+
+    // version du jeu, discrète en bas à gauche
+    this.add.text(16, GAME_H - 12, APP_VERSION, {
+      fontFamily: FONT, fontSize: '20px', color: CSS.greenDim,
+    }).setOrigin(0, 1).setAlpha(0.7);
+
+    // FPS en haut à gauche
+    const fps = this.add.text(4, 0, '', {
+      fontFamily: FONT, fontSize: '16px', color: CSS.greenDim,
+    }).setAlpha(0.7).setDepth(95);
+    this.time.addEvent({
+      delay: 250, loop: true,
+      callback: () => fps.setText(`${Math.round(this.game.loop.actualFps)} fps`),
+    });
+
+    // choix de la langue (touche L), en bas à droite
+    this.add.text(GAME_W - 16, GAME_H - 12, T('menuLang'), {
+      fontFamily: FONT, fontSize: '22px', color: CSS.cyan,
+    }).setOrigin(1, 1).setAlpha(0.85);
   }
 
   async loadTopScores() {

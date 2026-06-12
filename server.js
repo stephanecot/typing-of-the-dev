@@ -1,7 +1,7 @@
 /**
  * Typing of the Dev — serveur de stand (DevFest Toulouse 2026)
  * Zéro dépendance : node:http pour le statique + API, node:sqlite pour la BDD.
- * Lancement : node server.js  →  http://localhost:3000
+ * Lancement : node server.js  →  http://localhost:3333
  */
 'use strict';
 
@@ -10,7 +10,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { DatabaseSync } = require('node:sqlite');
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3333;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const DB_DIR = path.join(__dirname, 'db');
 const DB_FILE = path.join(DB_DIR, 'typing-of-the-dev.sqlite');
@@ -49,6 +49,16 @@ db.exec(`
 const existingCols = new Set(db.prepare('PRAGMA table_info(games)').all().map((c) => c.name));
 for (const col of ['first_name', 'last_name', 'phone']) {
   if (!existingCols.has(col)) db.exec(`ALTER TABLE games ADD COLUMN ${col} TEXT`);
+}
+
+// réglages du jeu pilotables depuis l'admin (clé/valeur)
+db.exec('CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)');
+const getSetting = db.prepare('SELECT value FROM settings WHERE key = ?');
+const setSetting = db.prepare(`INSERT INTO settings (key, value) VALUES (?, ?)
+                               ON CONFLICT(key) DO UPDATE SET value = excluded.value`);
+function readConfig() {
+  const row = getSetting.get('maxSprints');
+  return { maxSprints: row ? Number(row.value) : 10 };
 }
 
 const insertGame = db.prepare(`
@@ -210,6 +220,22 @@ function handleApi(req, res, url) {
       'Content-Disposition': 'attachment; filename="typing-of-the-dev-contacts.csv"',
     });
     return res.end(toCsv(rows, ['pseudo', 'first_name', 'last_name', 'email', 'phone', 'best_score', 'games']));
+  }
+
+  // GET /api/config — réglages publics du jeu (nb max de sprints…)
+  if (req.method === 'GET' && url.pathname === '/api/config') {
+    return sendJson(res, 200, readConfig());
+  }
+
+  // POST /api/config — modifié depuis l'admin
+  if (req.method === 'POST' && url.pathname === '/api/config') {
+    return readBody(req).then((raw) => {
+      const p = JSON.parse(raw);
+      if (p.maxSprints !== undefined) {
+        setSetting.run('maxSprints', String(clampInt(p.maxSprints, 1, 99)));
+      }
+      sendJson(res, 200, readConfig());
+    }).catch((e) => sendJson(res, 400, { error: e.message }));
   }
 
   return sendJson(res, 404, { error: 'not found' });
