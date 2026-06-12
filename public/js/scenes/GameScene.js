@@ -15,25 +15,27 @@ const LANE_BOTTOM = GAME_H - 90;
    d'apparition des ennemis. */
 function waveQueueFor(diff, n, bossWave) {
   const q = [];
-  const bugCount = bossWave ? 3 : Math.min(4 + n, 14);
+  // les bugs de base plafonnent vite (~24 % des apparitions au lieu de 36 %) :
+  // la variété vient des spéciaux, qui arrivent aussi plus tôt dans la partie
+  const bugCount = bossWave ? 3 : Math.min(3 + Math.ceil(n / 2), 8);
   for (let i = 0; i < bugCount; i++) q.push('bug');
   if (!bossWave) {
-    if (n >= 2) for (let i = 0; i < Math.min(1 + Math.floor(n / 2), 6); i++) q.push('legacy');
-    if (n >= diff.deadlineWave) for (let i = 0; i < Math.min(Math.floor(n / 2), 7); i++) q.push('deadline');
+    if (n >= 2) for (let i = 0; i < Math.min(1 + Math.floor(n / 2), 5); i++) q.push('legacy');
+    if (n >= diff.deadlineWave) for (let i = 0; i < Math.min(1 + Math.floor(n / 2), 6); i++) q.push('deadline');
     if (n >= diff.eliteWave) for (let i = 0; i < Math.min(Math.floor(n / 3) + 1, 4); i++) q.push('elite');
-    if (n >= 3) for (let i = 0; i < Math.min(1 + Math.floor((n - 3) / 3), 2); i++) q.push('spammer');
-    if (n >= 4) for (let i = 0; i < Math.min(Math.floor((n - 2) / 3), 3); i++) q.push('ghost');
-    if (n >= 5) for (let i = 0; i < Math.min(Math.floor((n - 3) / 3), 3); i++) q.push('virus');
-    if (n >= 6) for (let i = 0; i < Math.min(1 + Math.floor((n - 6) / 4), 2); i++) q.push('monolith');
-    if (n >= 5) for (let i = 0; i < Math.min(1 + Math.floor((n - 5) / 3), 2); i++) q.push('microservice');
-    if (n >= 4) for (let i = 0; i < Math.min(1 + Math.floor((n - 4) / 3), 2); i++) q.push('spec');
-    if (n >= 5) for (let i = 0; i < Math.min(1 + Math.floor((n - 5) / 4), 2); i++) q.push('indep');
+    if (n >= 2) for (let i = 0; i < Math.min(1 + Math.floor((n - 2) / 3), 2); i++) q.push('spammer');
+    if (n >= 3) for (let i = 0; i < Math.min(1 + Math.floor((n - 3) / 3), 3); i++) q.push('ghost');
+    if (n >= 4) for (let i = 0; i < Math.min(1 + Math.floor((n - 4) / 3), 3); i++) q.push('virus');
+    if (n >= 5) for (let i = 0; i < Math.min(1 + Math.floor((n - 5) / 4), 2); i++) q.push('monolith');
+    if (n >= 4) for (let i = 0; i < Math.min(1 + Math.floor((n - 4) / 3), 2); i++) q.push('microservice');
+    if (n >= 3) for (let i = 0; i < Math.min(1 + Math.floor((n - 3) / 3), 2); i++) q.push('spec');
+    if (n >= 4) for (let i = 0; i < Math.min(1 + Math.floor((n - 4) / 4), 2); i++) q.push('indep');
     // niv.4 et 5 : seulement en CTO BURNOUT et DIEU DU TERMINAL
     const hardcore = diff.key === 'cto' || diff.key === 'ultime';
-    if (hardcore && n >= 3) for (let i = 0; i < Math.min(1 + Math.floor((n - 3) / 3), 3); i++) q.push('consultant');
-    if (hardcore && n >= 4) for (let i = 0; i < Math.min(1 + Math.floor((n - 4) / 4), 2); i++) q.push('obfuscator');
-    if (diff.key === 'ultime' && n >= 4) for (let i = 0; i < Math.min(1 + Math.floor((n - 4) / 4), 2); i++) q.push('ransomware');
-    if (diff.key === 'ultime' && n >= 5) q.push('po'); // 1 seul PO à la fois suffit largement
+    if (hardcore && n >= 2) for (let i = 0; i < Math.min(1 + Math.floor((n - 2) / 3), 3); i++) q.push('consultant');
+    if (hardcore && n >= 3) for (let i = 0; i < Math.min(1 + Math.floor((n - 3) / 4), 2); i++) q.push('obfuscator');
+    if (diff.key === 'ultime' && n >= 3) for (let i = 0; i < Math.min(1 + Math.floor((n - 3) / 4), 2); i++) q.push('ransomware');
+    if (diff.key === 'ultime' && n >= 4) q.push('po'); // 1 seul PO à la fois suffit largement
 
     // +15 % d'ennemis spéciaux : on repioche (déterministe, pour que les %
     // affichés dans l'aide restent stables) parmi les non-bugs de la vague

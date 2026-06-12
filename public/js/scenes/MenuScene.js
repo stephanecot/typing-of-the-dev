@@ -376,11 +376,8 @@ class MenuScene extends Phaser.Scene {
     this.titleC = this.add.text(cx, 150, 'TYPING OF THE DEV', style(CSS.cyan)).setOrigin(0.5).setAlpha(0.55);
     this.title = this.add.text(cx, 150, 'TYPING OF THE DEV', style(CSS.green)).setOrigin(0.5);
 
-    this.add.text(cx, 228, '— DEVFEST TOULOUSE 2026 —', {
-      fontFamily: FONT, fontSize: '30px', color: CSS.amber, letterSpacing: 6,
-    }).setOrigin(0.5);
-    this.add.text(cx, 274, T('menuTagline'), {
-      fontFamily: FONT, fontSize: '26px', color: CSS.greenSoft,
+    this.add.text(cx, 240, T('menuTagline'), {
+      fontFamily: FONT, fontSize: '28px', color: CSS.greenSoft,
     }).setOrigin(0.5);
 
     // glitch périodique du titre (coupé en animations réduites)
