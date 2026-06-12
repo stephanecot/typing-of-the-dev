@@ -337,6 +337,7 @@ class GameScene extends Phaser.Scene {
       if (hardcore && n >= 3) for (let i = 0; i < Math.min(1 + Math.floor((n - 3) / 3), 3); i++) q.push('consultant');
       if (hardcore && n >= 4) for (let i = 0; i < Math.min(1 + Math.floor((n - 4) / 4), 2); i++) q.push('obfuscator');
       if (this.diff.key === 'ultime' && n >= 4) for (let i = 0; i < Math.min(1 + Math.floor((n - 4) / 4), 2); i++) q.push('ransomware');
+      if (this.diff.key === 'ultime' && n >= 5) q.push('po'); // 1 seul PO à la fois suffit largement
     }
     return Phaser.Utils.Array.Shuffle(q);
   }
@@ -376,6 +377,7 @@ class GameScene extends Phaser.Scene {
       case 'consultant': return pickWord(wordBank('buzzwords'), { exclude: ex });
       case 'obfuscator': return pickWord(WORDS.obfuscation, { exclude: ex });
       case 'ransomware': return pickWord(WORDS.commands, { exclude: ex });
+      case 'po': return pickWord(wordBank('poIdeas'), { exclude: ex });
       default: return pickWord(WORDS.keywords, opts);
     }
   }
@@ -443,6 +445,7 @@ class GameScene extends Phaser.Scene {
       consultant: { color: CSS.gold, tint: PALETTE.gold, speed: 48, art: 'consultant', cls: 'deadline', size: 18, level: 4 },
       obfuscator: { color: CSS.white, tint: PALETTE.white, speed: 45, art: 'obfuscator', cls: 'legacy', size: 18, level: 4 },
       ransomware: { color: CSS.red, tint: PALETTE.red, speed: 32, art: 'ransomware', cls: 'legacy', size: 18, level: 5 },
+      po: { color: CSS.magenta, tint: PALETTE.magenta, speed: 24, art: 'po', cls: 'deadline', size: 18, level: 5 },
     }[kind];
     const label = this.labelFor(kind);
     const techName = conf.art === 'legacy' ? label : null;
@@ -509,6 +512,7 @@ class GameScene extends Phaser.Scene {
     if (e.kind === 'spammer') e.fireAt = this.time.now + 2500;
     if (e.kind === 'ghost') e.fadeAt = this.time.now + Phaser.Math.Between(1200, 2500);
     if (e.kind === 'ransomware') e.mutateAt = this.time.now + 6000;
+    if (e.kind === 'po') e.ideaAt = this.time.now + 3500;
     if (e.kind === 'microservice') { e.gen = e.gen || 0; e.splitAt = this.time.now + 8000; }
     this.updateLabel(e); // applique le masquage "minifié" dès l'apparition
     this.enemies.push(e);
@@ -694,6 +698,20 @@ class GameScene extends Phaser.Scene {
       });
     }
     e.container.destroy();
+  }
+
+  /* LE PO INSPIRÉ : tant qu'il vit, une idée toutes les 5 s — le mot d'un
+     autre ennemi se rallonge d'une "petite feature en plus" (scope creep). */
+  scopeCreep(po) {
+    const victims = this.enemies.filter((v) => v !== po && v.kind !== 'boss'
+      && v.cls !== 'powerup' && v.label.length < 26);
+    if (!victims.length) return;
+    const v = Phaser.Utils.Array.GetRandom(victims);
+    v.label += pickWord(wordBank('scopeCreep'), {});
+    this.updateLabel(v);
+    Sfx.blip(2);
+    this.scorePopup(po.container.x, po.container.y - 100, T('newIdea'), CSS.magenta, 22);
+    this.scorePopup(v.container.x, v.container.y - 80, T('scopeCreep'), CSS.magenta, 24);
   }
 
   /* L'obfuscateur meurt en lâchant un écran de fumée : un nuage opaque
@@ -1146,6 +1164,11 @@ class GameScene extends Phaser.Scene {
       if (e.kind === 'ghost' && time > e.fadeAt) {
         e.fadeAt = time + Phaser.Math.Between(2200, 3800);
         this.tweens.add({ targets: e.container, alpha: 0.12, duration: 220, yoyo: true, hold: 650 });
+      }
+      // le PO a une idée toutes les 5 s : le mot d'un autre ennemi se rallonge
+      if (e.kind === 'po' && time > e.ideaAt) {
+        e.ideaAt = time + 5000;
+        this.scopeCreep(e);
       }
       // le ransomware "rechiffre" son mot toutes les 6 s : tout est à refaire
       if (e.kind === 'ransomware' && time > e.mutateAt) {

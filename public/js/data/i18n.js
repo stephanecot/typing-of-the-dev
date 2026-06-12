@@ -52,6 +52,7 @@ const I18N = {
       ]],
       ['NIVEAU 5 ▲▲▲▲▲', [
         ['ransomware', 'LE RANSOMWARE', 'rechiffre son mot toutes les 6 s :\ntout est à refaire !', '★★★★★ uniquement'],
+        ['po', 'LE PO INSPIRÉ', 'une idée toutes les 5 s : le mot\nd\'un autre ennemi se rallonge !', '★★★★★ uniquement'],
       ]],
       ['BONUS', [
         ['powerup', 'POWER-UP', 'le taper déclenche son pouvoir :\ncoffee, revert, reboot.', 'toutes difficultés'],
@@ -65,6 +66,8 @@ const I18N = {
     virusSplit: 'RÉPLICATION !',
     microSplit: 'SCALE OUT !',
     smokeScreen: 'ÉCRAN DE FUMÉE !',
+    newIdea: '« j\'ai une idée ! »',
+    scopeCreep: 'SCOPE CREEP +1 !',
     reEncrypted: 'rechiffré_',
     mutedTag: ' · 🔇 muet (F2)',
     konami: '☠ KONAMI CODE — GOD MODE ARMÉ — TRICHEUR REPÉRÉ ☠',
@@ -205,6 +208,7 @@ const I18N = {
       ]],
       ['LEVEL 5 ▲▲▲▲▲', [
         ['ransomware', 'THE RANSOMWARE', 're-encrypts its word every 6 s:\nstart all over again!', '★★★★★ only'],
+        ['po', 'THE INSPIRED PO', 'one idea every 5 s: another\nenemy\'s word gets longer!', '★★★★★ only'],
       ]],
       ['BONUS', [
         ['powerup', 'POWER-UP', 'typing it triggers its power:\ncoffee, revert, reboot.', 'all difficulties'],
@@ -218,6 +222,8 @@ const I18N = {
     virusSplit: 'REPLICATING!',
     microSplit: 'SCALING OUT!',
     smokeScreen: 'SMOKE SCREEN!',
+    newIdea: '"I have an idea!"',
+    scopeCreep: 'SCOPE CREEP +1!',
     reEncrypted: 're-encrypted_',
     mutedTag: ' · 🔇 muted (F2)',
     konami: '☠ KONAMI CODE — GOD MODE ARMED — CHEATER SPOTTED ☠',

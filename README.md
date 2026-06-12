@@ -70,6 +70,7 @@ Tout fonctionne **offline** : Phaser, police et sons sont locaux/procéduraux.
 | Le consultant | 4 | buzzwords | **CTO/DIEU uniquement**, accélère |
 | L'obfuscateur | 4 | jargon du code illisible | **CTO/DIEU uniquement**, écran de fumée 5 s à sa mort |
 | Le ransomware | 5 | commandes | **DIEU uniquement**, rechiffre son mot / 6 s |
+| Le PO inspiré | 5 | idées foireuses | **DIEU uniquement**, rallonge le mot d'un autre ennemi / 5 s |
 | Boss | — | commandes terminal | tous les 4 sprints |
 | LE DSI ÉNERVÉ | — | commandes terminal | boss final, victoire à la clé |
 

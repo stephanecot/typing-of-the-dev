@@ -233,6 +233,16 @@ const WORDS = {
     'relance 2', 'derniere chance', 'exclu !', 'process rapide', 'call demain ?',
   ],
 
+  // LE PO INSPIRÉ (niv.5) : ses idées foireuses, à taper…
+  poIdeas: [
+    'on pivote', 'comme uber', 'de la blockchain', 'avec de l ia',
+    'juste un bouton', 'cest facile non', 'pour hier', 'mvp direct en prod',
+    'les users adorent', 'ca prend 5 min', 'on verra en prod',
+    'pas besoin de tests', 'comme tiktok', 'un petit chatbot', 'gamifions tout',
+  ],
+  // …et les rallonges qu'il greffe aux mots des autres (scope creep)
+  scopeCreep: [' v2', ' v3', ' bis', ' rgpd', ' mobile', ' offline', ' dark mode', ' en mieux'],
+
   // L'OBFUSCATEUR (niv.4) : le jargon du code illisible
   obfuscation: [
     'minified', 'uglify', 'sourcemap', 'tree shaking', 'dead code',
@@ -287,6 +297,13 @@ const WORDS = {
       'linkedin recruiter', 'head hunter', 'agency hunting', 'urgent staffing',
       'business developer', 'talent acquisition', 'crazy sourcer', 'hr agency',
     ],
+    poIdeas: [
+      'lets pivot', 'like uber', 'add blockchain', 'with some ai',
+      'just one button', 'easy right', 'due yesterday', 'mvp straight to prod',
+      'users love it', 'takes 5 min', 'we will see in prod',
+      'no tests needed', 'like tiktok', 'a small chatbot', 'gamify everything',
+    ],
+    scopeCreep: [' v2', ' v3', ' gdpr', ' mobile', ' offline', ' dark mode', ' but better'],
     buzzwords: [
       'synergy', 'disruption', 'uberization', 'digital transformation',
       'change management', 'time to market', 'agile mindset', 'value proposition',
