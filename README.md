@@ -29,9 +29,11 @@ Tout fonctionne **offline** : Phaser, police et sons sont locaux/procéduraux.
   victoire rapporte des points bonus.
 - **Mode infini** (touche `I` au menu, persisté) : pas de chrono ni de limite —
   les sprints s'enchaînent tant qu'on survit, le DSI ne vient jamais. À la
-  place, 3 boss exclusifs tournent toutes les 4 vagues : **LE MAINFRAME**
+  place, 5 boss exclusifs tournent toutes les 4 vagues : **LE MAINFRAME**
   (lent, +3 commandes), **LA DETTE TECHNIQUE** (les commandes les plus
-  longues) et **LE STAGIAIRE VENGEUR** (rapide, −1 commande).
+  longues), **LE STAGIAIRE VENGEUR** (rapide, −1 commande), **LE COMMERCIAL**
+  (vend une deadline à chaque commande encaissée) et **LE DATACENTER EN FEU**
+  (+2 commandes, écran de fumée à chaque coup).
 - **Boss** tous les 4 sprints : enchaîner plusieurs commandes terminal complètes.
 - **Pouvoirs ennemis** : certains mots arrivent **MINIFIÉS** (des lettres sont
   masquées par des `?`, devine-les !) ou **RETOURNÉS** (affichés tête en bas) ;

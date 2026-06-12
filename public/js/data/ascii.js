@@ -97,6 +97,13 @@ const ASCII = {
     '  \\!!/\n (>_<)\n<|###|>\n /|_|\\\n d   b',
   ],
 
+  commercial: [
+    '   ____\n  ( ^o^ )\n /|+++|\\\n  |---|\n  d   b',
+  ],
+  datacenter: [
+    ' )  ( )\n( ) ) (\n|=====|\n|#x.x#|\n|#####|\n|__,__|',
+  ],
+
   // Le boss final : LE DSI ÉNERVÉ — costume, cravate, sourcils froncés
   finalBoss: [
     '     _________\n    /  _____  \\\n   |  \\\\   //  |\n   | (\\@) (@/) |\n   |    ___    |\n   |   /___\\   |\n    \\_________/\n   __|       |__\n  /  |  \\_/  |  \\\n |   | (===) |   |\n |___|  |#|  |___|\n  (_)   |#|   (_)\n        |_|',

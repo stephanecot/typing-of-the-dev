@@ -26,6 +26,8 @@ class MenuScene extends Phaser.Scene {
       if (this.helpOpen) {
         if (e.key === 'ArrowLeft') this.changeHelpPage(-1);
         else if (e.key === 'ArrowRight') this.changeHelpPage(1);
+        else if (e.key === 'ArrowUp') this.scrollHelp(-1);
+        else if (e.key === 'ArrowDown') this.scrollHelp(1);
         else if (e.key === 'h' || e.key === 'H' || e.key === 'Escape' || e.key === 'Enter') this.toggleHelp();
         return;
       }
@@ -83,7 +85,15 @@ class MenuScene extends Phaser.Scene {
 
     this.helpPages = [this.buildHelpRules(), this.buildHelpDiffs(), this.buildHelpEnemies(),
       this.buildHelpBosses(), this.buildHelpNotes()];
-    this.helpPages.forEach((p) => this.helpPanel.add(p));
+    // masque de défilement : le contenu coulisse sous la ligne d'aide du bas
+    const maskShape = this.make.graphics({ add: false }).fillRect(0, 0, GAME_W, 818);
+    const pageMask = maskShape.createGeometryMask();
+    this.helpScroll = 0;
+    this.helpMaxScroll = 0;
+    this.helpPages.forEach((p) => {
+      this.helpPanel.add(p);
+      p.setMask(pageMask);
+    });
 
     this.helpHint = this.add.text(cx, GAME_H - 50, '', {
       fontFamily: FONT, fontSize: '32px', color: CSS.green,
@@ -95,7 +105,18 @@ class MenuScene extends Phaser.Scene {
 
   refreshHelpPage() {
     this.helpPages.forEach((p, i) => p.setVisible(i === this.helpPage));
+    const page = this.helpPages[this.helpPage];
+    this.helpScroll = 0;
+    page.setY(0);
+    // de combien cette page déborde-t-elle ? (défilement ↑/↓)
+    this.helpMaxScroll = Math.max(0, Math.round(page.getBounds().bottom) - 812);
     this.helpHint.setText(T('helpPageHint')(this.helpPage + 1, this.helpPages.length));
+  }
+
+  scrollHelp(dir) {
+    if (this.helpMaxScroll <= 0) return;
+    this.helpScroll = Phaser.Math.Clamp(this.helpScroll + dir * 80, 0, this.helpMaxScroll);
+    this.helpPages[this.helpPage].setY(-this.helpScroll);
   }
 
   changeHelpPage(dir) {
@@ -187,6 +208,7 @@ class MenuScene extends Phaser.Scene {
     monolith: CSS.amber, consultant: CSS.gold, ransomware: CSS.red, microservice: CSS.cyan, spec: CSS.white, obfuscator: CSS.white, po: CSS.magenta, indep: CSS.cyan,
     boss: CSS.red, finalBoss: CSS.magenta,
     mainframe: CSS.cyan, dette: CSS.amber, stagiaireBoss: CSS.green,
+    commercial: CSS.gold, datacenter: CSS.red,
   };
 
   // page 3 : bestiaire — ennemis groupés par niveau, sur 3 colonnes remplies
@@ -277,21 +299,43 @@ class MenuScene extends Phaser.Scene {
       fontFamily: FONT, fontSize: '48px', color: CSS.amber,
     }).setOrigin(0.5));
 
+    // section campagne (boss normal + DSI), puis section mode infini
+    page.add(this.add.text(cx, 102, `-- ${T('bossesSectionMain')} --`, {
+      fontFamily: FONT, fontSize: '26px', color: CSS.red,
+    }).setOrigin(0.5));
     T('bestiaryBosses').forEach(([kind, name, desc, avail], i) => {
-      const cx2 = 270 + (i % 3) * 530;
-      const y = 112 + Math.floor(i / 3) * 352;
-      page.add(this.add.text(cx2, y + 158, ASCII[kind][0], {
-        fontFamily: FONT, fontSize: '15px',
+      const cx2 = 530 + i * 540;
+      const y = 130;
+      page.add(this.add.text(cx2, y + 150, ASCII[kind][0], {
+        fontFamily: FONT, fontSize: '14px',
         color: MenuScene.ART_COLORS[kind] || CSS.white, align: 'center', lineSpacing: -3,
       }).setOrigin(0.5, 1));
-      page.add(this.add.text(cx2, y + 168, name, {
-        fontFamily: FONT, fontSize: '30px', color: MenuScene.ART_COLORS[kind] || CSS.white, align: 'center',
+      page.add(this.add.text(cx2, y + 158, name, {
+        fontFamily: FONT, fontSize: '28px', color: MenuScene.ART_COLORS[kind] || CSS.white, align: 'center',
       }).setOrigin(0.5, 0));
-      page.add(this.add.text(cx2, y + 202, avail, {
-        fontFamily: FONT, fontSize: '20px', color: CSS.gold, align: 'center',
+      page.add(this.add.text(cx2, y + 190, avail, {
+        fontFamily: FONT, fontSize: '19px', color: CSS.gold, align: 'center',
       }).setOrigin(0.5, 0));
-      page.add(this.add.text(cx2, y + 228, desc, {
-        fontFamily: FONT, fontSize: '20px', color: CSS.white, align: 'center',
+      page.add(this.add.text(cx2, y + 214, desc, {
+        fontFamily: FONT, fontSize: '19px', color: CSS.white, align: 'center',
+      }).setOrigin(0.5, 0).setAlpha(0.92));
+    });
+
+    page.add(this.add.text(cx, 462, `-- ${T('bossesSectionInf')} --`, {
+      fontFamily: FONT, fontSize: '26px', color: CSS.cyan,
+    }).setOrigin(0.5));
+    T('bestiaryBossesInf').forEach(([kind, name, desc], i) => {
+      const cx2 = 190 + i * 305;
+      const y = 488;
+      page.add(this.add.text(cx2, y + 140, ASCII[kind][0], {
+        fontFamily: FONT, fontSize: '13px',
+        color: MenuScene.ART_COLORS[kind] || CSS.white, align: 'center', lineSpacing: -3,
+      }).setOrigin(0.5, 1));
+      page.add(this.add.text(cx2, y + 148, name, {
+        fontFamily: FONT, fontSize: '23px', color: MenuScene.ART_COLORS[kind] || CSS.white, align: 'center',
+      }).setOrigin(0.5, 0));
+      page.add(this.add.text(cx2, y + 176, desc, {
+        fontFamily: FONT, fontSize: '18px', color: CSS.white, align: 'center',
       }).setOrigin(0.5, 0).setAlpha(0.92));
     });
     return page;

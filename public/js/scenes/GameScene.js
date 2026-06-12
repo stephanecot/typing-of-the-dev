@@ -51,6 +51,8 @@ const INFINITE_BOSSES = [
   { art: 'mainframe', nameKey: 'bossMainframe', cmdDelta: 3, speedMult: 0.6, color: '#41f2ff' },
   { art: 'dette', nameKey: 'bossDette', cmdDelta: 1, speedMult: 0.9, color: '#ffb000', longest: true },
   { art: 'stagiaireBoss', nameKey: 'bossStagiaire', cmdDelta: -1, speedMult: 1.8, color: '#39ff7a' },
+  { art: 'commercial', nameKey: 'bossCommercial', cmdDelta: 0, speedMult: 1.2, color: '#ffd76a', spawnOnHit: 'deadline' },
+  { art: 'datacenter', nameKey: 'bossDatacenter', cmdDelta: 2, speedMult: 1.1, color: '#ff3b3b', smokeOnHit: true },
 ];
 
 class GameScene extends Phaser.Scene {
@@ -697,7 +699,7 @@ class GameScene extends Phaser.Scene {
     c.add([name, hp, art, typed, rest]);
 
     this.boss = {
-      kind: 'boss', cls: 'boss', isFinal, container: c, art, typedText: typed, restText: rest,
+      kind: 'boss', cls: 'boss', isFinal, variant, container: c, art, typedText: typed, restText: rest,
       hpText: hp, cmds, cmdIndex: 0, label: cmds[0], progress: 0,
       x: SPAWN_X + 100, y: GAME_H / 2, baseY: GAME_H / 2, phase: 0,
       speed: 18 * this.diff.speed * (variant ? variant.speedMult : 1), color: CSS.red,
@@ -729,6 +731,9 @@ class GameScene extends Phaser.Scene {
       sm >= 1.5 ? `+${pts} ${T('fast')} ×${sm.toFixed(1)}` : `+${pts}`, CSS.amber, 36);
     b.cmdStart = this.time.now; // chrono de la commande suivante
     if (b.cmdIndex >= b.cmds.length) return this.killEnemy(b);
+    // boss du mode infini : certains ripostent quand ils encaissent
+    if (b.variant && b.variant.spawnOnHit) this.spawnEnemy(b.variant.spawnOnHit);
+    if (b.variant && b.variant.smokeOnHit) this.spawnSmokeCloud(b.container.x - 320, b.container.y);
     b.container.x = Math.min(b.container.x + 170, SPAWN_X);
     b.label = b.cmds[b.cmdIndex];
     b.progress = 0;
