@@ -42,6 +42,10 @@ const I18N = {
     helpNotesTitle: '> NOTES DE VERSION_',
     helpCurrent: '(actuelle)',
     releaseNotes: [
+      ['v1.5.0', [
+        'LE TYPO se repère enfin : son mot fautif est souligné d\'une vaguelette rouge, comme un correcteur — tapez la faute telle quelle !',
+        'Chaque ennemi se présente la première fois qu\'il apparaît : un bandeau rappelle son nom et sa vacherie, le temps de l\'apprendre',
+      ]],
       ['v1.4.1', [
         'Écran COMMENT JOUER avant chaque partie : l\'essentiel des règles en un coup d\'œil',
         'Le son ne se coupe plus que depuis l\'écran de pause (touche S) — fini les conflits avec la frappe',
@@ -197,6 +201,28 @@ const I18N = {
     bannerBossWave: '!! INCIDENT MAJEUR DÉTECTÉ !!',
     bannerWave: 'déploiement des bugs...',
     bannerFinal: '!! LE DSI ÉNERVÉ ARRIVE !!',
+    /* Bandeau "première rencontre" : NOM — indice d'une ligne, montré une
+       seule fois par partie au premier spawn de chaque type d'ennemi. */
+    enemyIntro: {
+      bug: 'LE BUG — tapez son mot pour l\'écraser !',
+      typo: 'LE TYPO — son mot est déjà faux : tapez la faute !',
+      deadline: 'LA FAUCHEUSE DEADLINE — rapide, dépêchez-vous !',
+      legacy: 'LE ZOMBIE LEGACY — lent, mais long à taper.',
+      elite: 'LE BUG D\'ÉLITE — CamelCase et majuscules comprises.',
+      spammer: 'LE RECRUTEUR — éliminez la source des InMails !',
+      ghost: 'LE BUG FANTÔME — il clignote : retenez son mot !',
+      virus: 'LE VIRUS — il se réplique à sa mort : nettoyez vite !',
+      monolith: 'LE MONOLITHE — 2 mots pour le faire tomber.',
+      microservice: 'LE MICROSERVICE — il se scinde en deux : scale out !',
+      indep: 'L\'INDÉP — il esquive, mais sa mort en emporte un autre.',
+      spec: 'LA SPEC FOIREUSE — son mot ne veut rien dire. Courage.',
+      consultant: 'LE CONSULTANT — buzzwords à rallonge, et ça accélère.',
+      obfuscator: 'L\'OBFUSCATEUR — sa mort lâche un écran de fumée.',
+      ransomware: 'LE RANSOMWARE — il rechiffre son mot : tout à refaire !',
+      po: 'LE PO INSPIRÉ — ses idées rallongent un autre mot.',
+      missile: 'L\'INMAIL — missile rapide du recruteur : tapez-le vite !',
+      powerup: 'POWER-UP — tapez-le pour déclencher son pouvoir !',
+    },
     finalBossName: 'LE DSI ÉNERVÉ',
     bossMainframe: 'LE MAINFRAME',
     bossDette: 'LA DETTE TECHNIQUE',
@@ -302,6 +328,10 @@ const I18N = {
     helpNotesTitle: '> RELEASE NOTES_',
     helpCurrent: '(current)',
     releaseNotes: [
+      ['v1.5.0', [
+        'THE TYPO finally stands out: its misspelled word gets a red squiggly underline, just like a spell-checker — type the typo as is!',
+        'Every enemy introduces itself the first time it shows up: a banner recalls its name and its dirty trick, just long enough to learn it',
+      ]],
       ['v1.4.1', [
         'HOW TO PLAY screen before every game: the essentials at a glance',
         'Sound can now only be muted from the pause screen (S key) — no more conflict with typing',
@@ -455,6 +485,28 @@ const I18N = {
     bannerBossWave: '!! MAJOR INCIDENT DETECTED !!',
     bannerWave: 'deploying bugs...',
     bannerFinal: '!! THE FURIOUS CIO IS COMING !!',
+    /* First-encounter banner: NAME — one-line hint, shown once per run the
+       first time each enemy type spawns. */
+    enemyIntro: {
+      bug: 'THE BUG — type its word to squash it!',
+      typo: 'THE TYPO — its word is misspelled: type the typo!',
+      deadline: 'THE DEADLINE REAPER — fast, hurry up!',
+      legacy: 'THE LEGACY ZOMBIE — slow, but long to type.',
+      elite: 'THE ELITE BUG — CamelCase, capitals included.',
+      spammer: 'THE RECRUITER — kill the source of the InMails!',
+      ghost: 'THE GHOST BUG — it blinks: remember its word!',
+      virus: 'THE VIRUS — it replicates on death: clean up fast!',
+      monolith: 'THE MONOLITH — takes 2 words to bring down.',
+      microservice: 'THE MICROSERVICE — it splits in two: scale out!',
+      indep: 'THE FREELANCER — dodges, but its death takes one more.',
+      spec: 'THE BROKEN SPEC — its word means nothing. Good luck.',
+      consultant: 'THE CONSULTANT — endless buzzwords, and it speeds up.',
+      obfuscator: 'THE OBFUSCATOR — its death drops a smoke screen.',
+      ransomware: 'THE RANSOMWARE — it re-encrypts its word: start over!',
+      po: 'THE INSPIRED PO — its ideas lengthen another word.',
+      missile: 'THE INMAIL — the recruiter\'s fast missile: type it quick!',
+      powerup: 'POWER-UP — type it to trigger its power!',
+    },
     finalBossName: 'THE FURIOUS CIO',
     bossMainframe: 'THE MAINFRAME',
     bossDette: 'TECHNICAL DEBT',

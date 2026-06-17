@@ -1,6 +1,6 @@
 {
   "name": "typing-of-the-dev",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "Arcade typing game — a tribute to The Typing of the Dead: zombie bugs march toward your PROD server, type their words to squash them. Phaser 3, procedural WebAudio music, zero npm dependencies.",
   "main": "server.js",
   "scripts": {

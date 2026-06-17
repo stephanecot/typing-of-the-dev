@@ -102,6 +102,11 @@ class GameScene extends Phaser.Scene {
       kills: { bug: 0, legacy: 0, deadline: 0, boss: 0, powerup: 0 },
       missedWords: [],
     };
+    // bandeau pédagogique "première rencontre" : types déjà vus + file
+    // d'intros affichées séquentiellement (pour ne pas stomper un bandeau)
+    this.seenKinds = new Set();
+    this.introQueue = [];
+    this.introBusy = false;
     // caches d'affichage : à réinitialiser car l'instance de scène est réutilisée
     this._shownTimeS = null;
     this._shownLives = undefined;
@@ -488,9 +493,66 @@ class GameScene extends Phaser.Scene {
 
   showBanner(text) {
     this.banner.setText(text).setAlpha(0);
-    this.tweens.add({
-      targets: this.banner, alpha: 1, duration: 250, yoyo: true, hold: 1300,
-    });
+    if (REDUCED_MOTION) {
+      // animations réduites : pas de fade clignotant, on affiche stable puis on masque
+      this.banner.setAlpha(1);
+      this.time.delayedCall(1800, () => {
+        if (this.banner && this.banner.active) this.banner.setAlpha(0);
+      });
+    } else {
+      this.tweens.add({
+        targets: this.banner, alpha: 1, duration: 250, yoyo: true, hold: 1300,
+      });
+    }
+  }
+
+  /* Met une "première rencontre" en file : on retient le type, son art ASCII
+     et sa couleur. Le ticker du bas les défile un par un (pumpIntroQueue) —
+     le gros bandeau central reste réservé aux vagues et aux boss. */
+  queueEnemyIntro(kind, art, color) {
+    if (this.seenKinds.has(kind)) return;
+    this.seenKinds.add(kind);
+    const map = T('enemyIntro');
+    if (map && map[kind]) {
+      this.introQueue.push({ kind, art: art || kind, color: color || CSS.green });
+    }
+  }
+
+  pumpIntroQueue() {
+    if (this.over || this.paused || this.introBusy || !this.introQueue.length) return;
+    this.introBusy = true;
+    this.showEnemyTicker(this.introQueue.shift());
+  }
+
+  /* Ticker "nouvel ennemi" : défile en bas de l'écran avec l'icône ASCII de
+     l'ennemi (dans sa couleur) et un texte en petite police. Un seul à la fois
+     (introBusy), libéré quand il a fini de défiler. */
+  showEnemyTicker(intro) {
+    const text = (T('enemyIntro') || {})[intro.kind];
+    if (!text) { this.introBusy = false; return; }
+    const c = this.add.container(0, GAME_H - 36).setDepth(44);
+    // l'art "legacy" porte un placeholder <tech> : on lui donne un nom neutre
+    const techName = intro.art === 'legacy' ? 'LEGACY' : null;
+    const icon = this.add.text(0, 0, pickArt(intro.art, techName), {
+      fontFamily: FONT, fontSize: '18px', color: intro.color, align: 'left', lineSpacing: -4,
+    }).setOrigin(0, 0.5);
+    const label = this.add.text(icon.width + 16, 0, text, {
+      fontFamily: FONT, fontSize: '30px', color: CSS.amber,
+    }).setOrigin(0, 0.5);
+    c.add([icon, label]);
+    const span = icon.width + 16 + label.width;
+    const done = () => { c.destroy(); this.introBusy = false; };
+    if (REDUCED_MOTION) {
+      // animations réduites : pas de défilement, on centre, on tient, on retire
+      c.setX((GAME_W - span) / 2);
+      this.time.delayedCall(3200, done);
+    } else {
+      c.setX(GAME_W + 40);
+      const travel = GAME_W + 80 + span;
+      this.tweens.add({
+        targets: c, x: -span - 40, duration: travel / 0.26, ease: 'Linear', onComplete: done,
+      });
+    }
   }
 
   // ------------------------------------------------------------ ennemis
@@ -589,6 +651,7 @@ class GameScene extends Phaser.Scene {
       ransomware: { color: CSS.red, tint: PALETTE.red, speed: 32, art: 'ransomware', cls: 'legacy', size: 18, level: 5 },
       po: { color: CSS.magenta, tint: PALETTE.magenta, speed: 24, art: 'po', cls: 'deadline', size: 18, level: 5 },
     }[kind];
+    this.queueEnemyIntro(kind, conf.art, conf.color); // ticker pédagogique au 1er spawn du type
     const label = this.labelFor(kind);
     const techName = conf.art === 'legacy' ? label : null;
     const masked = this.rollMask(kind, label);
@@ -609,6 +672,7 @@ class GameScene extends Phaser.Scene {
 
   spawnPowerup() {
     if (this.enemies.some((e) => e.cls === 'powerup')) return;
+    this.queueEnemyIntro('powerup', 'powerup', CSS.gold);
     const types = [
       { effect: 'slowmo', label: WORDS.powerups.slowmo },
       { effect: 'knockback', label: WORDS.powerups.knockback },
@@ -646,9 +710,18 @@ class GameScene extends Phaser.Scene {
     }).setOrigin(0, 0);
     c.add([art, typed, rest]);
 
+    // LE TYPO : vaguelette rouge de correcteur orthographique sous le mot.
+    // C'est une FORME universelle ("ce mot a une faute") — l'info n'est pas
+    // portée par la seule couleur, et le trait est statique (zéro flash).
+    let underline = null;
+    if (spec.kind === 'typo') {
+      underline = this.add.graphics();
+      c.add(underline);
+    }
+
     if (spec.flipped) rest.setFlipY(true);
     const e = {
-      ...spec, container: c, art, typedText: typed, restText: rest,
+      ...spec, container: c, art, typedText: typed, restText: rest, underline,
       progress: 0, baseY: spec.y, phase: Math.random() * Math.PI * 2,
       glitchAt: this.time.now + Phaser.Math.Between(800, 3000),
     };
@@ -664,6 +737,7 @@ class GameScene extends Phaser.Scene {
 
   /* LE RECRUTEUR lance un InMail : petit missile rapide à taper lui aussi. */
   fireMissile(sp) {
+    this.queueEnemyIntro('missile', 'missile', CSS.red); // 1er InMail : ticker pédagogique
     Sfx.missile();
     this.scorePopup(sp.container.x, sp.container.y - 120, T('newMessage'), CSS.cyan, 22);
     this.addEnemy({
@@ -679,6 +753,26 @@ class GameScene extends Phaser.Scene {
     const total = tw + e.restText.width;
     e.typedText.setX(-total / 2);
     e.restText.setX(-total / 2 + tw);
+    if (e.underline) this.drawTypoUnderline(e, total);
+  }
+
+  /* Vaguelette rouge "correcteur orthographique" sous le mot du TYPO.
+     Sinusoïde tracée sur toute la largeur du mot, recentrée comme lui.
+     Statique : aucune animation, donc compatible REDUCED_MOTION d'office. */
+  drawTypoUnderline(e, width) {
+    const g = e.underline;
+    g.clear();
+    if (width < 4) return;
+    const y = 8 + 34;          // juste sous le mot (police 30px à y=8)
+    const amp = 3;             // amplitude de la vague
+    const period = 8;          // largeur d'une ondulation
+    g.lineStyle(2, PALETTE.red, 1);
+    g.beginPath();
+    g.moveTo(-width / 2, y);
+    for (let x = 0; x <= width; x += 2) {
+      g.lineTo(-width / 2 + x, y + Math.sin((x / period) * Math.PI) * amp);
+    }
+    g.strokePath();
   }
 
   // ------------------------------------------------------------ boss
@@ -1398,6 +1492,9 @@ class GameScene extends Phaser.Scene {
     // temps de jeu réel (pauses exclues, slow-mo inclus) + compte à rebours
     this.playMs += Math.min(delta, 50);
     this.refreshTime();
+
+    // bandeaux "première rencontre" en attente, joués un par un
+    this.pumpIntroQueue();
 
     // FPS, rafraîchi 4 fois par seconde
     if (!this._fpsAt || time > this._fpsAt) {
