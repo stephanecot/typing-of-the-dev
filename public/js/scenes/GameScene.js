@@ -284,13 +284,25 @@ class GameScene extends Phaser.Scene {
       this.add.text(cx, GAME_H / 2 - 50, T('pauseSub'), {
         fontFamily: FONT, fontSize: '26px', color: CSS.greenSoft,
       }).setOrigin(0.5),
-      this.add.text(cx, GAME_H / 2 + 60, T('pauseResume'), {
+      this.add.text(cx, GAME_H / 2 + 50, T('pauseResume'), {
         fontFamily: FONT, fontSize: '36px', color: CSS.green,
       }).setOrigin(0.5),
-      this.add.text(cx, GAME_H / 2 + 120, T('pauseQuit'), {
+    ]);
+    // le seul endroit où couper le son (S ne sert qu'à taper pendant le jeu)
+    this.pauseMute = this.add.text(cx, GAME_H / 2 + 108, '', {
+      fontFamily: FONT, fontSize: '30px', color: CSS.cyan,
+    }).setOrigin(0.5);
+    this.pauseOverlay.add([
+      this.pauseMute,
+      this.add.text(cx, GAME_H / 2 + 162, T('pauseQuit'), {
         fontFamily: FONT, fontSize: '30px', color: CSS.red,
       }).setOrigin(0.5),
     ]);
+  }
+
+  /* Reflète l'état muet/actif dans le libellé de la pause. */
+  refreshPauseMute() {
+    this.pauseMute.setText(T('pauseMute')(Sfx.muted));
   }
 
   togglePause() {
@@ -300,6 +312,7 @@ class GameScene extends Phaser.Scene {
       this.time.paused = true;       // gèle spawns, power-ups, banners
       this.tweens.pauseAll();
       Music.stop();
+      this.refreshPauseMute();
       this.pauseOverlay.setVisible(true);
     } else {
       this.time.paused = false;
@@ -773,6 +786,8 @@ class GameScene extends Phaser.Scene {
     if (this.paused) {
       if (e.key === 'Escape' || e.key === 'Enter') this.togglePause();
       else if (e.key === 'q' || e.key === 'Q') this.quitToMenu();
+      // le son ne se coupe QUE depuis la pause : en jeu, toute lettre sert à taper
+      else if (e.key === 's' || e.key === 'S') { Sfx.toggleMute(); this.refreshPauseMute(); }
       return;
     }
     if (e.key === 'Escape') { this.togglePause(); return; }
@@ -781,7 +796,6 @@ class GameScene extends Phaser.Scene {
     // items : touches jamais utilisées pour taper les mots
     if (e.key === 'Enter') { this.useBomb(); return; }
     if (e.key === 'Backspace') { e.preventDefault(); this.useLaser(); return; }
-    if (e.key === 'F2') { Sfx.toggleMute(); return; } // secours discret
     if (e.key.length !== 1 || e.metaKey || e.ctrlKey || e.altKey) return;
     e.preventDefault();
     Sfx.ensure();
@@ -791,12 +805,6 @@ class GameScene extends Phaser.Scene {
     // le pouvoir ne part que si la lettre ne correspond à aucune saisie valide
     if (this.superComboEnabled && (char === 'a' || char === 'z' || char === 'e')
         && !this.isValidKeystroke(char) && this.tryStarPower(char)) return;
-
-    // S coupe/active le son — même règle : seulement si la lettre ne tape rien
-    if ((char === 's' || char === 'S') && !this.isValidKeystroke(char)) {
-      Sfx.toggleMute();
-      return;
-    }
 
     if (!this.target) {
       // verrouille l'ennemi correspondant le plus proche de la prod

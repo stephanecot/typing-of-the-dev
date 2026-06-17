@@ -1,6 +1,6 @@
 # TYPING OF THE DEV 🧟⌨️
 
-[![version](https://img.shields.io/badge/version-1.4.0-39ff7a)](public/js/main.js)
+[![version](https://img.shields.io/badge/version-1.4.1-39ff7a)](public/js/main.js)
 [![node](https://img.shields.io/badge/node-%E2%89%A5%2022.5-339933?logo=node.js&logoColor=white)](#requirements)
 [![phaser](https://img.shields.io/badge/Phaser-3.87-9cf)](https://phaser.io)
 [![dependencies](https://img.shields.io/badge/npm%20dependencies-0-success)](package.json)

@@ -11,6 +11,7 @@ class MenuScene extends Phaser.Scene {
     this.konamiIdx = 0;
     this.codeOpen = false; // invite "code secret" (touche C)
     this.codeBuffer = '';
+    this.briefingOpen = false; // écran "comment jouer" avant le lancement
     Api.loadConfig(); // recharge les réglages admin à chaque passage au menu
     this.buildTitle();
     this.buildDifficulties();
@@ -22,6 +23,12 @@ class MenuScene extends Phaser.Scene {
       Sfx.ensure();
       if (!Music.playing) Music.start(0); // ambiance d'accueil, plus douce
       if (this.codeOpen) { this.onCodeKey(e); return; }
+      if (this.briefingOpen) {
+        if (e.key === 'Enter' || e.key === ' ') this.startGame();
+        else if (e.key === 'Escape') this.closeBriefing();
+        else if (e.key === 'h' || e.key === 'H') { this.closeBriefing(); this.toggleHelp(); }
+        return;
+      }
       this.trackKonami(e.key);
       if (this.helpOpen) {
         if (e.key === 'ArrowLeft') this.changeHelpPage(-1);
@@ -47,6 +54,7 @@ class MenuScene extends Phaser.Scene {
     if (BOISSON_MODE) applyDrunkFx(this);
     this.secretBadges = [];
     this.buildCodePrompt();
+    this.buildBriefing();
     this.refreshSecretBadges();
     this.cameras.main.fadeIn(400, 5, 10, 7);
   }
@@ -608,7 +616,61 @@ class MenuScene extends Phaser.Scene {
     this.refreshDiff();
   }
 
+  /* Écran "comment jouer" : recense l'essentiel avant de lancer la partie.
+     Construit une fois ; le grade et sa couleur sont rafraîchis à l'ouverture. */
+  buildBriefing() {
+    const cx = GAME_W / 2;
+    this.briefingPanel = this.add.container(0, 0).setDepth(96).setVisible(false);
+    const children = [
+      this.add.rectangle(cx, GAME_H / 2, GAME_W, GAME_H, 0x020503, 0.92),
+      this.add.rectangle(cx, GAME_H / 2, 1180, 620, 0x06120a, 0.98).setStrokeStyle(2, PALETTE.green),
+      this.add.text(cx, 188, T('briefingTitle'), {
+        fontFamily: FONT, fontSize: '52px', color: CSS.amber,
+      }).setOrigin(0.5),
+    ];
+    const stepColors = [CSS.green, CSS.cyan, CSS.red, CSS.gold];
+    let y = 288;
+    T('briefingSteps').forEach(([num, ...lines], i) => {
+      children.push(this.add.text(310, y, num, {
+        fontFamily: FONT, fontSize: '30px', color: stepColors[i] || CSS.white,
+      }).setOrigin(0, 0));
+      lines.forEach((line, j) => {
+        children.push(this.add.text(366, y + j * 30, line, {
+          fontFamily: FONT, fontSize: '26px', color: CSS.white,
+        }).setOrigin(0, 0).setAlpha(0.95));
+      });
+      y += 30 * lines.length + 24;
+    });
+    this.briefingGradeText = this.add.text(cx, y + 18, '', {
+      fontFamily: FONT, fontSize: '32px', color: CSS.gold,
+    }).setOrigin(0.5);
+    children.push(this.briefingGradeText);
+    const start = this.add.text(cx, GAME_H / 2 + 270, T('briefingStart'), {
+      fontFamily: FONT, fontSize: '28px', color: CSS.green,
+    }).setOrigin(0.5);
+    this.tweens.add({ targets: start, alpha: 0.35, duration: 600, yoyo: true, repeat: -1 });
+    children.push(start);
+    this.briefingPanel.add(children);
+  }
+
+  /* ENTRÉE depuis le menu : on affiche d'abord le briefing (pas de partie
+     lancée à l'aveugle). startGame() fait le vrai départ. */
   launch() {
+    Sfx.blip(10);
+    const d = DIFFICULTIES[this.selected];
+    this.briefingGradeText.setText(`${T('briefingGrade')(diffLabel(d))}  ${'★'.repeat(this.selected + 1)}`);
+    this.briefingGradeText.setColor(d.color);
+    this.briefingOpen = true;
+    this.briefingPanel.setVisible(true);
+  }
+
+  closeBriefing() {
+    this.briefingOpen = false;
+    this.briefingPanel.setVisible(false);
+    Sfx.blip(5);
+  }
+
+  startGame() {
     Sfx.powerup();
     Music.stop();
     this.cameras.main.fadeOut(350, 5, 10, 7);

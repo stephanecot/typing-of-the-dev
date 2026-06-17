@@ -11,10 +11,22 @@ const I18N = {
     menuTagline: 'Les bugs sont sortis du backlog. Tapez pour survivre.',
     menuSelect: '> SÉLECTIONNEZ VOTRE GRADE <',
     menuDeploy: '[ ENTRÉE pour déployer en prod ]',
-    menuFooter: 'H: aide & règles · flèches: choisir · ENTRÉE: jouer · ÉCHAP: pause · TAB: changer de cible · S: muet',
+    menuFooter: 'H: aide & règles · flèches: choisir · ENTRÉE: jouer · ÉCHAP: pause · TAB: changer de cible',
     menuLang: '[ L ] langue : FRANÇAIS',
     menuMusic: (name) => `[ B ] musique : ${name}`,
     menuMode: (inf) => inf ? '[ I ] mode : INFINI ∞' : `[ I ] mode : ${GAME_CONFIG.maxSprints} SPRINTS + DSI`,
+    // briefing affiché juste avant le lancement d'une partie
+    briefingTitle: '> COMMENT JOUER_',
+    briefingSteps: [
+      ['1.', 'Les bugs avancent vers ta PROD, à gauche. Tape la PREMIÈRE LETTRE',
+        'd\'un ennemi pour le verrouiller.'],
+      ['2.', 'Finis son mot sans faute pour l\'écraser. Les espaces sont facultatifs',
+        '— une faute remet ton combo à zéro.'],
+      ['3.', 'Ne laisse aucun ennemi atteindre la PROD : trop d\'incidents = GAME OVER.'],
+      ['4.', 'ÉCHAP : pause · TAB : changer de cible · ENTRÉE : kill -9 · EFFACER : autocomplete.'],
+    ],
+    briefingGrade: (label) => `grade : ${label}`,
+    briefingStart: '[ ENTRÉE : c\'est parti !    ÉCHAP : retour au menu    H : aide complète ]',
     helpTitle: '> AIDE — RÈGLES DU JEU_',
     helpPageHint: (cur, total) => `[ ←/→ : page ${cur}/${total} · ↑/↓ : défiler · H ou ÉCHAP : retour au menu ]`,
     helpDiffTitle: '> DIFFICULTÉS_',
@@ -30,6 +42,10 @@ const I18N = {
     helpNotesTitle: '> NOTES DE VERSION_',
     helpCurrent: '(actuelle)',
     releaseNotes: [
+      ['v1.4.1', [
+        'Écran COMMENT JOUER avant chaque partie : l\'essentiel des règles en un coup d\'œil',
+        'Le son ne se coupe plus que depuis l\'écran de pause (touche S) — fini les conflits avec la frappe',
+      ]],
       ['v1.4.0', [
         '5 nouveaux boss du mode infini (10 au total) : LA RÉUNION SANS FIN, LE FRAMEWORK DU JOUR, LE CERTIFICAT EXPIRÉ, L\'AUDIT SURPRISE et LA FACTURE CLOUD — chacun avec sa vacherie',
         'Les pages d\'aide défilent (↑/↓) et les boss y sont rangés par mode (campagne / infini)',
@@ -131,7 +147,7 @@ const I18N = {
     indepKill: 'facturé par l\'indép_',
     scopeCreep: 'SCOPE CREEP +1 !',
     reEncrypted: 'rechiffré_',
-    mutedTag: ' · 🔇 muet (S)',
+    mutedTag: ' · 🔇 muet',
     konami: '☠ KONAMI CODE — GOD MODE ARMÉ — TRICHEUR REPÉRÉ ☠',
     helpSections: [
       ['OBJECTIF', [
@@ -164,7 +180,7 @@ const I18N = {
         'Tous les 4 sprints, un BOSS : enchaîne ses commandes. Il lâche +1 vie.',
       ]],
       ['TOUCHES', [
-        'TAB : relâcher la cible · ÉCHAP : pause (puis Q : quitter) · S : muet · L (menu) : langue · B (menu) : musique',
+        'TAB : relâcher la cible · ÉCHAP : pause (puis Q : quitter, S : couper le son) · L (menu) : langue · B (menu) : musique',
       ]],
     ],
     // ---- jeu
@@ -198,6 +214,7 @@ const I18N = {
     timeBonus: 'BONUS TEMPS',
     pauseSub: 'les bugs attendent patiemment...',
     pauseResume: '[ ÉCHAP ou ENTRÉE : reprendre ]',
+    pauseMute: (muted) => muted ? '[ S : 🔇 son coupé — réactiver ]' : '[ S : 🔊 couper le son ]',
     pauseQuit: '[ Q : quitter la partie — score non sauvegardé ]',
     lvl: 'niv.',
     minified: ' [minifié]',
@@ -254,10 +271,22 @@ const I18N = {
     menuTagline: 'The bugs escaped the backlog. Type to survive.',
     menuSelect: '> SELECT YOUR RANK <',
     menuDeploy: '[ ENTER to deploy to prod ]',
-    menuFooter: 'H: help & rules · arrows: select · ENTER: play · ESC: pause · TAB: switch target · S: mute',
+    menuFooter: 'H: help & rules · arrows: select · ENTER: play · ESC: pause · TAB: switch target',
     menuLang: '[ L ] language: ENGLISH',
     menuMusic: (name) => `[ B ] music: ${name}`,
     menuMode: (inf) => inf ? '[ I ] mode: ENDLESS ∞' : `[ I ] mode: ${GAME_CONFIG.maxSprints} SPRINTS + CIO`,
+    // briefing shown right before a game starts
+    briefingTitle: '> HOW TO PLAY_',
+    briefingSteps: [
+      ['1.', 'Bugs march toward your PROD on the left. Type the FIRST LETTER',
+        'of an enemy to lock onto it.'],
+      ['2.', 'Finish its word without a typo to squash it. Spaces are optional',
+        '— a typo resets your combo.'],
+      ['3.', 'Let no enemy reach the PROD: too many incidents = GAME OVER.'],
+      ['4.', 'ESC: pause · TAB: switch target · ENTER: kill -9 · BACKSPACE: autocomplete.'],
+    ],
+    briefingGrade: (label) => `rank: ${label}`,
+    briefingStart: '[ ENTER: let\'s go!    ESC: back to menu    H: full help ]',
     helpTitle: '> HELP — HOW TO PLAY_',
     helpPageHint: (cur, total) => `[ ←/→: page ${cur}/${total} · ↑/↓: scroll · H or ESC: back to menu ]`,
     helpDiffTitle: '> DIFFICULTY LEVELS_',
@@ -273,6 +302,10 @@ const I18N = {
     helpNotesTitle: '> RELEASE NOTES_',
     helpCurrent: '(current)',
     releaseNotes: [
+      ['v1.4.1', [
+        'HOW TO PLAY screen before every game: the essentials at a glance',
+        'Sound can now only be muted from the pause screen (S key) — no more conflict with typing',
+      ]],
       ['v1.4.0', [
         '5 new endless-mode bosses (10 total): THE ENDLESS MEETING, THE FRAMEWORK OF THE DAY, THE EXPIRED CERTIFICATE, THE SURPRISE AUDIT and THE CLOUD BILL — each with its own dirty trick',
         'Help pages scroll (↑/↓) and bosses are grouped by mode (campaign / endless)',
@@ -372,7 +405,7 @@ const I18N = {
     indepKill: 'billed by the freelancer_',
     scopeCreep: 'SCOPE CREEP +1!',
     reEncrypted: 're-encrypted_',
-    mutedTag: ' · 🔇 muted (S)',
+    mutedTag: ' · 🔇 muted',
     konami: '☠ KONAMI CODE — GOD MODE ARMED — CHEATER SPOTTED ☠',
     helpSections: [
       ['GOAL', [
@@ -405,7 +438,7 @@ const I18N = {
         'Every 4 sprints, a BOSS: chain its commands. It always drops +1 life.',
       ]],
       ['KEYS', [
-        'TAB: release target · ESC: pause (then Q: quit) · S: mute · L (menu): language · B (menu): music',
+        'TAB: release target · ESC: pause (then Q: quit, S: mute) · L (menu): language · B (menu): music',
       ]],
     ],
     // ---- game
@@ -439,6 +472,7 @@ const I18N = {
     timeBonus: 'TIME BONUS',
     pauseSub: 'the bugs are waiting patiently...',
     pauseResume: '[ ESC or ENTER: resume ]',
+    pauseMute: (muted) => muted ? '[ S: 🔇 sound off — turn back on ]' : '[ S: 🔊 mute sound ]',
     pauseQuit: '[ Q: quit game — score not saved ]',
     lvl: 'lvl.',
     minified: ' [minified]',
