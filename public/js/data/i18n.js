@@ -74,6 +74,13 @@ const I18N = {
     helpNotesTitle: '> NOTES DE VERSION_',
     helpCurrent: '(actuelle)',
     releaseNotes: [
+      ['v2.0.0', [
+        'MODE MULTIJOUEUR (mode serveur) : crée ou rejoins une session par URL, 2 à 4 joueurs sur un champ de bataille partagé',
+        'Chacun son score et ses vies ; le plus rapide gagne le mot, le meilleur score l\'emporte, et tous comptent au classement',
+        'Boss, power-ups et items en multi ; +25 % d\'ennemis par joueur en plus ; un avatar coloré par joueur près de la PROD',
+        '2 nouvelles musiques plus punchies : NEUROFUNK et HARDCORE (7 pistes au total, touche B)',
+        'Des centaines de nouveaux mots à taper (+25 %)',
+      ]],
       ['v1.6.0', [
         'Nouveau mode 5 SPRINTS + DSI, désormais par défaut (touche I : 5 / 10 / infini)',
         'Rééquilibrage complet : nombre d\'ennemis et vitesse uniformisés par sprint et par difficulté',
@@ -399,6 +406,13 @@ const I18N = {
     helpNotesTitle: '> RELEASE NOTES_',
     helpCurrent: '(current)',
     releaseNotes: [
+      ['v2.0.0', [
+        'MULTIPLAYER MODE (server mode): create or join a session by URL, 2 to 4 players on a shared battlefield',
+        'Everyone keeps their own score and lives; the fastest typist wins each word, the top score wins, and all count on the leaderboard',
+        'Bosses, power-ups and items in multiplayer; +25% enemies per extra player; one colored avatar per player beside the PROD',
+        '2 new punchier music tracks: NEUROFUNK and HARDCORE (7 total, key B)',
+        'Hundreds of new words to type (+25%)',
+      ]],
       ['v1.6.0', [
         'New 5 SPRINTS + CIO mode, now the default (key I: 5 / 10 / endless)',
         'Full rebalance: enemy count and speed made uniform across sprints and difficulties',
