@@ -1750,13 +1750,8 @@ class GameScene extends Phaser.Scene {
     Sfx.gameOver();
     const results = this.mpResults();
     const winnerId = results[0] ? results[0].id : null;
-    if (this.isHost) {
-      results.forEach((r) => Api.saveGame({
-        pseudo: r.name, difficulty: this.diff.key, consent: false,
-        score: r.score, wave: r.wave, wpm: r.wpm, accuracy: r.accuracy,
-        maxCombo: r.maxCombo, durationS: r.durationS, kills: r.kills, missedWords: r.missedWords,
-      }));
-    }
+    // le leaderboard est écrit CÔTÉ SERVEUR à la réception de 'gameOver' (robuste
+    // face à la navigation : ÉCHAP avorterait un save client fire-and-forget)
     this.net?.push('gameOver', { winnerId, results });
     showMpResults(this, winnerId, results, this.localPlayer.id);
   }

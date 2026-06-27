@@ -374,7 +374,25 @@ function handleMp(req, res, url) {
       const p = JSON.parse(raw || '{}');
       if (p.playerId !== s.hostId) return sendJson(res, 403, { error: 'hote uniquement' });
       if (p.type === 'keyframe') s.keyframe = p.payload;
-      if (p.type === 'gameOver') { s.gameOver = p.payload; s.status = 'finished'; }
+      if (p.type === 'gameOver') {
+        s.gameOver = p.payload; s.status = 'finished';
+        // enregistrement leaderboard CÔTÉ SERVEUR : robuste, insensible à la
+        // navigation du client (l'hôte écrirait sinon en fire-and-forget, et
+        // ÉCHAP avorte la requête). Le pseudo multi suffit (pas de RGPD ici).
+        for (const r of (p.payload.results || [])) {
+          try {
+            const k = r.kills || {};
+            insertGame.run(
+              (String(r.name || 'JOUEUR').trim().slice(0, 20)) || 'JOUEUR', null, null, null, null, 0,
+              s.difficulty, clampInt(r.score, 0, 1e9), clampInt(r.wave, 0, 999),
+              clampFloat(r.wpm, 0, 500), clampFloat(r.accuracy, 0, 100),
+              clampInt(r.maxCombo, 0, 1e6), clampFloat(r.durationS, 0, 86400),
+              clampInt(k.bug, 0, 1e6), clampInt(k.legacy, 0, 1e6), clampInt(k.deadline, 0, 1e6),
+              clampInt(k.boss, 0, 1e6), clampInt(k.powerup, 0, 1e6), '[]'
+            );
+          } catch { /* une ligne fautive ne bloque pas les autres */ }
+        }
+      }
       mpBroadcast(s, p.type, p.payload, s.hostId); // aux miroirs uniquement
       return sendJson(res, 200, { ok: true });
     }).catch((e) => sendJson(res, 400, { error: e.message }));
