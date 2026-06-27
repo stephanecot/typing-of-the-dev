@@ -110,8 +110,28 @@ class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
 
   init(data) {
+    data = data || {};
     this.diff = data.difficulty || DIFFICULTIES[1];
     this.godModeArmed = !!data.godMode; // armé via Konami Code sur l'écran d'accueil
+
+    // ----- État PAR JOUEUR (socle multijoueur, transparent en solo) -----
+    // Un seul joueur "local" en solo. Les champs proxifiés (score, vies, combo,
+    // items, stats…) délèguent vers this.activePlayer (cf. GameScene.prototype,
+    // tout en bas du fichier) : tout le code existant `this.score += …` opère
+    // donc sur le bon joueur sans modification. En multi, this.players contient
+    // jusqu'à 4 joueurs et this.activePlayer est basculé le temps de créditer un
+    // kill au bon joueur (cf. arbitrateClaim).
+    this.mp = !!data.mp;          // true si partie multijoueur
+    this.isHost = !!data.host;    // l'hôte fait tourner la vraie simulation
+    this.net = data.net || null;  // client réseau (MpClient) côté hôte, sinon null
+    this._enemySeq = 0;           // id stable et croissant des ennemis (multi)
+    const roster = data.players && data.players.length
+      ? data.players
+      : [{ id: data.localId || 'p1', name: data.name || 'JOUEUR', color: data.color || CSS.green }];
+    this.players = roster.map((p) => GameScene.makePlayer(p.id, p.name, p.color, this.diff.lives));
+    this.localPlayer = this.players.find((p) => p.id === (data.localId || roster[0].id)) || this.players[0];
+    this.activePlayer = this.localPlayer; // joueur courant pour le proxy de score
+
     // partie gagnée au bout de maxSprints (5 ou 10 selon le mode choisi) ;
     // le compte à rebours "par" sert d'affichage et de bonus de fin
     this.infinite = INFINITE_MODE; // pas de chrono, sprints sans fin
@@ -772,7 +792,7 @@ class GameScene extends Phaser.Scene {
 
     if (spec.flipped) rest.setFlipY(true);
     const e = {
-      ...spec, container: c, art, typedText: typed, restText: rest, underline,
+      ...spec, id: ++this._enemySeq, container: c, art, typedText: typed, restText: rest, underline,
       progress: 0, baseY: spec.y, phase: Math.random() * Math.PI * 2,
       glitchAt: this.time.now + Phaser.Math.Between(800, 3000),
     };
@@ -870,6 +890,7 @@ class GameScene extends Phaser.Scene {
     c.add([name, hp, art, typed, rest]);
 
     this.boss = {
+      id: ++this._enemySeq,
       kind: 'boss', cls: 'boss', isFinal, variant, container: c, art, typedText: typed, restText: rest,
       hpText: hp, cmds, cmdIndex: 0, label: cmds[0], progress: 0,
       x: SPAWN_X + 100, y: GAME_H / 2, baseY: GAME_H / 2, phase: 0,
@@ -1641,4 +1662,33 @@ class GameScene extends Phaser.Scene {
       this.lockLine.strokeRect(t.container.x - w / 2, t.container.y - 56, w, 96);
     }
   }
+}
+
+/* État par joueur : fabrique le porteur de score / vies / combo / items / stats
+   d'un joueur (le seul "local" en solo, chacun des 2-4 en multijoueur). */
+GameScene.makePlayer = function (id, name, color, lives) {
+  return {
+    id, name, color, alive: true,
+    score: 0, combo: 0, maxCombo: 0, lives,
+    comboStars: 0, runStarTier: 0, invincibleUntil: 0,
+    bombs: 1, lasers: 1,
+    stats: {
+      typedOK: 0, errors: 0, startTime: 0,
+      kills: { bug: 0, legacy: 0, deadline: 0, boss: 0, powerup: 0 },
+      missedWords: [],
+    },
+  };
+};
+
+/* Proxy transparent : score, vies, combo, items, stats… sont lus et écrits sur
+   this.activePlayer. Tout le code de jeu existant (this.score += …, this.lives--)
+   opère ainsi sur le bon joueur sans la moindre modification, en solo comme en
+   multi (où activePlayer est basculé le temps de créditer un kill, cf. M1). */
+for (const f of ['score', 'combo', 'maxCombo', 'lives', 'comboStars',
+  'runStarTier', 'invincibleUntil', 'bombs', 'lasers', 'stats']) {
+  Object.defineProperty(GameScene.prototype, f, {
+    configurable: true,
+    get() { return this.activePlayer ? this.activePlayer[f] : undefined; },
+    set(v) { if (this.activePlayer) this.activePlayer[f] = v; },
+  });
 }
