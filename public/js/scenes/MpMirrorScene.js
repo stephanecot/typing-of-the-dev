@@ -19,6 +19,8 @@ class MpMirrorScene extends Phaser.Scene {
     this.target = null;
     this.wave = 1;
     this.over = false;
+    this.bombs = 1;   // KILL-9 (ENTRÉE) : demande à l'hôte de tuer le plus proche
+    this.lasers = 1;  // AUTOCOMPLETE (EFFACER) : aide de frappe locale
   }
 
   create() {
@@ -66,6 +68,12 @@ class MpMirrorScene extends Phaser.Scene {
   buildHud() {
     this.hudWave = this.add.text(GAME_W / 2, 22, `SPRINT 1 ∞`, { fontFamily: FONT, fontSize: '30px', color: CSS.white }).setOrigin(0.5).setDepth(40);
     this.add.text(GAME_W / 2, 58, T('mpMirrorTag'), { fontFamily: FONT, fontSize: '20px', color: CSS.greenSoft }).setOrigin(0.5).setDepth(40);
+    this.hudItems = this.add.text(24, 16, '', { fontFamily: FONT, fontSize: '24px', color: CSS.gold }).setDepth(40);
+    this.refreshItems();
+  }
+
+  refreshItems() {
+    if (this.hudItems) this.hudItems.setText(T('hudItems')(this.bombs, this.lasers));
   }
 
   refreshScoreboard() { mpRefreshAvatars(this.avatars, this.localId); }
@@ -219,7 +227,9 @@ class MpMirrorScene extends Phaser.Scene {
     if (this.over) return;
     Sfx.ensure();
     const k = e.key;
-    if (k.length !== 1) return; // ignore Entrée/Maj/etc. en M1 (items = M3)
+    if (k === 'Enter') { e.preventDefault(); this.useBomb(); return; }
+    if (k === 'Backspace') { e.preventDefault(); this.useLaser(); return; }
+    if (k.length !== 1) return; // ignore Maj/Tab/etc.
     if (!this.target) {
       // verrouille l'ennemi le plus avancé dont la 1re lettre correspond
       const cands = this.enemies
@@ -233,6 +243,36 @@ class MpMirrorScene extends Phaser.Scene {
       return;
     }
     this.advance(this.target, k);
+  }
+
+  /* KILL-9 : on demande à l'hôte de tuer le process le plus proche (il crédite
+     ce joueur et diffuse le kill). Le décompte local est purement indicatif. */
+  useBomb() {
+    if (this.bombs <= 0) { Sfx.error(); return; }
+    if (!this.enemies.some((en) => !en.boss)) { Sfx.error(); return; }
+    this.bombs--;
+    Sfx.bomb();
+    this.net.useItem('bomb');
+    this.scorePop(PLAYER_X + 160, GAME_H / 2 - 90, T('bombSent'), CSS.gold);
+    this.refreshItems();
+  }
+
+  /* AUTOCOMPLETE : aide de frappe 100 % locale (complète 4 lettres de la cible),
+     puis revendique si le mot est fini. */
+  useLaser() {
+    const t = this.target;
+    if (this.lasers <= 0 || !t) { Sfx.error(); return; }
+    this.lasers--;
+    Sfx.laser();
+    t.progress = Math.min(t.progress + 4, t.label.length);
+    this.drawLabel(t);
+    this.refreshItems();
+    if (t.progress >= t.label.length) {
+      const dur = Math.round(this.time.now - (t.lockAt || this.time.now));
+      this.net.claim(t.id, dur, t.boss ? t.cmdIndex : undefined);
+      if (!t.boss) { this.target = null; this.lockLine.clear(); }
+      else { t.progress = 0; this.drawLabel(t); }
+    }
   }
 
   firstChar(e) { let i = 0; while (e.label[i] === ' ') i++; return e.label[i]; }

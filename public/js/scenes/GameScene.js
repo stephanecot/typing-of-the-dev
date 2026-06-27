@@ -195,10 +195,10 @@ class GameScene extends Phaser.Scene {
 
     Music.start(1);
     this.nextWave();
-    // power-up indépendant des vagues, à partir de la vague 2 (solo seulement en M1)
+    // power-up indépendant des vagues, à partir de la vague 2 (solo + multi)
     this.time.addEvent({
       delay: 30000, loop: true, startAt: 0,
-      callback: () => { if (this.wave >= 2 && !this.over && !this.mp) this.spawnPowerup(); },
+      callback: () => { if (this.wave >= 2 && !this.over) this.spawnPowerup(); },
     });
     this.cameras.main.fadeIn(350, 5, 10, 7);
   }
@@ -1633,6 +1633,7 @@ class GameScene extends Phaser.Scene {
     this.buildPlayerAvatars();
     if (this.isHost && this.net) {
       this.net.on('claim', (c) => this.arbitrateClaim(c));
+      this.net.on('item', (c) => this.arbitrateItem(c));
       // ~12 Hz : positions + scores ; 2 Hz : keyframe complet (descripteurs, reconnexion)
       this.time.addEvent({ delay: 85, loop: true, callback: () => { if (!this.over) this.net.push('snapshot', this.mpSnapshotPayload()); } });
       this.time.addEvent({ delay: 500, loop: true, callback: () => { if (!this.over) this.net.push('keyframe', this.mpKeyframePayload()); } });
@@ -1693,6 +1694,17 @@ class GameScene extends Phaser.Scene {
     e.cmdStart = e.cmdStart && (this.time.now - (dur || 0)); // boss : chrono de commande
     player.stats.typedOK += e.label.length;    // crédite la frappe distante (WPM)
     if (e.kind === 'boss') this.bossHit(); else this.killEnemy(e);
+    this.activePlayer = prev;
+  }
+
+  /* Un miroir utilise un item. KILL-9 tue le process le plus proche en créditant
+     ce joueur (l'AUTOCOMPLETE, lui, est purement local côté miroir). */
+  arbitrateItem({ playerId, item }) {
+    const player = this.players.find((p) => p.id === playerId);
+    if (!player || !player.alive || item !== 'bomb') return;
+    const prev = this.activePlayer;
+    this.activePlayer = player;
+    this.useBomb();
     this.activePlayer = prev;
   }
 
