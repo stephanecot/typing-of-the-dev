@@ -12,7 +12,11 @@ class MenuScene extends Phaser.Scene {
     this.codeOpen = false; // invite "code secret" (touche C)
     this.codeBuffer = '';
     this.briefingOpen = false; // écran "comment jouer" avant le lancement
-    Api.loadConfig(); // recharge les réglages admin à chaque passage au menu
+    // recharge les réglages admin et, si le backend répond, propose le lien
+    // vers le leaderboard plein écran (inutile sur la démo statique sans serveur)
+    Api.loadConfig().then(() => {
+      if (SERVER_MODE) { this.buildLeaderboardLink(); this.buildLeaderboardOverlay(); }
+    });
     this.buildTitle();
     this.buildDifficulties();
     this.buildFooter();
@@ -23,6 +27,12 @@ class MenuScene extends Phaser.Scene {
       Sfx.ensure();
       if (!Music.playing) Music.start(0); // ambiance d'accueil, plus douce
       if (this.codeOpen) { this.onCodeKey(e); return; }
+      if (this.lbOpen) {
+        // overlay leaderboard ouvert : n'importe quelle touche de sortie ramène
+        // à l'accueil, on reste dans le même écran
+        if (['Escape', 'Enter', ' ', 't', 'T', 'm', 'M'].includes(e.key)) this.closeLeaderboard();
+        return;
+      }
       if (this.briefingOpen) {
         if (e.key === 'Enter' || e.key === ' ') this.startGame();
         else if (e.key === 'Escape') this.closeBriefing();
@@ -42,6 +52,7 @@ class MenuScene extends Phaser.Scene {
       else if (e.key === 'l' || e.key === 'L') this.toggleLang();
       else if (e.key === 'b' || e.key === 'B') this.cycleMusic();
       else if (e.key === 'c' || e.key === 'C') this.openCodePrompt();
+      else if (e.key === 't' || e.key === 'T') this.openLeaderboard();
       else if (e.key === 'i' || e.key === 'I') this.toggleInfinite();
       else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') this.move(-1);
       else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') this.move(1);
@@ -59,12 +70,14 @@ class MenuScene extends Phaser.Scene {
     this.cameras.main.fadeIn(400, 5, 10, 7);
   }
 
-  /* I : bascule le mode infini (pas de chrono, sprints sans fin), persisté. */
+  /* I : cycle les 3 modes (5 sprints → 10 sprints → infini), persisté. */
   toggleInfinite() {
-    INFINITE_MODE = !INFINITE_MODE;
-    localStorage.setItem('totd-infinite', INFINITE_MODE ? '1' : '0');
+    const next = (GAME_MODE_ORDER.indexOf(GAME_MODE) + 1) % GAME_MODE_ORDER.length;
+    GAME_MODE = GAME_MODE_ORDER[next];
+    localStorage.setItem('totd-mode', GAME_MODE);
+    applyGameMode();
     Sfx.blip(12);
-    if (this.modeLabel) this.modeLabel.setText(T('menuMode')(INFINITE_MODE));
+    if (this.modeLabel) this.modeLabel.setText(T('menuMode')(GAME_MODE));
   }
 
   /* B : fait défiler les 5 pistes musicales — pré-écoute immédiate, persistée. */
@@ -181,7 +194,7 @@ class MenuScene extends Phaser.Scene {
     page.add(this.add.text(cx, 60, T('helpDiffTitle'), {
       fontFamily: FONT, fontSize: '48px', color: CSS.amber,
     }).setOrigin(0.5));
-    page.add(this.add.text(cx, 130, T('helpGoal')(GAME_CONFIG.maxSprints), {
+    page.add(this.add.text(cx, 130, T('helpGoal')(CAMPAIGN_SPRINTS_SHORT, CAMPAIGN_SPRINTS_LONG), {
       fontFamily: FONT, fontSize: '26px', color: CSS.cyan, align: 'center',
     }).setOrigin(0.5));
 
@@ -231,12 +244,14 @@ class MenuScene extends Phaser.Scene {
     }).setOrigin(0.5));
 
     // % d'apparition : part de chaque ennemi dans les vagues d'une partie
-    // complète en difficulté max (la seule où toutes les classes existent)
+    // complète en difficulté max (la seule où toutes les classes existent).
+    // Échantillon sur une campagne longue, indépendant du mode choisi.
     const diffMax = DIFFICULTIES[DIFFICULTIES.length - 1];
+    const sampleSprints = CAMPAIGN_SPRINTS_LONG;
     const counts = {};
     let totalSpawns = 0;
-    for (let n = 1; n <= GAME_CONFIG.maxSprints; n++) {
-      const bossWave = n === GAME_CONFIG.maxSprints || n % 4 === 0;
+    for (let n = 1; n <= sampleSprints; n++) {
+      const bossWave = n === sampleSprints || n % 4 === 0;
       for (const k of waveQueueFor(diffMax, n, bossWave)) {
         counts[k] = (counts[k] || 0) + 1;
         totalSpawns++;
@@ -720,9 +735,79 @@ class MenuScene extends Phaser.Scene {
     }).setOrigin(1, 1).setAlpha(0.85);
 
     // mode objectif / infini (touche I), tout en haut de la pile
-    this.modeLabel = this.add.text(GAME_W - 16, GAME_H - 96, T('menuMode')(INFINITE_MODE), {
+    this.modeLabel = this.add.text(GAME_W - 16, GAME_H - 96, T('menuMode')(GAME_MODE), {
       fontFamily: FONT, fontSize: '22px', color: CSS.gold,
     }).setOrigin(1, 1).setAlpha(0.85);
+  }
+
+  /* Rappel du raccourci vers le leaderboard, juste au-dessus du Hall of Fame, à
+     droite. Affiché seulement en mode serveur (cf. SERVER_MODE). L'ouverture se
+     fait au clavier (touche T) ; le clic souris est un bonus. */
+  buildLeaderboardLink() {
+    if (this.leaderboardLink) return; // idempotent (relance possible au retour menu)
+    const link = this.add.text(GAME_W - 250, 350, T('menuLeaderboard'), {
+      fontFamily: FONT, fontSize: '22px', color: CSS.cyan,
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    link.on('pointerover', () => link.setColor(CSS.gold));
+    link.on('pointerout', () => link.setColor(CSS.cyan));
+    link.on('pointerup', () => this.openLeaderboard());
+    this.leaderboardLink = link;
+  }
+
+  /* Overlay leaderboard affiché PAR-DESSUS l'accueil (on ne quitte jamais
+     l'écran) : titre, top 10, et un rappel "ÉCHAP : retour à l'accueil".
+     Construit masqué ; rempli à l'ouverture. */
+  buildLeaderboardOverlay() {
+    if (this.lbPanel) return; // idempotent
+    const cx = GAME_W / 2;
+    this.lbOpen = false;
+    this.lbPanel = this.add.container(0, 0).setDepth(95).setVisible(false);
+    this.lbPanel.add(this.add.rectangle(cx, GAME_H / 2, GAME_W, GAME_H, 0x020503, 0.96));
+    this.lbPanel.add(this.add.text(cx, 90, '-- HALL OF FAME --', {
+      fontFamily: FONT, fontSize: '56px', color: CSS.cyan,
+    }).setOrigin(0.5));
+    this.lbRows = this.add.container(0, 0); // lignes (re)peuplées à chaque ouverture
+    this.lbPanel.add(this.lbRows);
+    const hint = this.add.text(cx, GAME_H - 50, T('lbHint'), {
+      fontFamily: FONT, fontSize: '32px', color: CSS.green,
+    }).setOrigin(0.5);
+    this.tweens.add({ targets: hint, alpha: 0.3, duration: 600, yoyo: true, repeat: -1 });
+    this.lbPanel.add(hint);
+  }
+
+  /* T : ouvre l'overlay leaderboard sur place. Sans effet hors mode serveur ou
+     si l'overlay n'est pas encore prêt. */
+  openLeaderboard() {
+    if (!SERVER_MODE || !this.lbPanel || this.lbOpen) return;
+    this.lbOpen = true;
+    Sfx.blip(18);
+    this.lbPanel.setVisible(true);
+    this.populateLeaderboard();
+  }
+
+  closeLeaderboard() {
+    this.lbOpen = false;
+    this.lbPanel.setVisible(false);
+    Sfx.blip(5);
+  }
+
+  async populateLeaderboard() {
+    this.lbRows.removeAll(true);
+    const cx = GAME_W / 2;
+    const rows = await Api.leaderboard('all', 10);
+    if (!this.lbOpen) return; // refermé pendant la requête
+    if (!rows.length) {
+      this.lbRows.add(this.add.text(cx, 320, T('lbEmpty'), {
+        fontFamily: FONT, fontSize: '30px', color: CSS.greenSoft,
+      }).setOrigin(0.5));
+      return;
+    }
+    rows.forEach((row, i) => {
+      this.lbRows.add(this.add.text(cx, 200 + i * 42,
+        `${String(i + 1).padStart(2)}. ${row.pseudo.slice(0, 14).padEnd(14)} ${String(row.score).padStart(8)}  ${row.difficulty.toUpperCase().padEnd(6)} ${row.wpm} wpm`, {
+          fontFamily: FONT, fontSize: '30px', color: i === 0 ? CSS.amber : CSS.green,
+        }).setOrigin(0.5));
+    });
   }
 
   async loadTopScores() {

@@ -1,7 +1,7 @@
 /* Configuration globale + lancement Phaser. */
 'use strict';
 
-const APP_VERSION = 'v1.5.0';
+const APP_VERSION = 'v1.6.0';
 
 const GAME_W = 1600;
 const GAME_H = 900;
@@ -39,12 +39,35 @@ let GINES_MODE = false;
 let DISCO_MODE = false;
 let BOISSON_MODE = false;
 
-/* MODE INFINI (touche I au menu, persisté) : pas de chrono ni de limite de
-   sprints — on enchaîne tant qu'on survit. Le DSI final n'apparaît jamais. */
-let INFINITE_MODE = localStorage.getItem('totd-infinite') === '1';
+/* MODES DE JEU (touche I au menu, persistés). Trois modes cyclés dans cet ordre :
+   - '5'  : campagne courte, 5 sprints puis LE DSI ÉNERVÉ (mode par défaut) ;
+   - '10' : campagne longue, 10 sprints puis LE DSI ÉNERVÉ ;
+   - 'inf': INFINI — pas de chrono ni de limite, on enchaîne tant qu'on survit
+            (le DSI final n'apparaît jamais).
+   INFINITE_MODE et CAMPAIGN_SPRINTS sont dérivés de GAME_MODE (cf. applyGameMode). */
+const CAMPAIGN_SPRINTS_SHORT = 5;
+const CAMPAIGN_SPRINTS_LONG = 10;
+const GAME_MODE_ORDER = ['5', '10', 'inf'];
+let GAME_MODE = localStorage.getItem('totd-mode');
+// migration depuis l'ancien réglage booléen 'totd-infinite'
+if (!GAME_MODE_ORDER.includes(GAME_MODE)) {
+  GAME_MODE = localStorage.getItem('totd-infinite') === '1' ? 'inf' : '5';
+}
+let INFINITE_MODE;
+let CAMPAIGN_SPRINTS;
+function applyGameMode() {
+  INFINITE_MODE = GAME_MODE === 'inf';
+  CAMPAIGN_SPRINTS = GAME_MODE === '10' ? CAMPAIGN_SPRINTS_LONG : CAMPAIGN_SPRINTS_SHORT;
+}
+applyGameMode();
 
 /* Code secret SPEED : +30 % de vitesse pour tout le monde, toutes difficultés. */
 let SPEED_MODE = false;
+
+/* "Mode serveur" : vrai quand le backend répond (Api.loadConfig a réussi). Faux
+   sur la démo statique GitHub Pages, sans backend. Pilote l'affichage du lien
+   vers le leaderboard (inutile sans serveur). */
+let SERVER_MODE = false;
 
 /* MODE BOISSON : caméra qui tangue, zoom qui respire et léger flou (WebGL).
    Appliqué au menu et en jeu. Les animations respectent reduced-motion. */
@@ -69,38 +92,48 @@ function applyDrunkFx(scene) {
 const REDUCED_MOTION = typeof window.matchMedia === 'function'
   && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/* Niveaux de difficulté : vitesse, cadence de spawn, vies (incidents avant
-   PROD DOWN), multiplicateur de score, longueur max des mots, commandes du boss. */
+/* Niveaux de difficulté — barème d'équilibrage UNIFORME (cf. waveQueueFor) :
+   - speed     : multiplicateur de vitesse, pas réguliers +0,30 (0,70 → 1,90) ;
+   - spawnMs   : cadence d'apparition (plus court = plus dense) ;
+   - lives     : incidents tolérés avant PROD DOWN, pas régulier −1 (5 → 1) ;
+   - scoreMult : multiplicateur de score ;
+   - maxLen    : longueur max des mots tapés (STAGIAIRE = mots courts) ;
+   - bossCmds  : commandes à enchaîner pour faire reculer un boss (+1 par cran) ;
+   - maxLevel  : palier d'ennemis le plus élevé qui apparaît (1-5) ;
+   - waveStart : nombre d'ennemis au sprint 1 ;
+   - waveGrowth: ennemis ajoutés par sprint suivant ;
+   - bugRatio  : part de bugs de base (le reste = ennemis spéciaux).
+   Le NOMBRE d'ennemis par sprint = round(waveStart + (n-1)·waveGrowth). */
 const DIFFICULTIES = [
   {
     key: 'facile', label: 'STAGIAIRE', tagline: 'Le café est offert',
     labelEn: 'INTERN', taglineEn: 'Free coffee included', color: '#39ff7a',
-    speed: 0.62, spawnMs: 2500, lives: 4, scoreMult: 1, maxLen: 10,
-    bossCmds: 2, eliteWave: 4, deadlineWave: 5,
+    speed: 0.70, spawnMs: 2200, lives: 5, scoreMult: 1, maxLen: 10,
+    bossCmds: 2, maxLevel: 2, waveStart: 5, waveGrowth: 0.5, bugRatio: 0.70,
   },
   {
     key: 'normal', label: 'DEV CONFIRMÉ', tagline: 'La prod attend',
     labelEn: 'MID-LEVEL DEV', taglineEn: 'Prod is waiting', color: '#41f2ff',
-    speed: 1.0, spawnMs: 1800, lives: 3, scoreMult: 1.5, maxLen: 18,
-    bossCmds: 3, eliteWave: 3, deadlineWave: 3,
+    speed: 1.00, spawnMs: 1700, lives: 4, scoreMult: 1.5, maxLen: 18,
+    bossCmds: 3, maxLevel: 3, waveStart: 6, waveGrowth: 1.0, bugRatio: 0.55,
   },
   {
     key: 'hard', label: 'SENIOR 10X', tagline: 'MEP un vendredi à 18h59',
     labelEn: 'SENIOR 10X', taglineEn: 'Deploying on Friday at 6:59pm', color: '#ffb000',
-    speed: 1.35, spawnMs: 1250, lives: 2, scoreMult: 2, maxLen: 99,
-    bossCmds: 4, eliteWave: 2, deadlineWave: 2,
+    speed: 1.30, spawnMs: 1350, lives: 3, scoreMult: 2, maxLen: 99,
+    bossCmds: 4, maxLevel: 3, waveStart: 7, waveGrowth: 1.4, bugRatio: 0.50,
   },
   {
     key: 'cto', label: 'CTO BURNOUT', tagline: 'Deux vies. On-call depuis 1999.',
     labelEn: 'CTO BURNOUT', taglineEn: 'Two lives. On-call since 1999.', color: '#ff3b3b',
-    speed: 1.7, spawnMs: 950, lives: 2, scoreMult: 3, maxLen: 99,
-    bossCmds: 5, eliteWave: 1, deadlineWave: 1,
+    speed: 1.60, spawnMs: 1050, lives: 2, scoreMult: 3, maxLen: 99,
+    bossCmds: 5, maxLevel: 4, waveStart: 8, waveGrowth: 1.8, bugRatio: 0.48,
   },
   {
     key: 'ultime', label: 'DIEU DU TERMINAL', tagline: 'Même vim a peur de vous.',
     labelEn: 'TERMINAL GOD', taglineEn: 'Even vim fears you.', color: '#ff5cf0',
-    speed: 2.1, spawnMs: 750, lives: 1, scoreMult: 4, maxLen: 99,
-    bossCmds: 6, eliteWave: 1, deadlineWave: 1,
+    speed: 1.90, spawnMs: 850, lives: 1, scoreMult: 4, maxLen: 99,
+    bossCmds: 6, maxLevel: 5, waveStart: 9, waveGrowth: 2.2, bugRatio: 0.45,
   },
 ];
 

@@ -14,7 +14,10 @@ const I18N = {
     menuFooter: 'H: aide & règles · flèches: choisir · ENTRÉE: jouer · ÉCHAP: pause · TAB: changer de cible',
     menuLang: '[ L ] langue : FRANÇAIS',
     menuMusic: (name) => `[ B ] musique : ${name}`,
-    menuMode: (inf) => inf ? '[ I ] mode : INFINI ∞' : `[ I ] mode : ${GAME_CONFIG.maxSprints} SPRINTS + DSI`,
+    menuMode: (mode) => mode === 'inf' ? '[ I ] mode : INFINI ∞' : `[ I ] mode : ${mode} SPRINTS + DSI`,
+    menuLeaderboard: '[ T ] classement complet',
+    lbHint: 'ÉCHAP / ENTRÉE : retour à l\'accueil',
+    lbEmpty: 'Aucun score pour le moment.',
     // briefing affiché juste avant le lancement d'une partie
     briefingTitle: '> COMMENT JOUER_',
     briefingSteps: [
@@ -30,7 +33,7 @@ const I18N = {
     helpTitle: '> AIDE — RÈGLES DU JEU_',
     helpPageHint: (cur, total) => `[ ←/→ : page ${cur}/${total} · ↑/↓ : défiler · H ou ÉCHAP : retour au menu ]`,
     helpDiffTitle: '> DIFFICULTÉS_',
-    helpGoal: (n) => `Objectif : tenir ${n} sprints puis vaincre LE DSI ÉNERVÉ.\nChaque seconde d'avance sur le chrono = points bonus !`,
+    helpGoal: (short, long) => `Objectif : tenir ${short} ou ${long} sprints (mode I) puis vaincre LE DSI ÉNERVÉ.\nChaque seconde d'avance sur le chrono = points bonus !`,
     helpLives: 'vies',
     helpSpeed: 'vitesse',
     helpSpawn: 'cadence',
@@ -42,6 +45,13 @@ const I18N = {
     helpNotesTitle: '> NOTES DE VERSION_',
     helpCurrent: '(actuelle)',
     releaseNotes: [
+      ['v1.6.0', [
+        'Nouveau mode 5 SPRINTS + DSI, désormais par défaut (touche I : 5 / 10 / infini)',
+        'Rééquilibrage complet : nombre d\'ennemis et vitesse uniformisés par sprint et par difficulté',
+        'STAGIAIRE simplifié : que des ennemis calmes et une montée en charge douce jusqu\'au bout',
+        'Mode infini plafonné pour rester jouable et fluide sur les longues parties',
+        'Classement complet accessible depuis l\'accueil au clavier (touche T), en mode serveur',
+      ]],
       ['v1.5.0', [
         'LE TYPO se repère enfin : son mot fautif est souligné d\'une vaguelette rouge, comme un correcteur — tapez la faute telle quelle !',
         'Chaque ennemi se présente la première fois qu\'il apparaît : un bandeau rappelle son nom et sa vacherie, le temps de l\'apprendre',
@@ -83,31 +93,31 @@ const I18N = {
        Ajouter un ennemi = une ligne dans le bon groupe, la mise en page suit. */
     bestiaryGroups: [
       ['NIVEAU 1 ▲', [
-        ['bug', 'BUG', 'le tout-venant du backlog : jargon\ndev court. Lent, mais nombreux.', 'toutes difficultés'],
-        ['missile', 'INMAIL', 'missile du recruteur : mot court\net très rapide.', 'toutes difficultés'],
-        ['typo', 'LE TYPO', 'son mot est déjà mal écrit —\ntapez la faute telle quelle !', 'toutes difficultés'],
+        ['bug', 'BUG', 'le tout-venant du backlog : jargon\ndev court. Lent, mais nombreux.', 'toutes · dès le sprint 1'],
+        ['missile', 'INMAIL', 'missile du recruteur : mot court\net très rapide.', 'lancé par LE RECRUTEUR'],
+        ['typo', 'LE TYPO', 'son mot est déjà mal écrit —\ntapez la faute telle quelle !', 'toutes · dès le sprint 1'],
       ]],
       ['NIVEAU 2 ▲▲', [
-        ['ghost', 'BUG FANTÔME', 'disparaît par intermittence.\nGardez son mot en tête !', 'toutes · dès le sprint 3'],
-        ['virus', 'VIRUS', 'se réplique en 2 mini-bugs à sa\nmort. Nettoyez vite !', 'toutes · dès le sprint 4'],
-        ['microservice', 'LE MICROSERVICE', 'se scinde en 2 instances toutes\nles 8 s. Scale out !', 'toutes · dès le sprint 4'],
-        ['legacy', 'ZOMBIE LEGACY', 'code et technos qui refusent de\nmourir. Lent mais long à taper.', 'toutes difficultés'],
-        ['deadline', 'FAUCHEUSE DEADLINE', 'l\'horreur du quotidien\n(réunions, jira…). Rapide !', 'toutes difficultés'],
+        ['ghost', 'BUG FANTÔME', 'disparaît par intermittence.\nGardez son mot en tête !', '★★ et + · dès le sprint 2'],
+        ['virus', 'VIRUS', 'se réplique en 2 mini-bugs à sa\nmort. Nettoyez vite !', '★★ et + · dès le sprint 2'],
+        ['microservice', 'LE MICROSERVICE', 'se scinde en 2 instances toutes\nles 8 s. Scale out !', '★★ et + · dès le sprint 2'],
+        ['legacy', 'ZOMBIE LEGACY', 'code et technos qui refusent de\nmourir. Lent mais long à taper.', 'toutes · dès le sprint 2'],
+        ['deadline', 'FAUCHEUSE DEADLINE', 'l\'horreur du quotidien\n(réunions, jira…). Rapide !', 'toutes · dès le sprint 2'],
       ]],
       ['NIVEAU 3 ▲▲▲', [
-        ['bug', 'BUG D\'ÉLITE', 'exceptions CamelCase, majuscules\ncomprises. Teigneux.', 'toutes difficultés'],
-        ['spammer', 'LE RECRUTEUR', 'campe au fond et spamme des\nInMails. Éliminez la source !', 'toutes · dès le sprint 2'],
-        ['monolith', 'LE MONOLITHE', 'exige 2 mots pour tomber, et\nrecule entre les deux.', 'toutes · dès le sprint 5'],
-        ['spec', 'LA SPEC FOIREUSE', 'son mot ne veut RIEN dire (généré\nau hasard). Bon courage.', 'toutes · dès le sprint 3'],
-      ['indep', 'L\'INDÉP', 'esquive à la moitié du mot — mais sa\nmort élimine l\'ennemi le plus proche !', 'toutes · dès le sprint 4'],
+        ['bug', 'BUG D\'ÉLITE', 'exceptions CamelCase, majuscules\ncomprises. Teigneux.', '★★ et + · dès le sprint 3'],
+        ['spammer', 'LE RECRUTEUR', 'campe au fond et spamme des\nInMails. Éliminez la source !', '★★ et + · dès le sprint 3'],
+        ['monolith', 'LE MONOLITHE', 'exige 2 mots pour tomber, et\nrecule entre les deux.', '★★ et + · dès le sprint 3'],
+        ['spec', 'LA SPEC FOIREUSE', 'son mot ne veut RIEN dire (généré\nau hasard). Bon courage.', '★★ et + · dès le sprint 3'],
+      ['indep', 'L\'INDÉP', 'esquive à la moitié du mot — mais sa\nmort élimine l\'ennemi le plus proche !', '★★ et + · dès le sprint 3'],
       ]],
       ['NIVEAU 4 ▲▲▲▲', [
-        ['consultant', 'LE CONSULTANT', 'buzzwords à rallonge, et il\naccélère vers la prod.', '★★★★ et ★★★★★'],
-        ['obfuscator', 'L\'OBFUSCATEUR', 'sa mort lâche un écran de fumée\nqui masque les bugs 5 s.', '★★★★ et ★★★★★'],
+        ['consultant', 'LE CONSULTANT', 'buzzwords à rallonge, et il\naccélère vers la prod.', '★★★★ et + · dès le sprint 4'],
+        ['obfuscator', 'L\'OBFUSCATEUR', 'sa mort lâche un écran de fumée\nqui masque les bugs 5 s.', '★★★★ et + · dès le sprint 4'],
       ]],
       ['NIVEAU 5 ▲▲▲▲▲', [
-        ['ransomware', 'LE RANSOMWARE', 'rechiffre son mot toutes les 6 s :\ntout est à refaire !', '★★★★★ uniquement'],
-        ['po', 'LE PO INSPIRÉ', 'une idée toutes les 5 s : le mot\nd\'un autre ennemi se rallonge !', '★★★★★ uniquement'],
+        ['ransomware', 'LE RANSOMWARE', 'rechiffre son mot toutes les 6 s :\ntout est à refaire !', '★★★★★ · dès le sprint 5'],
+        ['po', 'LE PO INSPIRÉ', 'une idée toutes les 5 s : le mot\nd\'un autre ennemi se rallonge !', '★★★★★ · dès le sprint 5'],
       ]],
       ['BONUS', [
         ['powerup', 'POWER-UP', 'le taper déclenche son pouvoir :\ncoffee, revert, reboot.', 'toutes difficultés'],
@@ -300,7 +310,10 @@ const I18N = {
     menuFooter: 'H: help & rules · arrows: select · ENTER: play · ESC: pause · TAB: switch target',
     menuLang: '[ L ] language: ENGLISH',
     menuMusic: (name) => `[ B ] music: ${name}`,
-    menuMode: (inf) => inf ? '[ I ] mode: ENDLESS ∞' : `[ I ] mode: ${GAME_CONFIG.maxSprints} SPRINTS + CIO`,
+    menuMode: (mode) => mode === 'inf' ? '[ I ] mode: ENDLESS ∞' : `[ I ] mode: ${mode} SPRINTS + CIO`,
+    menuLeaderboard: '[ T ] full leaderboard',
+    lbHint: 'ESC / ENTER: back to home',
+    lbEmpty: 'No scores yet.',
     // briefing shown right before a game starts
     briefingTitle: '> HOW TO PLAY_',
     briefingSteps: [
@@ -316,7 +329,7 @@ const I18N = {
     helpTitle: '> HELP — HOW TO PLAY_',
     helpPageHint: (cur, total) => `[ ←/→: page ${cur}/${total} · ↑/↓: scroll · H or ESC: back to menu ]`,
     helpDiffTitle: '> DIFFICULTY LEVELS_',
-    helpGoal: (n) => `Goal: survive ${n} sprints, then defeat THE FURIOUS CIO.\nEvery second left on the clock = bonus points!`,
+    helpGoal: (short, long) => `Goal: survive ${short} or ${long} sprints (mode I), then defeat THE FURIOUS CIO.\nEvery second left on the clock = bonus points!`,
     helpLives: 'lives',
     helpSpeed: 'speed',
     helpSpawn: 'spawn rate',
@@ -328,6 +341,13 @@ const I18N = {
     helpNotesTitle: '> RELEASE NOTES_',
     helpCurrent: '(current)',
     releaseNotes: [
+      ['v1.6.0', [
+        'New 5 SPRINTS + CIO mode, now the default (key I: 5 / 10 / endless)',
+        'Full rebalance: enemy count and speed made uniform across sprints and difficulties',
+        'INTERN simplified: only calm enemies and a gentle ramp-up all the way through',
+        'Endless mode capped to stay playable and smooth on long runs',
+        'Full leaderboard reachable from home via keyboard (key T), in server mode',
+      ]],
       ['v1.5.0', [
         'THE TYPO finally stands out: its misspelled word gets a red squiggly underline, just like a spell-checker — type the typo as is!',
         'Every enemy introduces itself the first time it shows up: a banner recalls its name and its dirty trick, just long enough to learn it',
@@ -367,31 +387,31 @@ const I18N = {
     helpCont: '(cont.)',
     bestiaryGroups: [
       ['LEVEL 1 ▲', [
-        ['bug', 'BUG', 'backlog regulars: short dev\njargon. Slow, but they swarm.', 'all difficulties'],
-        ['missile', 'INMAIL', 'recruiter missile: short word,\nvery fast.', 'all difficulties'],
-        ['typo', 'THE TYPO', 'its word is already misspelled —\ntype the mistake as is!', 'all difficulties'],
+        ['bug', 'BUG', 'backlog regulars: short dev\njargon. Slow, but they swarm.', 'all · from sprint 1'],
+        ['missile', 'INMAIL', 'recruiter missile: short word,\nvery fast.', 'launched by THE RECRUITER'],
+        ['typo', 'THE TYPO', 'its word is already misspelled —\ntype the mistake as is!', 'all · from sprint 1'],
       ]],
       ['LEVEL 2 ▲▲', [
-        ['ghost', 'GHOST BUG', 'fades out intermittently.\nKeep its word in mind!', 'all · from sprint 3'],
-        ['virus', 'VIRUS', 'splits into 2 mini-bugs when\nkilled. Clean up fast!', 'all · from sprint 4'],
-        ['microservice', 'THE MICROSERVICE', 'splits into 2 instances every\n8 s. Scale out!', 'all · from sprint 4'],
-        ['legacy', 'LEGACY ZOMBIE', 'code and tech that refuse to\ndie. Slow but long to type.', 'all difficulties'],
-        ['deadline', 'DEADLINE REAPER', 'everyday horror (meetings,\njira…). Fast!', 'all difficulties'],
+        ['ghost', 'GHOST BUG', 'fades out intermittently.\nKeep its word in mind!', '★★ and up · from sprint 2'],
+        ['virus', 'VIRUS', 'splits into 2 mini-bugs when\nkilled. Clean up fast!', '★★ and up · from sprint 2'],
+        ['microservice', 'THE MICROSERVICE', 'splits into 2 instances every\n8 s. Scale out!', '★★ and up · from sprint 2'],
+        ['legacy', 'LEGACY ZOMBIE', 'code and tech that refuse to\ndie. Slow but long to type.', 'all · from sprint 2'],
+        ['deadline', 'DEADLINE REAPER', 'everyday horror (meetings,\njira…). Fast!', 'all · from sprint 2'],
       ]],
       ['LEVEL 3 ▲▲▲', [
-        ['bug', 'ELITE BUG', 'CamelCase exceptions, capital\nletters included. Mean.', 'all difficulties'],
-        ['spammer', 'THE RECRUITER', 'camps in the back and spams\nInMails. Kill the source!', 'all · from sprint 2'],
-        ['monolith', 'THE MONOLITH', 'takes 2 words to bring down,\nknocks back in between.', 'all · from sprint 5'],
-        ['spec', 'THE BOTCHED SPEC', 'its word means NOTHING (randomly\ngenerated). Good luck.', 'all · from sprint 3'],
-      ['indep', 'THE FREELANCER', 'dodges at half word — but its death\ntakes out the closest enemy!', 'all · from sprint 4'],
+        ['bug', 'ELITE BUG', 'CamelCase exceptions, capital\nletters included. Mean.', '★★ and up · from sprint 3'],
+        ['spammer', 'THE RECRUITER', 'camps in the back and spams\nInMails. Kill the source!', '★★ and up · from sprint 3'],
+        ['monolith', 'THE MONOLITH', 'takes 2 words to bring down,\nknocks back in between.', '★★ and up · from sprint 3'],
+        ['spec', 'THE BOTCHED SPEC', 'its word means NOTHING (randomly\ngenerated). Good luck.', '★★ and up · from sprint 3'],
+      ['indep', 'THE FREELANCER', 'dodges at half word — but its death\ntakes out the closest enemy!', '★★ and up · from sprint 3'],
       ]],
       ['LEVEL 4 ▲▲▲▲', [
-        ['consultant', 'THE CONSULTANT', 'endless buzzwords, and it\naccelerates toward prod.', '★★★★ and ★★★★★'],
-        ['obfuscator', 'THE OBFUSCATOR', 'dies in a smoke screen that\nhides bugs for 5 s.', '★★★★ and ★★★★★'],
+        ['consultant', 'THE CONSULTANT', 'endless buzzwords, and it\naccelerates toward prod.', '★★★★ and up · from sprint 4'],
+        ['obfuscator', 'THE OBFUSCATOR', 'dies in a smoke screen that\nhides bugs for 5 s.', '★★★★ and up · from sprint 4'],
       ]],
       ['LEVEL 5 ▲▲▲▲▲', [
-        ['ransomware', 'THE RANSOMWARE', 're-encrypts its word every 6 s:\nstart all over again!', '★★★★★ only'],
-        ['po', 'THE INSPIRED PO', 'one idea every 5 s: another\nenemy\'s word gets longer!', '★★★★★ only'],
+        ['ransomware', 'THE RANSOMWARE', 're-encrypts its word every 6 s:\nstart all over again!', '★★★★★ · from sprint 5'],
+        ['po', 'THE INSPIRED PO', 'one idea every 5 s: another\nenemy\'s word gets longer!', '★★★★★ · from sprint 5'],
       ]],
       ['BONUS', [
         ['powerup', 'POWER-UP', 'typing it triggers its power:\ncoffee, revert, reboot.', 'all difficulties'],

@@ -1,6 +1,6 @@
 # TYPING OF THE DEV 🧟⌨️
 
-[![version](https://img.shields.io/badge/version-1.5.0-39ff7a)](public/js/main.js)
+[![version](https://img.shields.io/badge/version-1.6.0-39ff7a)](public/js/main.js)
 [![node](https://img.shields.io/badge/node-%E2%89%A5%2022.5-339933?logo=node.js&logoColor=white)](#requirements)
 [![phaser](https://img.shields.io/badge/Phaser-3.87-9cf)](https://phaser.io)
 [![dependencies](https://img.shields.io/badge/npm%20dependencies-0-success)](package.json)
@@ -69,15 +69,16 @@ db/                  SQLite database (created at runtime, git-ignored)
 
 - Type the **first letter** of an enemy to lock it, finish its word to kill it
   (spaces inside words are optional — typing the next letter skips them).
-- **Goal: survive 10 sprints** (configurable from the admin page) then beat the
-  final boss, **THE FURIOUS CIO**. A countdown is displayed: every second left
-  at victory pays a score bonus.
-- **Endless mode** (`I` key on the menu, persisted): no timer, no sprint limit —
-  waves keep coming as long as you survive, and 10 exclusive bosses rotate
-  every 4 sprints (THE MAINFRAME, TECHNICAL DEBT, THE VENGEFUL INTERN,
-  THE SALESMAN, THE BURNING DATACENTER, THE ENDLESS MEETING, THE FRAMEWORK OF
-  THE DAY, THE EXPIRED CERTIFICATE, THE SURPRISE AUDIT, THE CLOUD BILL — each
-  with its own dirty trick, see the in-game help).
+- **Game modes** (`I` key on the menu cycles them, persisted):
+  - **5 SPRINTS + CIO** (default) or **10 SPRINTS + CIO**: hold that many
+    sprints, then beat the final boss, **THE FURIOUS CIO**. A countdown is
+    displayed: every second left at victory pays a score bonus.
+  - **Endless**: no timer, no sprint limit — waves keep coming as long as you
+    survive (enemy count and speed plateau so it stays playable), and 10
+    exclusive bosses rotate every 4 sprints (THE MAINFRAME, TECHNICAL DEBT,
+    THE VENGEFUL INTERN, THE SALESMAN, THE BURNING DATACENTER, THE ENDLESS
+    MEETING, THE FRAMEWORK OF THE DAY, THE EXPIRED CERTIFICATE, THE SURPRISE
+    AUDIT, THE CLOUD BILL — each with its own dirty trick, see the in-game help).
 - 3 incidents (enemies reaching PROD) → **PROD IS DOWN** (and the server
   visibly burns).
 - A **boss** every 4 sprints: chain several full terminal commands.
@@ -109,12 +110,19 @@ freelancer), some hide everything behind a smoke screen (the obfuscator).
 
 | | INTERN | MID-LEVEL DEV | SENIOR 10X | CTO BURNOUT | TERMINAL GOD |
 |---|---|---|---|---|---|
-| Speed | ×0.62 | ×1.0 | ×1.35 | ×1.7 | ×2.1 |
-| Lives | 4 | 3 | 2 | 2 | **1** |
+| Speed | ×0.70 | ×1.00 | ×1.30 | ×1.60 | ×1.90 |
+| Lives | 5 | 4 | 3 | 2 | **1** |
 | Score multiplier | ×1 | ×1.5 | ×2 | ×3 | ×4 |
 | Boss commands | 2 | 3 | 4 | 5 | 6 |
+| Enemies / sprint | 5 → 10 | 6 → 15 | 7 → 20 | 8 → 24 | 9 → 29 |
+| Max enemy level | 2 | 3 | 3 | 4 | 5 |
 
-Lvl.4 enemies appear from CTO BURNOUT up, lvl.5 only at TERMINAL GOD.
+Balancing is uniform: enemy **count** = `waveStart + (n-1)·waveGrowth` and
+**speed** ramp grow on regular steps per difficulty (see the `DIFFICULTIES`
+table in `main.js`). Each enemy level unlocks at the sprint matching its number
+(lvl.1 from sprint 1 … lvl.5 from sprint 5). INTERN stays the gentlest: only
+calm, mechanic-free enemies; lvl.3 from MID-LEVEL DEV up, lvl.4 from CTO BURNOUT
+up, lvl.5 only at TERMINAL GOD.
 
 ### Secret codes
 
@@ -142,8 +150,9 @@ Exports from `/admin.html`:
 - `/api/export-emails.csv` — only contacts who opted in (GDPR)
 
 The admin page also shows fun end-of-day stats: average WPM, total bugs
-squashed, **the wall of shame** (most missed words), and lets you set the
-number of sprints needed to face the final boss.
+squashed, and **the wall of shame** (most missed words). *(The sprint count is
+now chosen in-game via the mode selector — 5 / 10 / endless — so the admin
+sprint setting no longer affects gameplay.)*
 
 ## Stack
 

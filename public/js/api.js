@@ -24,7 +24,9 @@ const Api = {
       const res = await fetch('/api/config');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       Object.assign(GAME_CONFIG, await res.json());
+      SERVER_MODE = true; // backend joignable : on active les fonctions en ligne
     } catch (e) {
+      SERVER_MODE = false;
       console.warn('[api] config indisponible, valeurs par défaut :', e.message);
     }
     return GAME_CONFIG;

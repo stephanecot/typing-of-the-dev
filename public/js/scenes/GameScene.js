@@ -10,40 +10,85 @@ const SPAWN_X = GAME_W + 80;
 const LANE_TOP = 130;
 const LANE_BOTTOM = GAME_H - 90;
 
+/* Métadonnées de composition des vagues (pures, partagées avec l'aide).
+   - level  : palier de difficulté de l'ennemi (= multiplicateur de score et
+              rangée du bestiaire). Débloqué au sprint dont le numéro = level.
+   - mech   : ennemi à mécanique spéciale → exclu de STAGIAIRE (le plus simple).
+   - weight : fréquence relative parmi les spéciaux d'une vague.
+   bug/typo (level 1) servent de remplissage de base (cf. bugRatio), poids 0.
+   GARDER EN PHASE avec les `level` de la table ENEMY de spawnEnemy(). */
+const ENEMY_KINDS = {
+  bug:          { level: 1, weight: 0 },
+  typo:         { level: 1, weight: 0 },
+  legacy:       { level: 2, weight: 3 },
+  deadline:     { level: 2, weight: 3 },
+  ghost:        { level: 2, weight: 2, mech: true },
+  virus:        { level: 2, weight: 2, mech: true },
+  microservice: { level: 2, weight: 2, mech: true },
+  elite:        { level: 3, weight: 2 },
+  spammer:      { level: 3, weight: 2, mech: true },
+  spec:         { level: 3, weight: 2, mech: true },
+  indep:        { level: 3, weight: 2, mech: true },
+  monolith:     { level: 3, weight: 1, mech: true },
+  consultant:   { level: 4, weight: 2, mech: true },
+  obfuscator:   { level: 4, weight: 1, mech: true },
+  ransomware:   { level: 5, weight: 1, mech: true },
+  po:           { level: 5, weight: 1, mech: true },
+};
+
+/* Plafonds de sécurité pour le MODE INFINI (sprints au-delà de 10) : la
+   campagne (≤ 10 sprints) reste sous ces valeurs, donc inchangée ; au-delà, le
+   nombre d'ennemis et la vitesse font palier pour rester jouable et fluide. */
+const MAX_WAVE_ENEMIES = 40; // DIEU l'atteint vers le sprint 15
+const MAX_SPEED_RAMP = 1.6;  // facteur de vitesse par sprint plafonné (atteint vers le sprint 25)
+
+/* Nombre total d'ennemis d'un sprint (hors boss), uniforme par difficulté :
+   waveStart au sprint 1, +waveGrowth à chaque sprint suivant, plafonné. */
+function enemyCountFor(diff, n) {
+  return Math.max(1, Math.min(MAX_WAVE_ENEMIES, Math.round(diff.waveStart + (n - 1) * diff.waveGrowth)));
+}
+
+/* Palette de spéciaux disponibles pour (difficulté, sprint), tissée par poids
+   pour un mélange régulier : un type de niveau L apparaît si L ≤ maxLevel de la
+   difficulté ET si le sprint a atteint L ; les ennemis à mécanique sont retirés
+   en STAGIAIRE. Déterministe (aucun Math.random) → % de l'aide stables. */
+function specialPaletteFor(diff, n) {
+  const eligible = [];
+  for (const [kind, meta] of Object.entries(ENEMY_KINDS)) {
+    if (meta.level < 2) continue;                  // bugs = remplissage de base
+    if (meta.level > diff.maxLevel) continue;      // au-delà du palier de la difficulté
+    if (n < meta.level) continue;                  // débloqué au sprint = son niveau
+    if (meta.mech && diff.maxLevel <= 2) continue; // STAGIAIRE : aucune mécanique
+    eligible.push(meta.weight > 0 ? { kind, weight: meta.weight } : { kind, weight: 1 });
+  }
+  // tissage : [a,b,c, a,b, a] plutôt que [a,a,a,b,b,c] → meilleure variété quand
+  // on ne prend que les premiers éléments d'une petite vague
+  const pool = [];
+  const maxW = eligible.reduce((m, e) => Math.max(m, e.weight), 0);
+  for (let r = 0; r < maxW; r++) {
+    for (const e of eligible) if (r < e.weight) pool.push(e.kind);
+  }
+  return pool;
+}
+
 /* Composition (déterministe) d'une vague pour une difficulté donnée.
    Partagée avec l'aide du menu, qui s'en sert pour calculer les %
    d'apparition des ennemis. */
 function waveQueueFor(diff, n, bossWave) {
-  const q = [];
-  // les bugs de base plafonnent vite (~24 % des apparitions au lieu de 36 %) :
-  // la variété vient des spéciaux, qui arrivent aussi plus tôt dans la partie
-  const bugCount = bossWave ? 3 : Math.min(3 + Math.ceil(n / 2), 8);
-  for (let i = 0; i < bugCount; i++) q.push('bug');
-  if (!bossWave) {
-    for (let i = 0; i < Math.min(1 + Math.floor(n / 3), 4); i++) q.push('typo');
-    if (n >= 2) for (let i = 0; i < Math.min(1 + Math.floor(n / 2), 5); i++) q.push('legacy');
-    if (n >= diff.deadlineWave) for (let i = 0; i < Math.min(1 + Math.floor(n / 2), 6); i++) q.push('deadline');
-    if (n >= diff.eliteWave) for (let i = 0; i < Math.min(Math.floor(n / 3) + 1, 4); i++) q.push('elite');
-    if (n >= 2) for (let i = 0; i < Math.min(1 + Math.floor((n - 2) / 3), 2); i++) q.push('spammer');
-    if (n >= 3) for (let i = 0; i < Math.min(1 + Math.floor((n - 3) / 3), 3); i++) q.push('ghost');
-    if (n >= 4) for (let i = 0; i < Math.min(1 + Math.floor((n - 4) / 3), 3); i++) q.push('virus');
-    if (n >= 5) for (let i = 0; i < Math.min(1 + Math.floor((n - 5) / 4), 2); i++) q.push('monolith');
-    if (n >= 4) for (let i = 0; i < Math.min(1 + Math.floor((n - 4) / 3), 2); i++) q.push('microservice');
-    if (n >= 3) for (let i = 0; i < Math.min(1 + Math.floor((n - 3) / 3), 2); i++) q.push('spec');
-    if (n >= 4) for (let i = 0; i < Math.min(1 + Math.floor((n - 4) / 4), 2); i++) q.push('indep');
-    // niv.4 et 5 : seulement en CTO BURNOUT et DIEU DU TERMINAL
-    const hardcore = diff.key === 'cto' || diff.key === 'ultime';
-    if (hardcore && n >= 2) for (let i = 0; i < Math.min(1 + Math.floor((n - 2) / 3), 3); i++) q.push('consultant');
-    if (hardcore && n >= 3) for (let i = 0; i < Math.min(1 + Math.floor((n - 3) / 4), 2); i++) q.push('obfuscator');
-    if (diff.key === 'ultime' && n >= 3) for (let i = 0; i < Math.min(1 + Math.floor((n - 3) / 4), 2); i++) q.push('ransomware');
-    if (diff.key === 'ultime' && n >= 4) q.push('po'); // 1 seul PO à la fois suffit largement
+  // vague de boss : escouade d'appoint légère (~30 %), surtout des bugs, pour
+  // garder le focus sur le boss
+  const total = bossWave
+    ? Math.max(2, Math.round(enemyCountFor(diff, n) * 0.3))
+    : enemyCountFor(diff, n);
+  const bugRatio = bossWave ? 0.85 : diff.bugRatio;
+  const palette = bossWave ? [] : specialPaletteFor(diff, n);
 
-    // +15 % d'ennemis spéciaux : on repioche (déterministe, pour que les %
-    // affichés dans l'aide restent stables) parmi les non-bugs de la vague
-    const specials = q.filter((k) => k !== 'bug');
-    const extra = Math.round(specials.length * 0.15);
-    for (let i = 0; i < extra; i++) q.push(specials[i % specials.length]);
-  }
+  const q = [];
+  // remplissage de base : bugs, avec ~1 typo sur 4 pour un peu de variété
+  const bugs = palette.length ? Math.round(total * bugRatio) : total;
+  for (let i = 0; i < bugs; i++) q.push(i % 4 === 3 ? 'typo' : 'bug');
+  // le reste : spéciaux parcourus en round-robin déterministe sur la palette
+  for (let i = 0; i < total - bugs; i++) q.push(palette[i % palette.length]);
   return q;
 }
 
@@ -67,11 +112,11 @@ class GameScene extends Phaser.Scene {
   init(data) {
     this.diff = data.difficulty || DIFFICULTIES[1];
     this.godModeArmed = !!data.godMode; // armé via Konami Code sur l'écran d'accueil
-    // partie gagnée au bout de maxSprints (réglable depuis l'admin) ;
+    // partie gagnée au bout de maxSprints (5 ou 10 selon le mode choisi) ;
     // le compte à rebours "par" sert d'affichage et de bonus de fin
     this.infinite = INFINITE_MODE; // pas de chrono, sprints sans fin
     this.speedScale = SPEED_MODE ? 1.3 : 1; // code secret SPEED : +30 %
-    this.maxSprints = GAME_CONFIG.maxSprints;
+    this.maxSprints = CAMPAIGN_SPRINTS;
     this.parMs = this.maxSprints * PAR_SECONDS_PER_SPRINT * 1000;
     this.playMs = 0; // temps de jeu effectif (pauses exclues)
     this.enemies = [];
@@ -486,8 +531,10 @@ class GameScene extends Phaser.Scene {
   scheduleSpawn() {
     if (this.over || !this.spawnQueue.length) return;
     this.spawnEnemy(this.spawnQueue.shift());
-    const delay = this.diff.spawnMs * Phaser.Math.FloatBetween(0.75, 1.25)
-      * Math.max(0.55, 1 - this.wave * 0.03);
+    // cadence = spawnMs × variation (±15 %) × accélération uniforme par sprint
+    // (−3 %/sprint, plancher 0,6) : les vagues tardives se densifient un peu
+    const delay = this.diff.spawnMs * Phaser.Math.FloatBetween(0.85, 1.15)
+      * Math.max(0.6, 1 - (this.wave - 1) * 0.03);
     this.time.delayedCall(delay, () => this.scheduleSpawn());
   }
 
@@ -665,7 +712,11 @@ class GameScene extends Phaser.Scene {
             { maxLen: this.diff.maxLen + 8, exclude: new Set([label]) })]
         : null,
       x: SPAWN_X, y: Phaser.Math.Between(LANE_TOP, LANE_BOTTOM),
-      speed: conf.speed * this.diff.speed * (1 + this.wave * 0.04) * Phaser.Math.FloatBetween(0.9, 1.1),
+      // vitesse = base de l'ennemi × difficulté × croissance uniforme par sprint
+      // (+2,5 %/sprint, plafonnée pour le mode infini) × variation visuelle (±5 %)
+      speed: conf.speed * this.diff.speed
+        * Math.min(MAX_SPEED_RAMP, 1 + (this.wave - 1) * 0.025)
+        * Phaser.Math.FloatBetween(0.95, 1.05),
       color: conf.color, artKind: conf.art, techName, artSize: conf.size,
     });
   }
