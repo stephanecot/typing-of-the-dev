@@ -241,6 +241,158 @@ function handleApi(req, res, url) {
   return sendJson(res, 404, { error: 'not found' });
 }
 
+// ---------------------------------------------------------------- Multijoueur
+// Sessions éphémères en mémoire. Transport temps réel : SSE (serveur → clients)
+// + POST (clients → serveur). L'HÔTE fait tourner la vraie simulation du jeu et
+// pousse l'état ; le serveur n'est qu'un relais + arbitre de session.
+const sessions = new Map();
+const MP_COLORS = ['#39ff7a', '#41f2ff', '#ffd76a', '#ff5cf0']; // 1 couleur par joueur
+
+function mpCode() {
+  const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sans I/O/0/1 ambigus
+  let c = '';
+  for (let i = 0; i < 4; i++) c += A[Math.floor(Math.random() * A.length)];
+  return sessions.has(c) ? mpCode() : c;
+}
+const mpId = () => 'p' + Math.random().toString(36).slice(2, 8);
+
+function sseSend(res, type, data) {
+  res.write(`event: ${type}\ndata: ${JSON.stringify(data)}\n\n`);
+}
+function lobbyView(s) {
+  return {
+    status: s.status, hostId: s.hostId, difficulty: s.difficulty, mode: s.mode,
+    players: s.players.map((p) => ({ id: p.id, name: p.name, color: p.color, ready: p.ready })),
+  };
+}
+function mpBroadcast(s, type, data, exceptId) {
+  for (const [pid, res] of s.subs) if (pid !== exceptId) sseSend(res, type, data);
+}
+
+function handleMp(req, res, url) {
+  const parts = url.pathname.split('/').filter(Boolean); // ['api','mp',code?,action?]
+
+  if (req.method === 'POST' && parts[2] === 'create') {
+    return readBody(req).then((raw) => {
+      const p = JSON.parse(raw || '{}');
+      const code = mpCode();
+      const id = mpId();
+      const difficulty = ['facile', 'normal', 'hard', 'cto', 'ultime'].includes(p.difficulty) ? p.difficulty : 'normal';
+      const mode = ['5', '10', 'inf'].includes(String(p.mode)) ? String(p.mode) : '5';
+      const name = (String(p.name || 'HOTE').trim().slice(0, 16)) || 'HOTE';
+      const color = MP_COLORS.includes(p.color) ? p.color : MP_COLORS[0];
+      sessions.set(code, {
+        code, status: 'lobby', difficulty, mode, hostId: id,
+        players: [{ id, name, color, ready: true }],
+        subs: new Map(), keyframe: null, gameOver: null, createdAt: Date.now(),
+      });
+      return sendJson(res, 201, { code, playerId: id, color });
+    }).catch((e) => sendJson(res, 400, { error: e.message }));
+  }
+
+  if (req.method === 'POST' && parts[2] === 'join') {
+    return readBody(req).then((raw) => {
+      const p = JSON.parse(raw || '{}');
+      const s = sessions.get(String(p.code || '').toUpperCase());
+      if (!s) return sendJson(res, 404, { error: 'session inconnue' });
+      if (s.status !== 'lobby') return sendJson(res, 409, { error: 'partie deja lancee' });
+      if (s.players.length >= 4) return sendJson(res, 409, { error: 'session pleine' });
+      const id = mpId();
+      const taken = new Set(s.players.map((q) => q.color));
+      const color = (MP_COLORS.includes(p.color) && !taken.has(p.color))
+        ? p.color : (MP_COLORS.find((c) => !taken.has(c)) || MP_COLORS[0]);
+      const name = (String(p.name || 'JOUEUR').trim().slice(0, 16)) || 'JOUEUR';
+      s.players.push({ id, name, color, ready: false });
+      mpBroadcast(s, 'lobby', lobbyView(s));
+      return sendJson(res, 200, { code: s.code, playerId: id, color });
+    }).catch((e) => sendJson(res, 400, { error: e.message }));
+  }
+
+  const code = (parts[2] || '').toUpperCase();
+  const s = sessions.get(code);
+
+  // SSE : flux d'événements du serveur vers un joueur (lobby + jeu)
+  if (req.method === 'GET' && parts[3] === 'events') {
+    const playerId = url.searchParams.get('playerId');
+    if (!s || !s.players.some((p) => p.id === playerId)) { res.writeHead(404); return res.end(); }
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache', Connection: 'keep-alive', 'X-Accel-Buffering': 'no',
+    });
+    res.write(': ok\n\n');
+    s.subs.set(playerId, res);
+    sseSend(res, 'lobby', lobbyView(s)); // état courant immédiat (gère la reconnexion)
+    if (s.status === 'playing') {
+      sseSend(res, 'start', { difficulty: s.difficulty, mode: s.mode, players: lobbyView(s).players });
+      if (s.keyframe) sseSend(res, 'keyframe', s.keyframe);
+    }
+    if (s.status === 'finished' && s.gameOver) sseSend(res, 'gameOver', s.gameOver);
+    const ping = setInterval(() => res.write(': ping\n\n'), 15000);
+    req.on('close', () => {
+      clearInterval(ping);
+      s.subs.delete(playerId);
+      if (playerId === s.hostId) {
+        s.status = 'finished';
+        mpBroadcast(s, 'sessionEnded', {});
+        setTimeout(() => sessions.delete(code), 30000);
+      } else if (s.status === 'lobby') {
+        s.players = s.players.filter((p) => p.id !== playerId);
+        mpBroadcast(s, 'lobby', lobbyView(s));
+      }
+    });
+    return;
+  }
+
+  if (!s) return sendJson(res, 404, { error: 'session inconnue' });
+
+  if (req.method === 'GET' && parts.length === 3) return sendJson(res, 200, lobbyView(s));
+
+  if (req.method === 'POST' && parts[3] === 'start') {
+    return readBody(req).then((raw) => {
+      const p = JSON.parse(raw || '{}');
+      if (p.playerId !== s.hostId) return sendJson(res, 403, { error: 'hote uniquement' });
+      if (s.players.length < 2) return sendJson(res, 409, { error: 'min 2 joueurs' });
+      s.status = 'playing';
+      mpBroadcast(s, 'start', { difficulty: s.difficulty, mode: s.mode, players: lobbyView(s).players });
+      return sendJson(res, 200, { ok: true });
+    }).catch((e) => sendJson(res, 400, { error: e.message }));
+  }
+
+  if (req.method === 'POST' && parts[3] === 'ready') {
+    return readBody(req).then((raw) => {
+      const p = JSON.parse(raw || '{}');
+      const pl = s.players.find((q) => q.id === p.playerId);
+      if (pl) pl.ready = !!p.ready;
+      mpBroadcast(s, 'lobby', lobbyView(s));
+      return sendJson(res, 200, { ok: true });
+    }).catch((e) => sendJson(res, 400, { error: e.message }));
+  }
+
+  // l'hôte pousse l'état du jeu (snapshot/keyframe/kill/incident/gameOver…) → miroirs
+  if (req.method === 'POST' && parts[3] === 'host') {
+    return readBody(req, 256 * 1024).then((raw) => {
+      const p = JSON.parse(raw || '{}');
+      if (p.playerId !== s.hostId) return sendJson(res, 403, { error: 'hote uniquement' });
+      if (p.type === 'keyframe') s.keyframe = p.payload;
+      if (p.type === 'gameOver') { s.gameOver = p.payload; s.status = 'finished'; }
+      mpBroadcast(s, p.type, p.payload, s.hostId); // aux miroirs uniquement
+      return sendJson(res, 200, { ok: true });
+    }).catch((e) => sendJson(res, 400, { error: e.message }));
+  }
+
+  // un miroir envoie une revendication de kill / un usage d'item → relayé à l'hôte
+  if (req.method === 'POST' && (parts[3] === 'claim' || parts[3] === 'item')) {
+    return readBody(req).then((raw) => {
+      const p = JSON.parse(raw || '{}');
+      const hostRes = s.subs.get(s.hostId);
+      if (hostRes) sseSend(hostRes, parts[3], p);
+      return sendJson(res, 200, { ok: true });
+    }).catch((e) => sendJson(res, 400, { error: e.message }));
+  }
+
+  return sendJson(res, 404, { error: 'not found' });
+}
+
 // ---------------------------------------------------------------- Statique
 function serveStatic(req, res, url) {
   let filePath = decodeURIComponent(url.pathname);
@@ -258,6 +410,7 @@ function serveStatic(req, res, url) {
 
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
+  if (url.pathname.startsWith('/api/mp/')) return handleMp(req, res, url);
   if (url.pathname.startsWith('/api/')) return handleApi(req, res, url);
   return serveStatic(req, res, url);
 });

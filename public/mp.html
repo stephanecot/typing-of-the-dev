@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TYPING OF THE DEV — MULTI</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="crt-frame">
+    <div id="game-container" role="application"
+         aria-label="Typing of the Dev — multijoueur, entièrement au clavier"></div>
+    <div class="crt-scanlines" aria-hidden="true"></div>
+    <div class="crt-rgb" aria-hidden="true"></div>
+    <div class="crt-vignette" aria-hidden="true"></div>
+    <div class="crt-flicker" aria-hidden="true"></div>
+  </div>
+
+  <!-- Formulaire de fin de partie (partagé avec le solo) -->
+  <div id="save-overlay" role="dialog" aria-modal="true" aria-labelledby="save-title">
+    <form id="save-form" autocomplete="off">
+      <h2 id="save-title">&gt; ENREGISTRER TON SCORE_</h2>
+      <label for="input-pseudo">pseudo *</label>
+      <input id="input-pseudo" type="text" minlength="2" maxlength="20" required
+             placeholder="xX_DevSlayer_Xx" spellcheck="false">
+      <div class="row">
+        <div>
+          <label for="input-firstname">prénom <span class="opt">(optionnel)</span></label>
+          <input id="input-firstname" type="text" maxlength="60" placeholder="Ada" spellcheck="false">
+        </div>
+        <div>
+          <label for="input-lastname">nom <span class="opt">(optionnel)</span></label>
+          <input id="input-lastname" type="text" maxlength="60" placeholder="Lovelace" spellcheck="false">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="input-email">email <span class="opt">(optionnel)</span></label>
+          <input id="input-email" type="email" maxlength="120" placeholder="toi@exemple.dev" spellcheck="false">
+        </div>
+        <div>
+          <label for="input-phone">téléphone <span class="opt">(optionnel)</span></label>
+          <input id="input-phone" type="tel" maxlength="20" placeholder="06 12 34 56 78" pattern="[0-9 +().-]*">
+        </div>
+      </div>
+      <label class="consent">
+        <input id="input-consent" type="checkbox">
+        <span>J'accepte d'être recontacté·e après l'événement. Sans cette case,
+        nom, prénom, email et téléphone ne sont pas conservés (RGPD : données
+        supprimées après le tirage, jamais cédées).</span>
+      </label>
+      <div class="form-actions">
+        <button type="submit">[ ENREGISTRER ]</button>
+        <button type="button" id="btn-skip">[ passer ]</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- page multijoueur : déclenche le scene-set lobby/miroir dans main.js -->
+  <script>window.MP_PAGE = true;</script>
+  <script src="lib/phaser.min.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/data/i18n.js"></script>
+  <script src="js/data/words.js"></script>
+  <script src="js/data/ascii.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/net/MpClient.js"></script>
+  <script src="js/scenes/BootScene.js"></script>
+  <script src="js/scenes/MenuScene.js"></script>
+  <script src="js/scenes/GameScene.js"></script>
+  <script src="js/scenes/MpLobbyScene.js"></script>
+  <script src="js/scenes/MpMirrorScene.js"></script>
+  <script src="js/scenes/GameOverScene.js"></script>
+</body>
+</html>
