@@ -109,10 +109,14 @@ class MpLobbyScene extends Phaser.Scene {
       mp: true, net: Mp, host: Mp.isHost, localId: Mp.playerId,
       difficulty: diff, mode: d.mode, players: d.players,
     };
-    this.cameras.main.fadeOut(300, 5, 10, 7);
-    this.cameras.main.once('camerafadeoutcomplete', () => {
+    const go = () => {
+      if (this._launched) return;
+      this._launched = true;
       this.scene.start(Mp.isHost ? 'Game' : 'MpMirror', data);
-    });
+    };
+    this.cameras.main.fadeOut(300, 5, 10, 7);
+    this.cameras.main.once('camerafadeoutcomplete', go);
+    this.time.delayedCall(700, go); // filet si le fondu est gelé (onglet en arrière-plan)
   }
 
   // ---- rendu (reconstruit l'UI à chaque changement d'état)

@@ -1632,6 +1632,7 @@ class GameScene extends Phaser.Scene {
   mpSetup() {
     this.buildPlayerAvatars();
     if (this.isHost && this.net) {
+      this.net.clearHandlers(); // oublie les handlers du lobby
       this.net.on('claim', (c) => this.arbitrateClaim(c));
       this.net.on('item', (c) => this.arbitrateItem(c));
       // ~12 Hz : positions + scores ; 2 Hz : keyframe complet (descripteurs, reconnexion)

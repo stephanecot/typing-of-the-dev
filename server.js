@@ -415,6 +415,17 @@ const server = http.createServer((req, res) => {
   return serveStatic(req, res, url);
 });
 
+// hygiène mémoire : purge les sessions terminées (5 min) ou abandonnées (1 h)
+const mpCleanup = setInterval(() => {
+  const now = Date.now();
+  for (const [code, s] of sessions) {
+    const doneOld = s.status === 'finished' && now - s.createdAt > 5 * 60 * 1000;
+    const abandoned = s.subs.size === 0 && now - s.createdAt > 60 * 60 * 1000;
+    if (doneOld || abandoned) sessions.delete(code);
+  }
+}, 5 * 60 * 1000);
+if (mpCleanup.unref) mpCleanup.unref();
+
 server.listen(PORT, () => {
   console.log('');
   console.log('  ████ TYPING OF THE DEV ████');

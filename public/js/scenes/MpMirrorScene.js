@@ -37,7 +37,8 @@ class MpMirrorScene extends Phaser.Scene {
     this.input.keyboard.on('keydown', this.keyHandler);
     this.events.on('shutdown', () => this.input.keyboard.off('keydown', this.keyHandler));
 
-    // écoute réseau
+    // écoute réseau (on oublie d'abord les handlers du lobby)
+    this.net.clearHandlers();
     this.net.on('spawn', (w) => this.makeEnemy(w));
     this.net.on('snapshot', (s) => this.onSnapshot(s));
     this.net.on('keyframe', (k) => this.onKeyframe(k));

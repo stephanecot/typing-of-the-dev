@@ -62,6 +62,9 @@ class MpClient {
 
   on(type, cb) { (this.handlers[type] = this.handlers[type] || []).push(cb); return this; }
   _emit(type, data) { (this.handlers[type] || []).forEach((cb) => cb(data)); }
+  // au changement de scène : on repart de zéro pour ne pas garder les handlers
+  // de la scène précédente (sinon une reconnexion SSE relancerait le lobby)
+  clearHandlers() { this.handlers = {}; }
 
   start() { return this._post(`/api/mp/${this.code}/start`, { playerId: this.playerId }); }
   setReady(v) { return this._post(`/api/mp/${this.code}/ready`, { playerId: this.playerId, ready: !!v }); }
