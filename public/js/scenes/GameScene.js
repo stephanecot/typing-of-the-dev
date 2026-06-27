@@ -543,8 +543,8 @@ class GameScene extends Phaser.Scene {
     this.net?.push('wave', { n: this.wave });
     const sprintLabel = this.infinite ? `SPRINT ${this.wave}` : `SPRINT ${this.wave}/${this.maxSprints}`;
     const isFinal = !this.infinite && this.wave === this.maxSprints;
-    // M1 : pas de boss en multi (arbitrage des boss = M2)
-    const isBossWave = !this.mp && (isFinal || this.wave % 4 === 0);
+    // boss tous les 4 sprints (en multi : survie infinie → boss du mode infini)
+    const isBossWave = isFinal || this.wave % 4 === 0;
     this.showBanner(isFinal
       ? `${sprintLabel}\n${T('bannerFinal')}`
       : isBossWave
@@ -928,6 +928,10 @@ class GameScene extends Phaser.Scene {
     this.layoutLabel(this.boss);
     this.refreshBossHp();
     this.enemies.push(this.boss);
+    if (this.net) { // miroirs : matérialise le boss + bannière
+      this.net.push('spawn', this.enemyWire(this.boss));
+      this.net.push('boss', { id: this.boss.id, name: name.text });
+    }
   }
 
   refreshBossHp() {
@@ -970,6 +974,11 @@ class GameScene extends Phaser.Scene {
     this.layoutLabel(b);
     this.refreshBossHp();
     this.refreshHud();
+    // miroirs : nouvelle commande du boss + crédit du coup
+    this.net?.push('bosscmd', {
+      id: b.id, label: b.label, cmdIndex: b.cmdIndex, cmdTotal: b.cmds.length,
+      byId: this.activePlayer.id, pts, fx: b.container.x, fy: b.container.y - 140,
+    });
   }
 
   // ------------------------------------------------------------ frappe
@@ -1247,7 +1256,10 @@ class GameScene extends Phaser.Scene {
         e.container.destroy();
         return this.victory();
       }
-      this.dropBonus(e, 'life'); // le boss lâche toujours une vie
+      // le boss lâche toujours une vie : en multi, +1 vie pour chaque joueur
+      // encore en lice (récompense partagée) ; en solo, un bonus à ramasser
+      if (this.mp) this.players.forEach((p) => { if (p.alive) p.lives += 1; });
+      else this.dropBonus(e, 'life');
     } else {
       this.stats.kills[e.cls] = (this.stats.kills[e.cls] || 0) + 1;
       const sm = this.speedMult(e, e.lockTime ? this.time.now - e.lockTime : 0);
@@ -1458,10 +1470,12 @@ class GameScene extends Phaser.Scene {
     if (this.mp) {
       const fx = e.container.x, fy = e.container.y;
       if (e.cls !== 'powerup') {
+        // un boss qui atteint la PROD frappe plus fort (comme en solo)
+        const dmg = e.kind === 'boss' ? ((e.variant && e.variant.damage) || 2) : 1;
         this.players.forEach((p) => {
           if (!p.alive) return;
           p.stats.missedWords.push(e.label);
-          p.lives -= 1;
+          p.lives -= dmg;
           p.combo = 0; p.runStarTier = 0;
           if (p.lives <= 0) { p.lives = 0; p.alive = false; this.net?.push('playerEliminated', { id: p.id }); }
         });
@@ -1470,9 +1484,10 @@ class GameScene extends Phaser.Scene {
         this.redSparks.explode(60, PROD_X + 80, fy);
         this.flashRect.setAlpha(0.35);
         this.tweens.add({ targets: this.flashRect, alpha: 0, duration: 450 });
-        this.showBanner(T('incident'));
+        this.showBanner(e.kind === 'boss' ? T('bossTouch') : T('incident'));
         this.net?.push('incident', { id: e.id, fx, fy });
       }
+      if (e.kind === 'boss') this.boss = null;
       e.container.destroy();
       this.refreshHud();
       if (this.players.every((p) => !p.alive)) return this.mpGameOver();
@@ -1627,7 +1642,7 @@ class GameScene extends Phaser.Scene {
 
   /* Descripteur réseau d'un ennemi (assez pour que le miroir le dessine). */
   enemyWire(e) {
-    return {
+    const w = {
       id: e.id, kind: e.kind, cls: e.cls, label: e.label,
       x: Math.round(e.container.x), y: Math.round(e.container.y),
       speed: Math.round(e.speed * this.speedScale),
@@ -1635,6 +1650,15 @@ class GameScene extends Phaser.Scene {
       techName: e.techName || null, artSize: e.artSize || 18,
       masked: e.masked ? Array.from(e.masked) : null, flipped: !!e.flipped,
     };
+    if (e.kind === 'boss') {
+      w.boss = true;
+      w.name = e.isFinal ? T('finalBossName') : (e.variant ? T(e.variant.nameKey) : T('bossName'));
+      w.artKind = e.isFinal ? 'finalBoss' : (e.variant ? e.variant.art : 'boss');
+      w.cmdIndex = e.cmdIndex; w.cmdTotal = e.cmds.length;
+      w.color = e.isFinal ? CSS.magenta : (e.variant ? e.variant.color : CSS.red);
+      w.artSize = e.isFinal ? 26 : 30;
+    }
+    return w;
   }
 
   mpSnapshotPayload() {
@@ -1656,15 +1680,19 @@ class GameScene extends Phaser.Scene {
   /* Un miroir a fini un mot → on crédite le PREMIER arrivé (les suivants
      trouvent l'ennemi déjà disparu). On bascule activePlayer le temps du kill
      pour que tout le code de score existant crédite le bon joueur. */
-  arbitrateClaim({ playerId, enemyId, dur }) {
+  arbitrateClaim({ playerId, enemyId, dur, cmdIndex }) {
     const e = this.enemies.find((x) => x.id === enemyId);
     const player = this.players.find((p) => p.id === playerId);
-    if (!e || !player || !player.alive || e.kind === 'boss') return; // trop tard / boss (M2)
+    if (!e || !player || !player.alive) return; // trop tard / déjà tué
+    // boss : on n'avance que si le joueur a fini LA commande courante (sinon,
+    // un autre l'a déjà fait passer → revendication périmée, ignorée)
+    if (e.kind === 'boss' && cmdIndex !== e.cmdIndex) return;
     const prev = this.activePlayer;
     this.activePlayer = player;
     e.lockTime = this.time.now - (dur || 0);   // pour le bonus de vitesse
+    e.cmdStart = e.cmdStart && (this.time.now - (dur || 0)); // boss : chrono de commande
     player.stats.typedOK += e.label.length;    // crédite la frappe distante (WPM)
-    this.killEnemy(e);
+    if (e.kind === 'boss') this.bossHit(); else this.killEnemy(e);
     this.activePlayer = prev;
   }
 

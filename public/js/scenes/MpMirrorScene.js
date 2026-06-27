@@ -42,6 +42,8 @@ class MpMirrorScene extends Phaser.Scene {
     this.net.on('kill', (k) => this.onKill(k));
     this.net.on('incident', (k) => this.onIncident(k));
     this.net.on('wave', (w) => { this.wave = w.n; this.hudWave.setText(`SPRINT ${w.n} ∞`); });
+    this.net.on('boss', (b) => this.showBossBanner(b));
+    this.net.on('bosscmd', (b) => this.onBossCmd(b));
     this.net.on('gameOver', (g) => this.onGameOver(g));
     this.net.on('sessionEnded', () => this.onSessionEnded());
 
@@ -75,18 +77,27 @@ class MpMirrorScene extends Phaser.Scene {
     const art = this.add.text(0, 0, pickArt(w.artKind, w.techName), {
       fontFamily: FONT, fontSize: `${w.artSize}px`, color: w.color, align: 'center', lineSpacing: -3,
     }).setOrigin(0.5, 1);
-    const typed = this.add.text(0, 8, '', { fontFamily: FONT, fontSize: '30px', color: CSS.amber }).setOrigin(0, 0);
-    const rest = this.add.text(0, 8, '', { fontFamily: FONT, fontSize: '30px', color: w.cls === 'powerup' ? CSS.gold : CSS.white }).setOrigin(0, 0);
+    const ly = w.boss ? 12 : 8;
+    const typed = this.add.text(0, ly, '', { fontFamily: FONT, fontSize: '30px', color: CSS.amber }).setOrigin(0, 0);
+    const rest = this.add.text(0, ly, '', { fontFamily: FONT, fontSize: '30px', color: w.cls === 'powerup' ? CSS.gold : CSS.white }).setOrigin(0, 0);
     if (w.flipped) rest.setFlipY(true);
     c.add([art, typed, rest]);
+    let nameT = null, hpT = null;
+    if (w.boss) {
+      nameT = this.add.text(0, -art.height - 36, w.name || 'BOSS', { fontFamily: FONT, fontSize: '26px', color: CSS.red }).setOrigin(0.5);
+      hpT = this.add.text(0, -art.height - 10, '', { fontFamily: FONT, fontSize: '24px', color: CSS.amber }).setOrigin(0.5);
+      c.add([nameT, hpT]);
+    }
     const e = {
       id: w.id, kind: w.kind, label: w.label, color: w.color, speed: w.speed || 40,
       masked: w.masked ? new Set(w.masked) : null, flipped: w.flipped,
+      boss: !!w.boss, name: w.name, cmdIndex: w.cmdIndex || 0, cmdTotal: w.cmdTotal || 1, hpT,
       x: w.x, y: w.y, serverX: w.x, container: c, art, typed, rest, progress: 0,
     };
     this.eMap.set(w.id, e);
     this.enemies.push(e);
     this.drawLabel(e);
+    if (e.boss) this.drawBossHp(e);
     return e;
   }
 
@@ -98,6 +109,12 @@ class MpMirrorScene extends Phaser.Scene {
     const total = e.typed.width + e.rest.width;
     e.typed.x = -total / 2;
     e.rest.x = e.typed.x + e.typed.width;
+  }
+
+  drawBossHp(e) {
+    if (!e.hpT) return;
+    const left = e.cmdTotal - e.cmdIndex;
+    e.hpT.setText('HP ' + '▓'.repeat(Math.max(0, left)) + '░'.repeat(Math.max(0, e.cmdTotal - left)));
   }
 
   removeEnemy(id) {
@@ -156,6 +173,23 @@ class MpMirrorScene extends Phaser.Scene {
     this.removeEnemy(k.id);
   }
 
+  showBossBanner(b) {
+    const t = this.add.text(GAME_W / 2, GAME_H / 2 - 60, `! ${b.name} !`, {
+      fontFamily: FONT, fontSize: '56px', color: CSS.red, align: 'center',
+    }).setOrigin(0.5).setDepth(45);
+    this.tweens.add({ targets: t, alpha: 0, duration: 1600, delay: 600, onComplete: () => t.destroy() });
+  }
+
+  onBossCmd(b) {
+    const e = this.eMap.get(b.id);
+    if (!e) return;
+    e.label = b.label; e.cmdIndex = b.cmdIndex; e.cmdTotal = b.cmdTotal; e.progress = 0; e.masked = null;
+    this.drawLabel(e);
+    this.drawBossHp(e);
+    this.scorePop(e.container.x, e.container.y - 120, `+${b.pts}`, b.byId === this.localId ? CSS.gold : CSS.amber);
+    if (this.target === e) { this.target = null; this.lockLine.clear(); } // commande passée → relock
+  }
+
   scorePop(x, y, txt, color) {
     const t = this.add.text(x, y, txt, { fontFamily: FONT, fontSize: '28px', color }).setOrigin(0.5).setDepth(45);
     this.tweens.add({ targets: t, y: y - 40, alpha: 0, duration: 700, onComplete: () => t.destroy() });
@@ -210,10 +244,12 @@ class MpMirrorScene extends Phaser.Scene {
       e.progress++;
       this.drawLabel(e);
       if (e.progress >= e.label.length) {
-        // mot fini → revendication (l'hôte crédite le plus rapide)
-        this.net.claim(e.id, Math.round(this.time.now - (e.lockAt || this.time.now)));
-        this.target = null;
-        this.lockLine.clear();
+        // mot/commande fini → revendication (l'hôte crédite le plus rapide ;
+        // pour un boss, on précise la commande pour rejeter les coups périmés)
+        const dur = Math.round(this.time.now - (e.lockAt || this.time.now));
+        this.net.claim(e.id, dur, e.boss ? e.cmdIndex : undefined);
+        if (!e.boss) { this.target = null; this.lockLine.clear(); }
+        else { e.progress = 0; this.drawLabel(e); } // boss : on garde la cible, l'hôte confirmera via bosscmd
       }
     } else {
       Sfx.error();

@@ -69,7 +69,7 @@ class MpClient {
   // hôte → serveur → miroirs
   push(type, payload) { this._send(`/api/mp/${this.code}/host`, { playerId: this.playerId, type, payload }); }
   // miroir → serveur → hôte
-  claim(enemyId, dur) { this._send(`/api/mp/${this.code}/claim`, { playerId: this.playerId, enemyId, dur }); }
+  claim(enemyId, dur, cmdIndex) { this._send(`/api/mp/${this.code}/claim`, { playerId: this.playerId, enemyId, dur, cmdIndex }); }
   useItem(item, targetId) { this._send(`/api/mp/${this.code}/item`, { playerId: this.playerId, item, targetId }); }
 
   close() { if (this.es) { this.es.close(); this.es = null; } }
