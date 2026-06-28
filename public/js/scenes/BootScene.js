@@ -22,7 +22,7 @@ class BootScene extends Phaser.Scene {
       document.fonts.ready,
     ]).finally(() => {
       loading.destroy();
-      this.scene.start('Menu');
+      this.scene.start(window.MP_PAGE ? 'MpLobby' : 'Menu');
     });
   }
 }

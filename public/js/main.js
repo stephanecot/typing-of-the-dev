@@ -1,7 +1,7 @@
 /* Configuration globale + lancement Phaser. */
 'use strict';
 
-const APP_VERSION = 'v1.6.0';
+const APP_VERSION = 'v2.0.0';
 
 const GAME_W = 1600;
 const GAME_H = 900;
@@ -151,7 +151,11 @@ window.addEventListener('load', () => {
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },
-    scene: [BootScene, MenuScene, GameScene, GameOverScene],
+    // mp.html pose window.MP_PAGE : on enregistre alors le lobby + la scène
+    // miroir (la simulation, elle, reste GameScene, partagée avec le solo).
+    scene: window.MP_PAGE
+      ? [BootScene, MpLobbyScene, MenuScene, GameScene, MpMirrorScene, GameOverScene]
+      : [BootScene, MenuScene, GameScene, GameOverScene],
   };
   window.game = new Phaser.Game(config);
 });

@@ -275,6 +275,53 @@ const TRACKS = [
       }
     },
   },
+
+  {
+    name: 'NEUROFUNK', // drum & bass nerveux : basse reese qui roule, breakbeat punchy
+    REESE: [36.7, 36.7, 36.7, 49, 36.7, 36.7, 43.7, 36.7, 32.7, 32.7, 49, 41.2, 36.7, 36.7, 55, 49],
+    STAB: [293.7, 0, 0, 349.2, 0, 293.7, 0, 0, 261.6, 0, 0, 293.7, 0, 0, 349.2, 0],
+    bpm(i) { return i === 0 ? 88 : i >= 4 ? 174 : 150 + i * 6; },
+    step(s, when, I) {
+      if (I === 0) {
+        if (s % 4 === 0) Sfx.tone({ type: 'sawtooth', f: this.REESE[s], dur: 0.7, vol: 0.16, when, dest: Sfx.music });
+        if (s % 8 === 4) Sfx.tone({ type: 'triangle', f: this.STAB[s] || 293.7, dur: 0.3, vol: 0.05, when, dest: Sfx.music });
+        return;
+      }
+      // basse reese saturée sur chaque double-croche
+      Sfx.tone({ type: 'sawtooth', f: this.REESE[s], f2: this.REESE[s] * 1.5, dur: 0.1, vol: 0.22, when, dest: Sfx.music });
+      // breakbeat : kick (0, 10), snare (4, 12)
+      if (s === 0 || s === 10) Sfx.tone({ type: 'sine', f: 160, f2: 38, dur: 0.16, vol: 0.46, when, dest: Sfx.music });
+      if (s === 4 || s === 12) Sfx.noise({ dur: 0.14, vol: 0.18, filterF: 2400, when, dest: Sfx.music });
+      if (I >= 2 && s % 2 === 1) Sfx.noise({ dur: 0.03, vol: 0.06, filterF: 11000, type: 'highpass', when, dest: Sfx.music });
+      if (I >= 3) { const m = this.STAB[s]; if (m) Sfx.tone({ type: 'square', f: m, dur: 0.14, vol: 0.1, when, dest: Sfx.music }); }
+      if (I >= 4 && s % 8 === 6) Sfx.tone({ type: 'sawtooth', f: this.REESE[s] * 2, dur: 0.12, vol: 0.12, when, dest: Sfx.music });
+    },
+  },
+
+  {
+    name: 'HARDCORE', // gabber/hardstyle : kick distordu four-on-the-floor, lead acide, très punchy
+    LEAD: [220, 0, 220, 261.6, 0, 293.7, 0, 220, 196, 0, 196, 233.1, 0, 261.6, 0, 293.7],
+    ROOTS: [55, 55, 49, 65.4],
+    bpm(i) { return i === 0 ? 90 : i >= 4 ? 180 : 150 + i * 8; },
+    step(s, when, I) {
+      const root = this.ROOTS[Math.floor(s / 4)];
+      if (I === 0) {
+        if (s % 4 === 0) Sfx.tone({ type: 'sawtooth', f: root, dur: 0.6, vol: 0.16, when, dest: Sfx.music });
+        const m = this.LEAD[s]; if (m && s % 2 === 0) Sfx.tone({ type: 'triangle', f: m, dur: 0.3, vol: 0.05, when, dest: Sfx.music });
+        return;
+      }
+      // kick gabber sur le temps (sine pitché + clic d'attaque)
+      if (s % 4 === 0) {
+        Sfx.tone({ type: 'sine', f: 170, f2: 36, dur: 0.22, vol: 0.5, when, dest: Sfx.music });
+        Sfx.noise({ dur: 0.02, vol: 0.12, filterF: 5000, when, dest: Sfx.music });
+      }
+      // basse hardstyle en contretemps
+      if (s % 4 === 2) Sfx.tone({ type: 'sawtooth', f: root, dur: 0.12, vol: 0.22, when, dest: Sfx.music });
+      if (I >= 2 && s % 2 === 1) Sfx.noise({ dur: 0.03, vol: 0.07, filterF: 10000, type: 'highpass', when, dest: Sfx.music });
+      if (I >= 3) { const m = this.LEAD[s]; if (m) Sfx.tone({ type: 'sawtooth', f: m, f2: m * 1.01, dur: 0.16, vol: 0.13, when, dest: Sfx.music }); }
+      if (I >= 4) { const m = this.LEAD[s]; if (m) Sfx.tone({ type: 'square', f: m * 2, dur: 0.1, vol: 0.08, when, dest: Sfx.music }); }
+    },
+  },
 ];
 
 /* Piste cachée du MODE DISCO : four-on-the-floor, charley en contretemps,

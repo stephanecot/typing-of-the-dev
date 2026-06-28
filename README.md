@@ -1,6 +1,6 @@
 # TYPING OF THE DEV 🧟⌨️
 
-[![version](https://img.shields.io/badge/version-1.6.0-39ff7a)](public/js/main.js)
+[![version](https://img.shields.io/badge/version-2.0.0-39ff7a)](public/js/main.js)
 [![node](https://img.shields.io/badge/node-%E2%89%A5%2022.5-339933?logo=node.js&logoColor=white)](#requirements)
 [![phaser](https://img.shields.io/badge/Phaser-3.87-9cf)](https://phaser.io)
 [![dependencies](https://img.shields.io/badge/npm%20dependencies-0-success)](package.json)
@@ -61,7 +61,8 @@ public/
   js/main.js         globals: difficulties, palette, modes, version
   js/data/           word banks, ASCII sprites, FR/EN translations
   js/scenes/         Phaser scenes: Boot, Menu, Game, GameOver
-  js/audio.js        procedural WebAudio: SFX + 5 music tracks
+  js/audio.js        procedural WebAudio: SFX + 7 music tracks
+  js/net/            multiplayer client (SSE + POST transport)
 db/                  SQLite database (created at runtime, git-ignored)
 ```
 
@@ -97,7 +98,28 @@ db/                  SQLite database (created at runtime, git-ignored)
   `sudo reboot` (screen purge).
 - `H` on the menu: full help (rules, difficulties, bestiary with spawn rates,
   bosses, release notes — pages scroll with ↑/↓). `L`: French/English.
-  `B`: cycle the 5 music tracks. `S`: mute.
+  `B`: cycle the 7 music tracks. `S`: mute. `M`: multiplayer (server mode).
+
+### Multiplayer (server mode only)
+
+Press `M` on the home screen (or open `/mp.html`). One player **creates** a
+session and gets a 4-letter code + a shareable URL (`/mp.html?s=CODE`); 1–3 others
+**join**. With **2 to 4 players** the host starts a **shared battlefield**: the same
+enemies on every screen, but each player keeps their **own score and lives**, shown
+as a colored avatar beside the PROD.
+
+- **Fastest typist wins each word** — two players can target the same enemy, only
+  the first to finish it scores; the loser sees it vanish.
+- **Same gameplay as solo** — bosses, golden power-ups, KILL-9 / AUTOCOMPLETE items
+  and every enemy mechanic are in. **+25% enemies per extra player.**
+- An enemy reaching PROD costs **every still-alive player a life**; at 0 lives you're
+  out (you spectate); the game ends when everyone is out, **highest score wins.**
+- Every player's score counts for the leaderboard (saved with their multiplayer
+  nickname — no form to fill).
+- Architecture: **host-authority** — the host's browser runs the real game and
+  streams state over **Server-Sent Events**; the server (`server.js`) is a thin
+  relay + session manager. Best on a LAN/booth; the host should be the stable
+  machine (if it leaves, the session ends).
 
 ### Enemies (17 kinds — full bestiary in-game)
 
@@ -159,9 +181,11 @@ sprint setting no longer affects gameplay.)*
 - [Phaser 3.87](https://phaser.io), vendored in `public/lib/` (offline)
 - VT323 font, CRT look (scanlines/vignette/flicker in CSS — disabled with
   `prefers-reduced-motion`)
-- 100% procedural WebAudio: SFX + 5 selectable generative music tracks
-  (MATRIX, SYNTHWAVE, LOUNGE, RAVE, 8-BIT HERO), intensity follows the waves
-- `node:http` + `node:sqlite` server — zero npm dependency
+- 100% procedural WebAudio: SFX + 7 selectable generative music tracks
+  (MATRIX, SYNTHWAVE, LOUNGE, RAVE, 8-BIT HERO, NEUROFUNK, HARDCORE), intensity
+  follows the waves
+- `node:http` + `node:sqlite` server — zero npm dependency, incl. real-time
+  multiplayer over Server-Sent Events
 - Accessibility: WCAG AA contrasts, reduced-motion support, color-blind-safe
   enemy design (shape + badge redundancy), no `{ } [ ]` in typed words
 

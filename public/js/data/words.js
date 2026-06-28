@@ -70,6 +70,62 @@ const WORDS = {
     'canary release', 'chaos monkey', 'dry run', 'smoke test', 'load test',
     'unit test', 'e2e test', 'profiler', 'debugger', 'breakpoint',
     'stack trace', 'hot reload',
+    // — extension multijoueur —
+    'css', 'html', 'http2', 'http3', 'quic',
+    'grpc-web', 'ldap', 'smtp', 'imap', 'pop3',
+    'ftp', 'sftp', 'telnet', 'gzip', 'brotli',
+    'protobuf', 'avro', 'thrift', 'msgpack', 'cbor',
+    'toml', 'ini', 'dotenv', 'env', 'kustomize',
+    'flux', 'tekton', 'spinnaker', 'octopus', 'bamboo',
+    'teamcity', 'circleci', 'travis', 'drone', 'sonarqube',
+    'snyk', 'trivy', 'dependabot', 'renovate', 'codeql',
+    'semgrep', 'gitleaks', 'loki', 'tempo', 'jaeger',
+    'zipkin', 'otel', 'prometheus', 'statsd', 'telegraf',
+    'fluentd', 'logstash', 'elastic', 'opensearch', 'solr',
+    'lucene', 'typesense', 'meilisearch', 'algolia', 'sphinx',
+    'kong', 'apisix', 'tyk', 'zuul', 'sidecar',
+    'mesh', 'linkerd', 'cilium', 'calico', 'ceph',
+    'minio', 'nfs', 'smb', 'iscsi', 'zfs',
+    'btrfs', 'ext4', 'xfs', 'lvm', 'raid',
+    'bgp', 'ospf', 'vlan', 'nat', 'dhcp',
+    'icmp', 'arp', 'mac', 'mtu', 'qos',
+    'wireguard', 'openvpn', 'sops', 'sealed', 'letsencrypt',
+    'acme', 'x509', 'hsm', 'kms', 'iam',
+    'rbac', 'abac', 'saml', 'oidc', 'scim',
+    'passkey', 'webauthn', 'fido2', 'yubikey', 'boundary',
+    'waypoint', 'cobra', 'gin', 'echo', 'fiber',
+    'axum', 'actix', 'rocket', 'tokio', 'rayon',
+    'serde', 'clap', 'diesel', 'sqlx', 'tonic',
+    'hyper', 'reqwest', 'pydantic', 'poetry', 'ruff',
+    'mypy', 'tox', 'uvicorn', 'gunicorn', 'celery',
+    'alembic', 'jvm', 'jdk', 'jre', 'graalvm',
+    'micronaut', 'vertx', 'netty', 'hibernate', 'lombok',
+    'jackson', 'okhttp', 'retrofit', 'dagger', 'guice',
+    'testng', 'mockk', 'composer', 'phpunit', 'pest',
+    'tls', 'tls13', 'sni', 'hsts', 'csp',
+    'sri', 'cors preflight', 'webtransport', 'websocket', 'sse',
+    'long polling', 'etag', 'cache-control', 'vary', 'http verb',
+    'idempotent put', 'patch verb', 'head verb', 'options verb', 'trace verb',
+    'multipart', 'form-data', 'urlencoded', 'content-type', 'accept header',
+    'user-agent', 'rate limit', 'token bucket', 'leaky bucket', 'sliding window',
+    'fixed window', 'consistent hash', 'rendezvous', 'jump hash', 'bloom filter',
+    'count min', 'hyperloglog', 'skiplist', 'red black', 'avl tree',
+    'b plus tree', 'lsm tree', 'wal', 'mvcc', '2pc',
+    '3pc', 'snapshot', 'isolation', 'serializable', 'read committed',
+    'repeatable read', 'sharding', 'partition', 'replica', 'primary',
+    'standby', 'failover', 'failback', 'leader', 'follower',
+    'witness', 'arbiter', 'heartbeat', 'lease', 'fencing',
+    'split vote', 'wal-g', 'barman', 'pgbackrest', 'litestream',
+    'pitr', 'wal archive', 'hot standby', 'pooler', 'prepared',
+    'cursor', 'upsert', 'returning', 'cte', 'window fn',
+    'lateral', 'explain', 'seq scan', 'bitmap scan', 'nested loop',
+    'hash join', 'merge join', 'autovacuum', 'bloat', 'toast',
+    'fillfactor', 'heap only', 'hot update', 'rust nightly', 'clippy',
+    'rustfmt', 'wasm-pack', 'trunk', 'leptos', 'yew',
+    'dioxus', 'bevy', 'wgpu', 'winit', 'egui',
+    'tracing', 'metrics', 'heaptrack', 'pprof', 'async-std',
+    'smol', 'crossbeam', 'dashmap', 'parking lot', 'once cell',
+    'cython', 'numba', 'dask', 'ray', 'modin',
   ],
 
   // Bugs d'élite : exceptions CamelCase (les majuscules font partie du challenge)
@@ -112,6 +168,21 @@ const WORDS = {
     'IndexCorruption', 'ReplicationLag', 'FailoverLoop', 'QuorumLost',
     'LeaderElectionStorm', 'NoisyNeighbor', 'ColdStart', 'VendorLockIn',
     'DependencyHell', 'SchemaDrift', 'BrownoutAlert',
+    // — extension multijoueur —
+    'NullPointer', 'ArrayIndexError', 'KeyNotFound', 'ValueErrorRaised', 'AttributeMissing',
+    'ImportFailure', 'RecursionLimit', 'MaxDepthExceeded', 'HandshakeTimeout', 'ConnectionReset',
+    'DeadlineExceeded', 'ContextCanceled', 'PanicRecovered', 'GoroutineLeak', 'ChannelClosed',
+    'BorrowChecker', 'LifetimeError', 'MoveAfterDrop', 'UnwrapOnNone', 'PoisonedMutex',
+    'DeadlockDetected', 'StarvationError', 'ThreadPanic', 'AssertionFailed', 'PreconditionViolated',
+    'InvariantBroken', 'StateCorrupted', 'VersionMismatch', 'ProtocolError', 'MalformedPayload',
+    'ChecksumMismatch', 'CorruptArchive', 'TruncatedStream', 'UnexpectedEof', 'PartialWrite',
+    'StaleElement', 'ElementNotFound', 'TimeoutWaiting', 'FlakySelector', 'RetryExhausted',
+    'TooManyRedirects', 'CircularImport', 'AmbiguousMatch', 'HashCollision', 'SaltMissing',
+    'WriteConflict', 'ReadTimeout', 'PoolTimeout', 'LockTimeout', 'QueryCanceled',
+    'StatementTimeout', 'TransactionAborted', 'UniqueViolation', 'ForeignKeyError', 'CheckViolation',
+    'NotNullViolation', 'SerializationFailure', 'DeadlockVictim', 'ConnectionClosed', 'TooManyClients',
+    'BrokenBarrier', 'SemaphoreLeak', 'LatchTimeout', 'EpochMismatch', 'FenceTokenStale',
+    'QuorumNotMet', 'LeaseExpired', 'HeartbeatLost', 'PartitionDetected', 'ClockDriftHigh',
   ],
 
   // Zombies legacy : snippets de code + technos qui refusent de mourir
@@ -168,6 +239,23 @@ const WORDS = {
     'pytest -x', 'def __init__(self):', 'self.data = data', 'return None',
     'pass  # todo', 'cargo test', 'cargo clippy', 'go vet ./...',
     'gofmt -w .', 'make test', 'echo $PATH', 'source .env',
+    // — extension multijoueur —
+    'let x = 1;', 'var y = 2;', 'foo()', 'bar()', 'baz()',
+    'exit(0)', 'exit 1', 'noop()', 'pass', 'import sys',
+    'from x import y', 'print(x)', 'puts msg', 'echo hi', 'cat file',
+    'ls -la', 'cd ..', 'def run():', 'async def f():', 'await q.get()',
+    'yield x', 'raise e', 'assert x', 'del obj', 'fn add()',
+    'let mut v', 'impl Foo', 'use std::io', 'match x', 'Some(v)',
+    'None', 'Ok(x)', 'Err(e)', 'go run .', 'package main',
+    'func main()', 'close(ch)', 'panic(err)', 'recover()', 'public int x;',
+    'int i = 0;', 'new Foo()', 'this.x = x;', 'super()', 'break;',
+    'continue;', 'SELECT now();', 'DELETE FROM t;', 'UPDATE t SET', 'INSERT INTO t',
+    'CREATE TABLE t',
+    'i++;', '--j;', 'x += 1;', 'y -= 1;', 'z *= 2;',
+    'a ^= b;', 'b <<= 1;', 'c >>= 2;', 'goto fail;', 'return;',
+    'await tx;', 'tx.commit()', 'tx.rollback()', 'db.close()', 'lock.acquire()',
+    'lock.release()', 'sem.wait()', 'sem.post()', 'cond.signal()', 'select(2)',
+    'poll(fd)', 'epoll_wait', 'accept(fd)', 'listen(5)', 'bind(sock)',
   ],
   legacyNames: [
     'cobol', 'fortran', 'pascal', 'delphi', 'vb6', 'flash', 'silverlight', 'ie6',
@@ -194,6 +282,17 @@ const WORDS = {
     'cle wep', 'bluetooth v1', 'infrarouge nokia', 'wap push', 'mms surtaxe',
     'sonnerie polyphonique', 'java me', 'symbian', 'windows phone', 'bada os',
     'firefox os', 'netbook', 'modem rtc', 'minidisc', 'lecteur zip',
+    // — extension multijoueur —
+    'cobol 85', 'rpg as400', 'jcl', 'tso', 'vsam',
+    'db2 host', 'cics', 'ims', 'adabas', 'natural',
+    'visual basic', 'vb net 1', 'asp classic', 'ado', 'dao',
+    'odbc 16 bits', 'win16', 'dos box', 'borland c', 'watcom',
+    'novell', 'banyan vines', 'arcnet', 'appletalk', 'fidonet',
+    'bbs', 'x modem', 'z modem', 'kermit', 'procomm',
+    'hyperterminal', 'pcanywhere',
+    'turbo c', 'quick basic', 'clipper', 'foxpro', 'dbase',
+    'paradox', 'informix', 'sybase', 'progress 4gl', 'uniface',
+    'gupta', 'oracle forms', 'pl sql 8', 'jdeveloper', 'websphere',
   ],
 
   // Faucheuses deadline : l'horreur du quotidien (rapides !)
@@ -234,6 +333,15 @@ const WORDS = {
     'admin en vacances', 'doc introuvable', 'wiki obsolete', 'readme menteur',
     'specs dans un mail', 'decision en couloir', 'priorite qui change',
     'demo au client final', 'golive reporte', 'gel de fin dannee',
+    // — extension multijoueur —
+    'jira-666', 'jira-42', 'ticket p2', 'ticket rouge', 'mail de 7h',
+    'call du soir', 'daily a 9h', 'retro sans actions', 'demo qui rame', 'sprint review',
+    'grooming', 'poker planning', 'story point', 'epic sans fin', 'rollback urgent',
+    'mep nocturne', 'astreinte week-end', 'change request', 'validation metier', 'recette client',
+    'uat', 'tnr', 'livrable manquant', 'jalon rate', 'comite de pilotage',
+    'revue de portefeuille', 'arbitrage budgetaire', 'bon de commande', 'ordre de mission', 'conge refuse',
+    'reorg surprise', 'gel des embauches', 'seminaire obligatoire', 'photo d equipe', 'tour de table',
+    'meteo du jour', 'tableau blanc', 'onboarding express', 'passation baclee', 'vis ma vie',
   ],
 
   // Boss : commandes terminal complètes
@@ -273,6 +381,16 @@ const WORDS = {
     'kubectl get events -w', 'helm rollback api 1', 'terraform plan -out tf.plan',
     'curl -I https://prod', 'dig +short prod.local', 'host -t mx exemple.dev',
     'uptime && who', 'last -n 5', 'chmod 600 id_rsa', 'ssh-keygen -t ed25519',
+    // — extension multijoueur —
+    'git status -s', 'git add -p', 'git diff --stat', 'git pull --rebase', 'git push -u origin',
+    'docker ps -a', 'docker network ls', 'docker volume prune', 'kubectl get ns', 'kubectl exec -it pod -- sh',
+    'kubectl port-forward svc 8080:80', 'kubectl drain node --ignore-daemonsets', 'kustomize build .', 'terraform fmt -recursive', 'terraform state list',
+    'terraform import res id', 'ansible -m ping all', 'vagrant up --provision', 'aws sts get-caller-identity', 'gcloud auth login',
+    'kubectl config use-context prod', 'grep -rn TODO src/', 'find . -type f -mtime +30', 'chown -R app:app /srv', 'tar -xzf archive.tgz',
+    'zcat log.gz | grep ERR', 'wc -l *.py', 'curl -sS https://api | jq', 'ssh-copy-id user@host', 'rsync -a --progress src/ dst/',
+    'git reset --hard', 'git gc --prune=now', 'git remote -v', 'git branch -a', 'git merge --abort',
+    'docker compose down', 'docker tag img repo', 'docker push repo', 'docker pull alpine', 'docker inspect id',
+    'kubectl rollout status', 'kubectl cordon node', 'kubectl uncordon node', 'kubectl taint node', 'kubectl label pod',
   ],
 
   // Le RECRUTEUR : ennemi spammeur, et ses "missiles" InMail à abattre
@@ -316,6 +434,11 @@ const WORDS = {
     'cosnole', 'imoprt', 'fucntion', 'reutrn', 'flase', 'treu', 'nlul',
     'undefiend', 'paquage', 'comit', 'brnach', 'mrege', 'sduo', 'grpe',
     'kubernets', 'pormise', 'asnyc', 'awiat', 'calback', 'stirng', 'vraiable',
+    // — extension multijoueur —
+    'fucntoin', 'retrun', 'consoel', 'varibale', 'lenght',
+    'widht', 'heigth', 'recieve', 'seperate', 'definately',
+    'occured', 'existant', 'adress', 'comitting', 'depencency',
+    'enviroment',
   ],
 
   // L'INDÉP (niv.3) : la vie de freelance
@@ -325,6 +448,10 @@ const WORDS = {
     'pas de cdi merci', 'micro entreprise', 'kbis', 'acompte de moitie',
     'mon reseau suffit', 'cumul de missions', 'relance facture', 'intercontrat jamais',
     'devis gratuit', 'tjm double en urgence', 'reseau linkedin', 'mission au forfait',
+    // — extension multijoueur —
+    'tjm a la hausse', 'client final svp', 'pas d astreinte', 'remote total', 'mission longue',
+    'preavis court', 'aupres du compte', 'clause de non concurrence', 'sortie de mission', 'renouvellement signe',
+    'cotisations a part', 'marge de l esn', 'intermediaire en trop', 'reseau d abord', 'bouche a oreille',
   ],
 
   // LE PO INSPIRÉ (niv.5) : ses idées foireuses, à taper…
@@ -334,6 +461,10 @@ const WORDS = {
     'les users adorent', 'ca prend 5 min', 'on verra en prod',
     'pas besoin de tests', 'comme tiktok', 'un petit chatbot', 'gamifions tout',
     'une marketplace', 'du machine learning', 'on fait comme avant', 'juste un petit script',
+    // — extension multijoueur —
+    'comme netflix', 'un peu d ia', 'version premium', 'abonnement mensuel', 'notifications partout',
+    'mode hors ligne', 'et en vr', 'un dashboard', 'des badges', 'un programme de fidelite',
+    'on copie le concurrent', 'juste une appli',
   ],
   // …et les rallonges qu'il greffe aux mots des autres (scope creep)
   scopeCreep: [' v2', ' v3', ' bis', ' rgpd', ' mobile', ' offline', ' dark mode', ' en mieux'],
@@ -358,6 +489,11 @@ const WORDS = {
     'deep dive', 'core business', 'growth hacking', 'scalabilite',
     'culture produit', 'plateformisation', 'data driven', 'customer centric',
     'test and learn', 'fail fast', 'one team',
+    // — extension multijoueur —
+    'effet waouh', 'levier de croissance', 'centre de gravite', 'pierre angulaire', 'cercle vertueux',
+    'rupture maitrisee', 'intelligence collective', 'organisation apprenante', 'culture du feedback', 'experience utilisateur',
+    'design thinking', 'sprint zero', 'north star', 'flywheel', 'ocean bleu',
+    'avantage concurrentiel', 'creation de valeur', 'effet reseau', 'economie de la donnee', 'souverainete numerique',
   ],
 
   // Power-ups (libellés fixes, dorés)
@@ -389,6 +525,12 @@ const WORDS = {
       'expired certificate', 'expired password', 'vpn drop', 'corporate proxy',
       'zealous firewall', 'locked workstation', 'admin on holiday',
       'outdated wiki', 'lying readme',
+      // — extension multijoueur —
+      'planning meeting', 'load plan', 'project board', 'refinement', 'endless daily',
+      'demo that crashes', 'client wifi', 'forgotten badge', 'room taken', 'frozen scope',
+      'blocked ticket', 'escalation n3', 'crisis committee', 'action plan', 'blocking points',
+      'no repro ticket', 'stand up overrun', 'retro overrun', 'status report', 'session expired',
+      'firewall block', 'locked laptop', 'outdated doc', 'spec in an email',
     ],
     missiles: [
       'cv ?', 'open to work', 'ping', 'inmail', 'connect', 'rate ?', 'urgent !',
@@ -423,6 +565,10 @@ const WORDS = {
       'my own boss', 'sole trader', 'upfront deposit', 'my network is enough',
       'stacking gigs', 'invoice reminder', 'never on the bench', 'side project',
       'free quote', 'double rate for rush', 'linkedin network', 'fixed price gig',
+      // — extension multijoueur —
+      'rate going up', 'final client please', 'no on-call', 'fully remote', 'long gig',
+      'short notice', 'through the account', 'non compete clause', 'offboarding', 'renewal signed',
+      'separate contributions', 'agency margin', 'one too many middlemen', 'network first', 'word of mouth',
     ],
     poIdeas: [
       'lets pivot', 'like uber', 'add blockchain', 'with some ai',
@@ -430,6 +576,10 @@ const WORDS = {
       'users love it', 'takes 5 min', 'we will see in prod',
       'no tests needed', 'like tiktok', 'a small chatbot', 'gamify everything',
       'a marketplace', 'some machine learning', 'lets do it like before', 'just a small script',
+      // — extension multijoueur —
+      'like netflix', 'a bit of ai', 'premium tier', 'monthly subscription', 'notifications everywhere',
+      'and offline mode', 'and in vr', 'a dashboard', 'some badges', 'a loyalty program',
+      'copy the competitor', 'just an app',
     ],
     scopeCreep: [' v2', ' v3', ' gdpr', ' mobile', ' offline', ' dark mode', ' but better'],
     buzzwords: [
@@ -441,6 +591,11 @@ const WORDS = {
       'c-level deep dive', 'core business', 'growth hacking', 'scalability',
       'product culture', 'platformization', 'data driven', 'customer centric',
       'test and learn', 'fail fast', 'one team',
+      // — extension multijoueur —
+      'wow effect', 'growth lever', 'center of gravity', 'cornerstone', 'virtuous circle',
+      'controlled disruption', 'collective intelligence', 'learning organization', 'feedback culture', 'user experience',
+      'design thinking', 'sprint zero', 'north star', 'flywheel', 'blue ocean',
+      'competitive edge', 'value creation', 'network effect', 'data economy', 'digital sovereignty',
     ],
   },
 };

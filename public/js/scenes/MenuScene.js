@@ -15,7 +15,14 @@ class MenuScene extends Phaser.Scene {
     // recharge les réglages admin et, si le backend répond, propose le lien
     // vers le leaderboard plein écran (inutile sur la démo statique sans serveur)
     Api.loadConfig().then(() => {
-      if (SERVER_MODE) { this.buildLeaderboardLink(); this.buildLeaderboardOverlay(); }
+      if (SERVER_MODE) {
+        this.buildLeaderboardLink();
+        this.buildLeaderboardOverlay();
+        // entrée multijoueur (mode serveur uniquement)
+        this.add.text(GAME_W - 250, 318, T('menuMulti'), {
+          fontFamily: FONT, fontSize: '22px', color: CSS.magenta,
+        }).setOrigin(0.5);
+      }
     });
     this.buildTitle();
     this.buildDifficulties();
@@ -53,6 +60,7 @@ class MenuScene extends Phaser.Scene {
       else if (e.key === 'b' || e.key === 'B') this.cycleMusic();
       else if (e.key === 'c' || e.key === 'C') this.openCodePrompt();
       else if (e.key === 't' || e.key === 'T') this.openLeaderboard();
+      else if (e.key === 'm' || e.key === 'M') { if (SERVER_MODE) window.location.href = '/mp.html'; }
       else if (e.key === 'i' || e.key === 'I') this.toggleInfinite();
       else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') this.move(-1);
       else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') this.move(1);

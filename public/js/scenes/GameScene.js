@@ -110,11 +110,31 @@ class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
 
   init(data) {
+    data = data || {};
     this.diff = data.difficulty || DIFFICULTIES[1];
     this.godModeArmed = !!data.godMode; // armé via Konami Code sur l'écran d'accueil
+
+    // ----- État PAR JOUEUR (socle multijoueur, transparent en solo) -----
+    // Un seul joueur "local" en solo. Les champs proxifiés (score, vies, combo,
+    // items, stats…) délèguent vers this.activePlayer (cf. GameScene.prototype,
+    // tout en bas du fichier) : tout le code existant `this.score += …` opère
+    // donc sur le bon joueur sans modification. En multi, this.players contient
+    // jusqu'à 4 joueurs et this.activePlayer est basculé le temps de créditer un
+    // kill au bon joueur (cf. arbitrateClaim).
+    this.mp = !!data.mp;          // true si partie multijoueur
+    this.isHost = !!data.host;    // l'hôte fait tourner la vraie simulation
+    this.net = data.net || null;  // client réseau (MpClient) côté hôte, sinon null
+    this._enemySeq = 0;           // id stable et croissant des ennemis (multi)
+    const roster = data.players && data.players.length
+      ? data.players
+      : [{ id: data.localId || 'p1', name: data.name || 'JOUEUR', color: data.color || CSS.green }];
+    this.players = roster.map((p) => GameScene.makePlayer(p.id, p.name, p.color, this.diff.lives));
+    this.localPlayer = this.players.find((p) => p.id === (data.localId || roster[0].id)) || this.players[0];
+    this.activePlayer = this.localPlayer; // joueur courant pour le proxy de score
+
     // partie gagnée au bout de maxSprints (5 ou 10 selon le mode choisi) ;
     // le compte à rebours "par" sert d'affichage et de bonus de fin
-    this.infinite = INFINITE_MODE; // pas de chrono, sprints sans fin
+    this.infinite = INFINITE_MODE; // pas de chrono, sprints sans fin (multi inclus)
     this.speedScale = SPEED_MODE ? 1.3 : 1; // code secret SPEED : +30 %
     this.maxSprints = CAMPAIGN_SPRINTS;
     this.parMs = this.maxSprints * PAR_SECONDS_PER_SPRINT * 1000;
@@ -161,10 +181,12 @@ class GameScene extends Phaser.Scene {
 
   create() {
     this.stats.startTime = this.time.now;
+    this.players.forEach((p) => { p.stats.startTime = this.time.now; }); // chrono WPM par joueur
     if (REDUCED_MOTION) this.cameras.main.shake = () => this.cameras.main;
     this.buildDecor();
     this.buildHud();
     this.buildEmitters();
+    if (this.mp) this.mpSetup(); // tableau des scores + écoute réseau (hôte)
 
     this.keyHandler = (e) => this.onKey(e);
     this.input.keyboard.on('keydown', this.keyHandler);
@@ -172,7 +194,7 @@ class GameScene extends Phaser.Scene {
 
     Music.start(1);
     this.nextWave();
-    // power-up indépendant des vagues, à partir de la vague 2
+    // power-up indépendant des vagues, à partir de la vague 2 (solo + multi)
     this.time.addEvent({
       delay: 30000, loop: true, startAt: 0,
       callback: () => { if (this.wave >= 2 && !this.over) this.spawnPowerup(); },
@@ -258,10 +280,14 @@ class GameScene extends Phaser.Scene {
     this.prodArt = this.add.text(PROD_X, GAME_H / 2, ASCII.prod, {
       fontFamily: FONT, fontSize: '24px', color: CSS.cyan, align: 'center', lineSpacing: -4,
     }).setOrigin(0.5).setAlpha(0.95);
-    this.player = this.add.text(PLAYER_X, GAME_H / 2 + 150, ASCII.player, {
-      fontFamily: FONT, fontSize: '22px', color: CSS.green, align: 'center', lineSpacing: -4,
-    }).setOrigin(0.5);
-    this.tweens.add({ targets: this.player, y: '+=8', duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    // le "dev" solo : en multi, mpSetup pose plutôt un avatar par joueur (cf.
+    // buildPlayerAvatars), donc on ne crée pas ce personnage unique
+    if (!this.mp) {
+      this.player = this.add.text(PLAYER_X, GAME_H / 2 + 150, ASCII.player, {
+        fontFamily: FONT, fontSize: '22px', color: CSS.green, align: 'center', lineSpacing: -4,
+      }).setOrigin(0.5);
+      this.tweens.add({ targets: this.player, y: '+=8', duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    }
 
     // ligne de danger
     const danger = this.add.graphics();
@@ -304,6 +330,9 @@ class GameScene extends Phaser.Scene {
       this.lifeIcons.push(this.add.rectangle(x, 66, 30, 30).setDepth(40));
     }
     this.lifePulse = null;
+    // en multi, les PV de chaque joueur sont affichés (en petit) près de la PROD :
+    // on masque le gros bandeau de vies local pour laisser la place aux scores
+    if (this.mp) { this.hudProdLabel.setVisible(false); this.lifeIcons.forEach((ic) => ic.setVisible(false)); }
     // badges des modes secrets actifs, empilés sous les PV
     let badgeY = 96;
     const addBadge = (txt, color) => {
@@ -380,6 +409,10 @@ class GameScene extends Phaser.Scene {
   }
 
   refreshHud() {
+    // en multi, le HUD (score/vies/combo/items) montre TOUJOURS le joueur local,
+    // même si activePlayer est momentanément basculé pour créditer un kill distant
+    const ap = this.activePlayer;
+    if (this.mp) this.activePlayer = this.localPlayer;
     // le tricheur est affiché à côté de son score, bien en rouge
     this.hudScore.setText(`SCORE ${this.score}${this.godMode ? T('hudGod') : ''}`);
     this.hudScore.setColor(this.godMode ? CSS.red : CSS.green);
@@ -392,6 +425,7 @@ class GameScene extends Phaser.Scene {
     this.hudWave.setText(this.infinite ? `SPRINT ${this.wave} ∞` : `SPRINT ${this.wave}/${this.maxSprints}`);
     this.refreshSprintBar();
     this.refreshLives();
+    if (this.mp) this.activePlayer = ap;
   }
 
   refreshSprintBar() {
@@ -505,8 +539,10 @@ class GameScene extends Phaser.Scene {
     Music.setIntensity(Math.min(3, 1 + Math.floor(this.wave / 3)));
     this.refreshHud();
 
+    this.net?.push('wave', { n: this.wave });
     const sprintLabel = this.infinite ? `SPRINT ${this.wave}` : `SPRINT ${this.wave}/${this.maxSprints}`;
     const isFinal = !this.infinite && this.wave === this.maxSprints;
+    // boss tous les 4 sprints (en multi : survie infinie → boss du mode infini)
     const isBossWave = isFinal || this.wave % 4 === 0;
     this.showBanner(isFinal
       ? `${sprintLabel}\n${T('bannerFinal')}`
@@ -525,7 +561,15 @@ class GameScene extends Phaser.Scene {
   }
 
   buildWaveQueue(n, bossWave) {
-    return Phaser.Utils.Array.Shuffle(waveQueueFor(this.diff, n, bossWave));
+    let q = waveQueueFor(this.diff, n, bossWave);
+    // multijoueur : +25 % d'ennemis par joueur supplémentaire (plafonné)
+    if (this.mp && this.players.length > 1) {
+      const target = Math.min(MAX_WAVE_ENEMIES,
+        Math.round(q.length * (1 + 0.25 * (this.players.length - 1))));
+      const base = q.slice();
+      while (q.length < target) q.push(base[q.length % base.length]);
+    }
+    return Phaser.Utils.Array.Shuffle(q);
   }
 
   scheduleSpawn() {
@@ -706,8 +750,8 @@ class GameScene extends Phaser.Scene {
       kind, cls: conf.cls, label, level: conf.level,
       masked,
       flipped: !masked && this.rollFlip(kind),
-      // le monolithe encaisse un 2e mot après le premier
-      extraWords: kind === 'monolith'
+      // le monolithe encaisse un 2e mot après le premier (1 seul mot en multi M1)
+      extraWords: (kind === 'monolith' && !this.mp)
         ? [pickWord(GINES_MODE ? wordBank('insults') : WORDS.exceptions,
             { maxLen: this.diff.maxLen + 8, exclude: new Set([label]) })]
         : null,
@@ -772,7 +816,7 @@ class GameScene extends Phaser.Scene {
 
     if (spec.flipped) rest.setFlipY(true);
     const e = {
-      ...spec, container: c, art, typedText: typed, restText: rest, underline,
+      ...spec, id: ++this._enemySeq, container: c, art, typedText: typed, restText: rest, underline,
       progress: 0, baseY: spec.y, phase: Math.random() * Math.PI * 2,
       glitchAt: this.time.now + Phaser.Math.Between(800, 3000),
     };
@@ -783,6 +827,7 @@ class GameScene extends Phaser.Scene {
     if (e.kind === 'microservice') { e.gen = e.gen || 0; e.splitAt = this.time.now + 8000; }
     this.updateLabel(e); // applique le masquage "minifié" dès l'apparition
     this.enemies.push(e);
+    this.net?.push('spawn', this.enemyWire(e)); // miroirs : matérialise l'ennemi
     return e;
   }
 
@@ -870,6 +915,7 @@ class GameScene extends Phaser.Scene {
     c.add([name, hp, art, typed, rest]);
 
     this.boss = {
+      id: ++this._enemySeq,
       kind: 'boss', cls: 'boss', isFinal, variant, container: c, art, typedText: typed, restText: rest,
       hpText: hp, cmds, cmdIndex: 0, label: cmds[0], progress: 0,
       x: SPAWN_X + 100, y: GAME_H / 2, baseY: GAME_H / 2, phase: 0,
@@ -881,6 +927,10 @@ class GameScene extends Phaser.Scene {
     this.layoutLabel(this.boss);
     this.refreshBossHp();
     this.enemies.push(this.boss);
+    if (this.net) { // miroirs : matérialise le boss + bannière
+      this.net.push('spawn', this.enemyWire(this.boss));
+      this.net.push('boss', { id: this.boss.id, name: name.text });
+    }
   }
 
   refreshBossHp() {
@@ -923,6 +973,11 @@ class GameScene extends Phaser.Scene {
     this.layoutLabel(b);
     this.refreshBossHp();
     this.refreshHud();
+    // miroirs : nouvelle commande du boss + crédit du coup
+    this.net?.push('bosscmd', {
+      id: b.id, label: b.label, cmdIndex: b.cmdIndex, cmdTotal: b.cmds.length,
+      byId: this.activePlayer.id, pts, fx: b.container.x, fy: b.container.y - 140,
+    });
   }
 
   // ------------------------------------------------------------ frappe
@@ -1178,6 +1233,8 @@ class GameScene extends Phaser.Scene {
 
   // ------------------------------------------------------------ mort & effets
   killEnemy(e) {
+    const s0 = this.net ? this.score : 0;          // pour calculer les points crédités
+    const fx = e.container.x, fy = e.container.y;   // position avant destruction (FX miroirs)
     if (this.target === e) { this.target = null; this.lockLine.clear(); }
     Phaser.Utils.Array.Remove(this.enemies, e);
     if (e.kind === 'boss') {
@@ -1198,7 +1255,10 @@ class GameScene extends Phaser.Scene {
         e.container.destroy();
         return this.victory();
       }
-      this.dropBonus(e, 'life'); // le boss lâche toujours une vie
+      // le boss lâche toujours une vie : en multi, +1 vie pour chaque joueur
+      // encore en lice (récompense partagée) ; en solo, un bonus à ramasser
+      if (this.mp) this.players.forEach((p) => { if (p.alive) p.lives += 1; });
+      else this.dropBonus(e, 'life');
     } else {
       this.stats.kills[e.cls] = (this.stats.kills[e.cls] || 0) + 1;
       const sm = this.speedMult(e, e.lockTime ? this.time.now - e.lockTime : 0);
@@ -1220,6 +1280,7 @@ class GameScene extends Phaser.Scene {
     Sfx.kill();
     this.explodeLetters(e);
     if (e.cls === 'powerup') this.applyPowerup(e.effect);
+    this.net?.push('kill', { id: e.id, byId: this.activePlayer.id, pts: this.score - s0, fx, fy });
     e.container.destroy();
     this.refreshHud();
     this.checkWaveEnd();
@@ -1404,6 +1465,34 @@ class GameScene extends Phaser.Scene {
   incident(e) {
     Phaser.Utils.Array.Remove(this.enemies, e);
     if (this.target === e) { this.target = null; this.lockLine.clear(); }
+    // ----- multijoueur : un ennemi atteint la PROD partagée -----
+    if (this.mp) {
+      const fx = e.container.x, fy = e.container.y;
+      if (e.cls !== 'powerup') {
+        // un boss qui atteint la PROD frappe plus fort (comme en solo)
+        const dmg = e.kind === 'boss' ? ((e.variant && e.variant.damage) || 2) : 1;
+        this.players.forEach((p) => {
+          if (!p.alive) return;
+          p.stats.missedWords.push(e.label);
+          p.lives -= dmg;
+          p.combo = 0; p.runStarTier = 0;
+          if (p.lives <= 0) { p.lives = 0; p.alive = false; this.net?.push('playerEliminated', { id: p.id }); }
+        });
+        Sfx.incident();
+        this.cameras.main.shake(350, 0.01);
+        this.redSparks.explode(60, PROD_X + 80, fy);
+        this.flashRect.setAlpha(0.35);
+        this.tweens.add({ targets: this.flashRect, alpha: 0, duration: 450 });
+        this.showBanner(e.kind === 'boss' ? T('bossTouch') : T('incident'));
+        this.net?.push('incident', { id: e.id, fx, fy });
+      }
+      if (e.kind === 'boss') this.boss = null;
+      e.container.destroy();
+      this.refreshHud();
+      if (this.players.every((p) => !p.alive)) return this.mpFinish(false);
+      this.checkWaveEnd();
+      return;
+    }
     if ((this.godMode || this.time.now < this.invincibleUntil) && e.cls !== 'powerup') {
       // invincible : l'ennemi s'écrase sur un bouclier, aucun dégât
       this.redSparks.explode(25, PROD_X + 80, e.container.y);
@@ -1435,7 +1524,9 @@ class GameScene extends Phaser.Scene {
 
   checkWaveEnd() {
     if (this.over || this.spawnQueue.length || this.enemies.length || this.boss || this.bossPending) return;
-    this.score += Math.round(100 * this.wave * this.diff.scoreMult);
+    const bonus = Math.round(100 * this.wave * this.diff.scoreMult);
+    if (this.mp) this.players.forEach((p) => { if (p.alive) p.score += bonus; });
+    else this.score += bonus;
     Sfx.waveClear();
     this.refreshHud();
     this.time.delayedCall(1600, () => this.nextWave());
@@ -1490,6 +1581,7 @@ class GameScene extends Phaser.Scene {
   }
 
   gameOver() {
+    if (this.mp) return this.mpFinish(false); // sécurité : en multi, la défaite passe par mpFinish
     const results = this.endRun();
     Sfx.gameOver();
     this.burnProd();
@@ -1510,6 +1602,12 @@ class GameScene extends Phaser.Scene {
   victory() {
     const remainingS = Math.max(0, Math.round((this.parMs - this.playMs) / 1000));
     const timeBonus = Math.round(remainingS * 25 * this.diff.scoreMult);
+    if (this.mp) {
+      // multi (modes 5/10 sprints) : le DSI est vaincu, bonus de temps pour
+      // chaque survivant, puis classement partagé (le meilleur score l'emporte)
+      this.players.forEach((p) => { if (p.alive) p.score += timeBonus; });
+      return this.mpFinish(true);
+    }
     this.score += timeBonus;
     const results = this.endRun();
     results.won = true;
@@ -1531,6 +1629,135 @@ class GameScene extends Phaser.Scene {
     this.time.delayedCall(3200, () => {
       this.scene.start('GameOver', { difficulty: this.diff, results });
     });
+  }
+
+  // ============================================================ MULTIJOUEUR (hôte)
+  /* L'hôte fait tourner la vraie simulation et POUSSE l'état aux miroirs ; il
+     reçoit en retour leurs revendications de kill (claim). */
+  mpSetup() {
+    this.buildPlayerAvatars();
+    if (this.isHost && this.net) {
+      this.net.clearHandlers(); // oublie les handlers du lobby
+      this.net.on('claim', (c) => this.arbitrateClaim(c));
+      this.net.on('item', (c) => this.arbitrateItem(c));
+      // ~12 Hz : positions + scores ; 2 Hz : keyframe complet (descripteurs, reconnexion)
+      this.time.addEvent({ delay: 85, loop: true, callback: () => { if (!this.over) this.net.push('snapshot', this.mpSnapshotPayload()); } });
+      this.time.addEvent({ delay: 500, loop: true, callback: () => { if (!this.over) this.net.push('keyframe', this.mpKeyframePayload()); } });
+    }
+    this.time.addEvent({ delay: 200, loop: true, callback: () => this.refreshPlayerAvatars() });
+  }
+
+  /* Descripteur réseau d'un ennemi (assez pour que le miroir le dessine). */
+  enemyWire(e) {
+    const w = {
+      id: e.id, kind: e.kind, cls: e.cls, label: e.label,
+      x: Math.round(e.container.x), y: Math.round(e.container.y),
+      speed: Math.round(e.speed * this.speedScale),
+      level: e.level || 0, color: e.color, artKind: e.artKind,
+      techName: e.techName || null, artSize: e.artSize || 18,
+      masked: e.masked ? Array.from(e.masked) : null, flipped: !!e.flipped,
+    };
+    if (e.kind === 'boss') {
+      w.boss = true;
+      w.name = e.isFinal ? T('finalBossName') : (e.variant ? T(e.variant.nameKey) : T('bossName'));
+      w.artKind = e.isFinal ? 'finalBoss' : (e.variant ? e.variant.art : 'boss');
+      w.cmdIndex = e.cmdIndex; w.cmdTotal = e.cmds.length;
+      w.color = e.isFinal ? CSS.magenta : (e.variant ? e.variant.color : CSS.red);
+      w.artSize = e.isFinal ? 26 : 30;
+    }
+    return w;
+  }
+
+  mpSnapshotPayload() {
+    return {
+      t: Math.round(this.time.now),
+      e: this.enemies.map((e) => [e.id, Math.round(e.container.x), Math.round(e.container.y)]),
+      p: this.players.map((p) => [p.id, p.score, p.lives, p.alive ? 1 : 0, p.combo]),
+    };
+  }
+
+  mpKeyframePayload() {
+    return {
+      wave: this.wave, status: 'playing',
+      e: this.enemies.map((e) => this.enemyWire(e)),
+      p: this.players.map((p) => ({ id: p.id, name: p.name, color: p.color, score: p.score, lives: p.lives, alive: p.alive, combo: p.combo })),
+    };
+  }
+
+  /* Un miroir a fini un mot → on crédite le PREMIER arrivé (les suivants
+     trouvent l'ennemi déjà disparu). On bascule activePlayer le temps du kill
+     pour que tout le code de score existant crédite le bon joueur. */
+  arbitrateClaim({ playerId, enemyId, dur, cmdIndex }) {
+    const e = this.enemies.find((x) => x.id === enemyId);
+    const player = this.players.find((p) => p.id === playerId);
+    if (!e || !player || !player.alive) return; // trop tard / déjà tué
+    // boss : on n'avance que si le joueur a fini LA commande courante (sinon,
+    // un autre l'a déjà fait passer → revendication périmée, ignorée)
+    if (e.kind === 'boss' && cmdIndex !== e.cmdIndex) return;
+    const prev = this.activePlayer;
+    this.activePlayer = player;
+    e.lockTime = this.time.now - (dur || 0);   // pour le bonus de vitesse
+    e.cmdStart = e.cmdStart && (this.time.now - (dur || 0)); // boss : chrono de commande
+    player.stats.typedOK += e.label.length;    // crédite la frappe distante (WPM)
+    if (e.kind === 'boss') this.bossHit(); else this.killEnemy(e);
+    this.activePlayer = prev;
+  }
+
+  /* Un miroir utilise un item. KILL-9 tue le process le plus proche en créditant
+     ce joueur (l'AUTOCOMPLETE, lui, est purement local côté miroir). */
+  arbitrateItem({ playerId, item }) {
+    const player = this.players.find((p) => p.id === playerId);
+    if (!player || !player.alive || item !== 'bomb') return;
+    const prev = this.activePlayer;
+    this.activePlayer = player;
+    this.useBomb();
+    this.activePlayer = prev;
+  }
+
+  /* Les joueurs sont matérialisés CÔTE À CÔTE près de la PROD qu'ils défendent :
+     un personnage par joueur, dans sa couleur, avec pseudo + SCORE (en évidence)
+     et PV en petit. Le joueur local est mis en avant. Remplace le dev solo. */
+  buildPlayerAvatars() {
+    if (this.player) this.player.destroy();
+    this.avatars = mpBuildAvatars(this, this.players, this.localPlayer.id);
+    this.player = (this.avatars.find((a) => a.me) || this.avatars[0]).art; // ancre la ligne de visée
+    this.refreshPlayerAvatars();
+  }
+
+  refreshPlayerAvatars() { mpRefreshAvatars(this.avatars, this.localPlayer.id); }
+
+  /* Résultats par joueur (triés par score) pour le classement final + leaderboard. */
+  mpResults() {
+    const dur = (this.time.now - this.stats.startTime) / 1000;
+    const minutes = Math.max(dur / 60, 1 / 60);
+    return this.players.map((p) => {
+      const s = p.stats;
+      const total = s.typedOK + s.errors;
+      return {
+        id: p.id, name: p.name, color: p.color, score: p.score, wave: this.wave,
+        wpm: Math.round((s.typedOK / 5) / minutes),
+        accuracy: total ? Math.round((s.typedOK / total) * 1000) / 10 : 100,
+        maxCombo: p.maxCombo, durationS: Math.round(dur),
+        kills: s.kills, missedWords: s.missedWords.slice(0, 100),
+      };
+    }).sort((a, b) => b.score - a.score);
+  }
+
+  /* Fin de partie multi : soit tous éliminés (won=false), soit le DSI vaincu
+     (won=true). Classement partagé + enregistrement leaderboard CÔTÉ SERVEUR
+     (robuste : ÉCHAP avorterait un save client fire-and-forget). */
+  mpFinish(won) {
+    if (this.over) return;
+    this.over = true;
+    this.input.keyboard.off('keydown', this.keyHandler);
+    this.enemies.forEach((e) => e.container.destroy());
+    this.enemies = [];
+    Music.stop();
+    if (won) Sfx.waveClear(); else Sfx.gameOver();
+    const results = this.mpResults();
+    const winnerId = results[0] ? results[0].id : null;
+    this.net?.push('gameOver', { winnerId, results, won });
+    showMpResults(this, winnerId, results, this.localPlayer.id, won);
   }
 
   // ------------------------------------------------------------ update
@@ -1641,4 +1868,33 @@ class GameScene extends Phaser.Scene {
       this.lockLine.strokeRect(t.container.x - w / 2, t.container.y - 56, w, 96);
     }
   }
+}
+
+/* État par joueur : fabrique le porteur de score / vies / combo / items / stats
+   d'un joueur (le seul "local" en solo, chacun des 2-4 en multijoueur). */
+GameScene.makePlayer = function (id, name, color, lives) {
+  return {
+    id, name, color, alive: true,
+    score: 0, combo: 0, maxCombo: 0, lives,
+    comboStars: 0, runStarTier: 0, invincibleUntil: 0,
+    bombs: 1, lasers: 1,
+    stats: {
+      typedOK: 0, errors: 0, startTime: 0,
+      kills: { bug: 0, legacy: 0, deadline: 0, boss: 0, powerup: 0 },
+      missedWords: [],
+    },
+  };
+};
+
+/* Proxy transparent : score, vies, combo, items, stats… sont lus et écrits sur
+   this.activePlayer. Tout le code de jeu existant (this.score += …, this.lives--)
+   opère ainsi sur le bon joueur sans la moindre modification, en solo comme en
+   multi (où activePlayer est basculé le temps de créditer un kill, cf. M1). */
+for (const f of ['score', 'combo', 'maxCombo', 'lives', 'comboStars',
+  'runStarTier', 'invincibleUntil', 'bombs', 'lasers', 'stats']) {
+  Object.defineProperty(GameScene.prototype, f, {
+    configurable: true,
+    get() { return this.activePlayer ? this.activePlayer[f] : undefined; },
+    set(v) { if (this.activePlayer) this.activePlayer[f] = v; },
+  });
 }
