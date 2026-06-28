@@ -10,6 +10,9 @@ class MpMirrorScene extends Phaser.Scene {
   init(data) {
     this.net = data.net;
     this.diff = data.difficulty || DIFFICULTIES[1];
+    this.mode = data.mode || 'inf';
+    this.infinite = this.mode === 'inf';
+    this.maxSprints = this.mode === '10' ? 10 : 5;
     this.localId = data.localId;
     this.roster = data.players || [];
     this.players = this.roster.map((p) => ({ id: p.id, name: p.name, color: p.color, score: 0, lives: this.diff.lives, alive: true, combo: 0 }));
@@ -44,7 +47,7 @@ class MpMirrorScene extends Phaser.Scene {
     this.net.on('keyframe', (k) => this.onKeyframe(k));
     this.net.on('kill', (k) => this.onKill(k));
     this.net.on('incident', (k) => this.onIncident(k));
-    this.net.on('wave', (w) => { this.wave = w.n; this.hudWave.setText(`SPRINT ${w.n} ∞`); });
+    this.net.on('wave', (w) => { this.wave = w.n; this.hudWave.setText(this.waveLabel(w.n)); });
     this.net.on('boss', (b) => this.showBossBanner(b));
     this.net.on('bosscmd', (b) => this.onBossCmd(b));
     this.net.on('gameOver', (g) => this.onGameOver(g));
@@ -67,7 +70,7 @@ class MpMirrorScene extends Phaser.Scene {
   }
 
   buildHud() {
-    this.hudWave = this.add.text(GAME_W / 2, 22, `SPRINT 1 ∞`, { fontFamily: FONT, fontSize: '30px', color: CSS.white }).setOrigin(0.5).setDepth(40);
+    this.hudWave = this.add.text(GAME_W / 2, 22, this.waveLabel(1), { fontFamily: FONT, fontSize: '30px', color: CSS.white }).setOrigin(0.5).setDepth(40);
     this.add.text(GAME_W / 2, 58, T('mpMirrorTag'), { fontFamily: FONT, fontSize: '20px', color: CSS.greenSoft }).setOrigin(0.5).setDepth(40);
     this.hudItems = this.add.text(24, 16, '', { fontFamily: FONT, fontSize: '24px', color: CSS.gold }).setDepth(40);
     this.refreshItems();
@@ -76,6 +79,8 @@ class MpMirrorScene extends Phaser.Scene {
   refreshItems() {
     if (this.hudItems) this.hudItems.setText(T('hudItems')(this.bombs, this.lasers));
   }
+
+  waveLabel(n) { return this.infinite ? `SPRINT ${n} ∞` : `SPRINT ${n}/${this.maxSprints}`; }
 
   refreshScoreboard() { mpRefreshAvatars(this.avatars, this.localId); }
 
@@ -211,7 +216,7 @@ class MpMirrorScene extends Phaser.Scene {
     this.enemies.forEach((e) => e.container.destroy());
     this.enemies = []; this.eMap.clear();
     Music.stop();
-    showMpResults(this, g.winnerId, g.results, this.localId);
+    showMpResults(this, g.winnerId, g.results, this.localId, g.won);
   }
 
   onSessionEnded() {

@@ -45,6 +45,7 @@ const I18N = {
     mpYou: 'TOI :',
     mpMirrorTag: '(miroir réseau — l\'hôte arbitre)',
     mpResultsTitle: '-- CLASSEMENT --',
+    mpResultsWon: '-- PROD SAUVÉE ! --',
     mpWinner: (name) => `🏆 ${name} l'emporte !`,
     mpResultsHint: 'ÉCHAP : retour au lobby',
     // briefing affiché juste avant le lancement d'une partie
@@ -377,6 +378,7 @@ const I18N = {
     mpYou: 'YOU:',
     mpMirrorTag: '(network mirror — host arbitrates)',
     mpResultsTitle: '-- RANKING --',
+    mpResultsWon: '-- PROD SAVED! --',
     mpWinner: (name) => `🏆 ${name} wins!`,
     mpResultsHint: 'ESC: back to lobby',
     // briefing shown right before a game starts

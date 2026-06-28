@@ -134,8 +134,7 @@ class GameScene extends Phaser.Scene {
 
     // partie gagnée au bout de maxSprints (5 ou 10 selon le mode choisi) ;
     // le compte à rebours "par" sert d'affichage et de bonus de fin
-    this.infinite = INFINITE_MODE; // pas de chrono, sprints sans fin
-    if (this.mp) this.infinite = true; // multi (M1) : survie partagée, pas de fin par sprints
+    this.infinite = INFINITE_MODE; // pas de chrono, sprints sans fin (multi inclus)
     this.speedScale = SPEED_MODE ? 1.3 : 1; // code secret SPEED : +30 %
     this.maxSprints = CAMPAIGN_SPRINTS;
     this.parMs = this.maxSprints * PAR_SECONDS_PER_SPRINT * 1000;
@@ -1490,7 +1489,7 @@ class GameScene extends Phaser.Scene {
       if (e.kind === 'boss') this.boss = null;
       e.container.destroy();
       this.refreshHud();
-      if (this.players.every((p) => !p.alive)) return this.mpGameOver();
+      if (this.players.every((p) => !p.alive)) return this.mpFinish(false);
       this.checkWaveEnd();
       return;
     }
@@ -1582,7 +1581,7 @@ class GameScene extends Phaser.Scene {
   }
 
   gameOver() {
-    if (this.mp) return this.mpGameOver(); // sécurité : en multi, la défaite passe par mpGameOver
+    if (this.mp) return this.mpFinish(false); // sécurité : en multi, la défaite passe par mpFinish
     const results = this.endRun();
     Sfx.gameOver();
     this.burnProd();
@@ -1603,6 +1602,12 @@ class GameScene extends Phaser.Scene {
   victory() {
     const remainingS = Math.max(0, Math.round((this.parMs - this.playMs) / 1000));
     const timeBonus = Math.round(remainingS * 25 * this.diff.scoreMult);
+    if (this.mp) {
+      // multi (modes 5/10 sprints) : le DSI est vaincu, bonus de temps pour
+      // chaque survivant, puis classement partagé (le meilleur score l'emporte)
+      this.players.forEach((p) => { if (p.alive) p.score += timeBonus; });
+      return this.mpFinish(true);
+    }
     this.score += timeBonus;
     const results = this.endRun();
     results.won = true;
@@ -1738,22 +1743,21 @@ class GameScene extends Phaser.Scene {
     }).sort((a, b) => b.score - a.score);
   }
 
-  /* Tous les joueurs sont éliminés : classement, enregistrement leaderboard
-     (l'hôte écrit chaque joueur) et écran de fin partagé. */
-  mpGameOver() {
+  /* Fin de partie multi : soit tous éliminés (won=false), soit le DSI vaincu
+     (won=true). Classement partagé + enregistrement leaderboard CÔTÉ SERVEUR
+     (robuste : ÉCHAP avorterait un save client fire-and-forget). */
+  mpFinish(won) {
     if (this.over) return;
     this.over = true;
     this.input.keyboard.off('keydown', this.keyHandler);
     this.enemies.forEach((e) => e.container.destroy());
     this.enemies = [];
     Music.stop();
-    Sfx.gameOver();
+    if (won) Sfx.waveClear(); else Sfx.gameOver();
     const results = this.mpResults();
     const winnerId = results[0] ? results[0].id : null;
-    // le leaderboard est écrit CÔTÉ SERVEUR à la réception de 'gameOver' (robuste
-    // face à la navigation : ÉCHAP avorterait un save client fire-and-forget)
-    this.net?.push('gameOver', { winnerId, results });
-    showMpResults(this, winnerId, results, this.localPlayer.id);
+    this.net?.push('gameOver', { winnerId, results, won });
+    showMpResults(this, winnerId, results, this.localPlayer.id, won);
   }
 
   // ------------------------------------------------------------ update

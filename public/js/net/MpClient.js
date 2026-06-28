@@ -88,18 +88,18 @@ const Mp = new MpClient();
    dans sa couleur, avec pseudo + SCORE (en évidence) + PV (en petit). Partagé
    par l'hôte (GameScene) et les miroirs (MpMirrorScene). */
 function mpBuildAvatars(scene, players, localId) {
-  const x = 196;
+  const x = 190;
   const n = players.length;
-  const span = 470, top = 176;
+  const span = 480, top = 166;
   return players.map((p, i) => {
-    const y = n <= 1 ? GAME_H / 2 - 30 : top + i * (span / (n - 1));
+    const y = n <= 1 ? GAME_H / 2 - 40 : top + i * (span / (n - 1));
     const me = p.id === localId;
-    const art = scene.add.text(x, y, ASCII.player, { fontFamily: FONT, fontSize: '22px', color: p.color, align: 'center', lineSpacing: -4 }).setOrigin(0.5).setDepth(3);
-    const name = scene.add.text(x, y + 36, '', { fontFamily: FONT, fontSize: '20px', color: p.color, align: 'center' }).setOrigin(0.5).setDepth(3);
-    const score = scene.add.text(x, y + 60, '', { fontFamily: FONT, fontSize: '28px', color: CSS.white, align: 'center' }).setOrigin(0.5).setDepth(3);
-    const pv = scene.add.text(x, y + 84, '', { fontFamily: FONT, fontSize: '15px', color: CSS.greenSoft, align: 'center' }).setOrigin(0.5).setDepth(3);
-    if (me && !REDUCED_MOTION) scene.tweens.add({ targets: art, y: y - 6, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-    return { p, art, name, score, pv, me };
+    const art = scene.add.text(x, y, ASCII.player, { fontFamily: FONT, fontSize: '20px', color: p.color, align: 'center', lineSpacing: -4 }).setOrigin(0.5, 0.5).setDepth(3);
+    const baseY = y + art.height / 2;  // bas de l'avatar (espace l'avatar du pseudo)
+    const name = scene.add.text(x, baseY + 14, '', { fontFamily: FONT, fontSize: '20px', color: p.color, align: 'center' }).setOrigin(0.5, 0).setDepth(3);
+    const score = scene.add.text(x, baseY + 38, '', { fontFamily: FONT, fontSize: '26px', color: CSS.white, align: 'center' }).setOrigin(0.5, 0).setDepth(3);
+    const pips = scene.add.container(x, baseY + 74).setDepth(3); // vies = carrés (plus lisibles)
+    return { p, scene, art, name, score, pips, me, lastLives: -1, lastAlive: null };
   });
 }
 
@@ -108,22 +108,36 @@ function mpRefreshAvatars(avatars, localId) {
   for (const a of avatars) {
     const p = a.p;
     const me = p.id === localId;
-    a.art.setColor(p.alive ? p.color : CSS.greenDim).setAlpha(p.alive ? 1 : 0.3);
+    a.art.setColor(p.alive ? p.color : CSS.greenDim).setAlpha(p.alive ? 1 : 0.35);
     a.name.setText(`${me ? '▶ ' : ''}${p.name}`).setColor(p.alive ? p.color : CSS.greenDim);
     a.score.setText(String(p.score)).setColor(me ? CSS.gold : CSS.white);
-    a.pv.setText(p.alive ? `${T('mpLivesShort')} ${p.lives}` : T('mpDead'));
-    a.pv.setColor(p.alive ? CSS.greenSoft : CSS.red);
+    // pastilles de vie en CARRÉS (comme en solo), reconstruites seulement quand ça change
+    if (a.lastLives !== p.lives || a.lastAlive !== p.alive) {
+      a.lastLives = p.lives; a.lastAlive = p.alive;
+      a.pips.removeAll(true);
+      if (!p.alive) {
+        a.pips.add(a.scene.add.text(0, 0, T('mpDead'), { fontFamily: FONT, fontSize: '18px', color: CSS.red }).setOrigin(0.5));
+      } else {
+        const max = Math.min(p.lives, 8);
+        const tint = Phaser.Display.Color.HexStringToColor(p.color).color;
+        const sx = -((max - 1) * 17) / 2;
+        for (let k = 0; k < max; k++) {
+          a.pips.add(a.scene.add.rectangle(sx + k * 17, 0, 14, 14, tint).setStrokeStyle(2, 0x0a1a10));
+        }
+        if (p.lives > 8) a.pips.add(a.scene.add.text(sx + max * 17 + 4, 0, '+', { fontFamily: FONT, fontSize: '18px', color: p.color }).setOrigin(0, 0.5));
+      }
+    }
   }
 }
 
 /* Écran de classement final, partagé par l'hôte (GameScene) et les miroirs
    (MpMirrorScene). Affiché par-dessus la scène en cours. */
-function showMpResults(scene, winnerId, results, localId) {
+function showMpResults(scene, winnerId, results, localId, won) {
   const cx = GAME_W / 2;
   const panel = scene.add.container(0, 0).setDepth(80);
   panel.add(scene.add.rectangle(cx, GAME_H / 2, GAME_W, GAME_H, 0x020503, 0.95));
-  panel.add(scene.add.text(cx, 110, T('mpResultsTitle'), {
-    fontFamily: FONT, fontSize: '64px', color: CSS.cyan,
+  panel.add(scene.add.text(cx, 110, won ? T('mpResultsWon') : T('mpResultsTitle'), {
+    fontFamily: FONT, fontSize: '64px', color: won ? CSS.green : CSS.cyan,
   }).setOrigin(0.5));
   const winner = (results || []).find((r) => r.id === winnerId);
   if (winner) {
