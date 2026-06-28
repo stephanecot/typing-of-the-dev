@@ -32,6 +32,7 @@ class MpMirrorScene extends Phaser.Scene {
     this.buildDecor();
     this.buildHud();
     this.avatars = mpBuildAvatars(this, this.players, this.localId);
+    this.localAvatar = this.avatars.find((a) => a.me) || this.avatars[0]; // origine de la ligne de visée
     mpRefreshAvatars(this.avatars, this.localId);
     this.flashRect = this.add.rectangle(GAME_W / 2, GAME_H / 2, GAME_W, GAME_H, 0xff3b3b, 0).setDepth(50);
     this.redSparks = this.add.particles(0, 0, 'px', { lifespan: 500, speed: { min: 60, max: 260 }, scale: { start: 2, end: 0 }, tint: PALETTE.red, emitting: false }).setDepth(36);
@@ -316,8 +317,11 @@ class MpMirrorScene extends Phaser.Scene {
     this.lockLine.clear();
     if (this.target && this.target.container.active) {
       const t = this.target;
+      // la ligne part de l'avatar du joueur LOCAL (et non du centre de l'écran)
+      const ox = this.localAvatar.art.x + 30;
+      const oy = this.localAvatar.art.y;
       this.lockLine.lineStyle(2, PALETTE.amber, 0.7);
-      this.lockLine.lineBetween(PLAYER_X + 40, GAME_H / 2 - 30, t.container.x, t.container.y);
+      this.lockLine.lineBetween(ox, oy, t.container.x, t.container.y);
     }
   }
 }
