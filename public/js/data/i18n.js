@@ -20,6 +20,7 @@ const I18N = {
     lbEmpty: 'Aucun score pour le moment.',
     // ----- Multijoueur -----
     menuMulti: '[ M ] multijoueur',
+    menuLocalMode: '⚠ MODE LOCAL\nscores non sauvegardés\nmultijoueur indisponible\n(lancez le serveur)',
     mpChoose: 'Crée une partie ou rejoins-en une',
     mpCreateOpt: '[ C ] CRÉER une session',
     mpJoinOpt: '[ J ] REJOINDRE une session',
@@ -353,6 +354,7 @@ const I18N = {
     lbEmpty: 'No scores yet.',
     // ----- Multiplayer -----
     menuMulti: '[ M ] multiplayer',
+    menuLocalMode: '⚠ LOCAL MODE\nscores not saved\nmultiplayer unavailable\n(start the server)',
     mpChoose: 'Create a session or join one',
     mpCreateOpt: '[ C ] CREATE a session',
     mpJoinOpt: '[ J ] JOIN a session',

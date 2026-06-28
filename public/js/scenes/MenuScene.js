@@ -22,6 +22,11 @@ class MenuScene extends Phaser.Scene {
         this.add.text(GAME_W - 250, 318, T('menuMulti'), {
           fontFamily: FONT, fontSize: '22px', color: CSS.magenta,
         }).setOrigin(0.5);
+      } else {
+        // démo statique (sans backend) : on prévient des limitations
+        this.add.text(GAME_W - 250, 340, T('menuLocalMode'), {
+          fontFamily: FONT, fontSize: '20px', color: CSS.amber, align: 'center', lineSpacing: 4,
+        }).setOrigin(0.5);
       }
     });
     this.buildTitle();
