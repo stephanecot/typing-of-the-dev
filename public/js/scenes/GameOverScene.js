@@ -11,18 +11,8 @@ class GameOverScene extends Phaser.Scene {
     this.saved = false;
   }
 
-  create() {
-    const r = this.results;
-    const cx = GAME_W / 2;
-
-    // victoire (DSI vaincu) ou post-mortem classique
-    this.add.text(cx, 80, r.won ? T('goWin') : 'POST-MORTEM', {
-      fontFamily: FONT, fontSize: '72px', color: r.won ? CSS.green : CSS.red,
-    }).setOrigin(0.5);
-    this.add.text(cx, 140, `${T('goDiff')} ${diffLabel(this.diff)}`, {
-      fontFamily: FONT, fontSize: '26px', color: this.diff.color || CSS.magenta,
-    }).setOrigin(0.5);
-
+  /* Lignes de stats [libellé, valeur] — partagées avec l'écran mobile. */
+  static statLines(r) {
     const kills = r.kills;
     const lines = [
       ['SCORE', String(r.score)],
@@ -34,6 +24,24 @@ class GameOverScene extends Phaser.Scene {
       [T('statBosses'), String(kills.boss || 0)],
     ];
     if (r.won && r.timeBonus) lines.push([T('timeBonus'), `+${r.timeBonus}`]);
+    return lines;
+  }
+
+  create() {
+    const r = this.results;
+    const cx = GAME_W / 2;
+    // mobile : écran de fin en DOM tactile (js/mobile/ui.js)
+    if (MOBILE) { MobileUI.showGameOver(this); return; }
+
+    // victoire (DSI vaincu) ou post-mortem classique
+    this.add.text(cx, 80, r.won ? T('goWin') : 'POST-MORTEM', {
+      fontFamily: FONT, fontSize: '72px', color: r.won ? CSS.green : CSS.red,
+    }).setOrigin(0.5);
+    this.add.text(cx, 140, `${T('goDiff')} ${diffLabel(this.diff)}`, {
+      fontFamily: FONT, fontSize: '26px', color: this.diff.color || CSS.magenta,
+    }).setOrigin(0.5);
+
+    const lines = GameOverScene.statLines(r);
     // stats dans la moitié gauche : le formulaire s'affiche à droite, sur le même écran
     lines.forEach(([k, v], i) => {
       const y = 250 + i * 52;
@@ -113,6 +121,7 @@ class GameOverScene extends Phaser.Scene {
   }
 
   async showLeaderboard(pseudo, rank) {
+    if (MOBILE) { MobileUI.showRanking(this, pseudo, rank); return; }
     const cx = GAME_W / 2;
     const panel = this.add.container(cx, 0).setDepth(70);
     const bg = this.add.rectangle(0, GAME_H / 2, GAME_W, GAME_H, 0x050a07, 0.93);

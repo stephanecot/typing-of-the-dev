@@ -15,6 +15,7 @@ class MenuScene extends Phaser.Scene {
     // recharge les réglages admin et, si le backend répond, propose le lien
     // vers le leaderboard plein écran (inutile sur la démo statique sans serveur)
     Api.loadConfig().then(() => {
+      if (MOBILE) MobileUI.render(); // boutons dépendant du serveur (classement…)
       if (SERVER_MODE) {
         this.buildLeaderboardLink();
         this.buildLeaderboardOverlay();
@@ -82,6 +83,8 @@ class MenuScene extends Phaser.Scene {
     this.buildBriefing();
     this.refreshSecretBadges();
     this.cameras.main.fadeIn(400, 5, 10, 7);
+    // mobile : l'accueil est une interface tactile DOM par-dessus (js/mobile/ui.js)
+    if (MOBILE) MobileUI.show(this);
   }
 
   /* I : cycle les 3 modes (5 sprints → 10 sprints → infini), persisté. */
@@ -505,7 +508,7 @@ class MenuScene extends Phaser.Scene {
       this.codeBuffer = '';
       this.refreshCodeText();
       Sfx.error();
-      return;
+      return false; // code refusé (utilisé par l'interface mobile)
     }
     Sfx.powerup();
     this.refreshSecretBadges();

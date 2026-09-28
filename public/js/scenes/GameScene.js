@@ -4,11 +4,18 @@
    Les ennemis avancent de droite à gauche vers le serveur PROD. */
 'use strict';
 
-const PLAYER_X = 190;
-const PROD_X = 95;
+/* Colonne de gauche : serveur PROD + dev. Mobile : colonne étroite collée au
+   bord (le dev passe sous la PROD) pour laisser la largeur aux ennemis.
+   PROD_EDGE = distance entre le centre de la PROD et la ligne d'incident. */
+const PLAYER_X = M(190, 56);
+const PROD_X = M(95, 56);
+const PROD_EDGE = M(80, 60);
 const SPAWN_X = GAME_W + 80;
-const LANE_TOP = 130;
+const LANE_TOP = M(130, 200); // mobile : HUD plus gros, les ennemis passent dessous
 const LANE_BOTTOM = GAME_H - 90;
+/* Mobile : l'écran est 2× moins large (800 px) et on tape au pouce. Les ennemis
+   vont 0,45× moins vite : un peu plus de temps de trajet qu'en standard. */
+const MOBILE_SPEED = 0.45;
 
 /* Métadonnées de composition des vagues (pures, partagées avec l'aide).
    - level  : palier de difficulté de l'ennemi (= multiplicateur de score et
@@ -135,7 +142,7 @@ class GameScene extends Phaser.Scene {
     // partie gagnée au bout de maxSprints (5 ou 10 selon le mode choisi) ;
     // le compte à rebours "par" sert d'affichage et de bonus de fin
     this.infinite = INFINITE_MODE; // pas de chrono, sprints sans fin (multi inclus)
-    this.speedScale = SPEED_MODE ? 1.3 : 1; // code secret SPEED : +30 %
+    this.speedScale = (SPEED_MODE ? 1.3 : 1) * M(1, MOBILE_SPEED); // code secret SPEED : +30 %
     this.maxSprints = CAMPAIGN_SPRINTS;
     this.parMs = this.maxSprints * PAR_SECONDS_PER_SPRINT * 1000;
     this.playMs = 0; // temps de jeu effectif (pauses exclues)
@@ -278,13 +285,13 @@ class GameScene extends Phaser.Scene {
 
     // serveur PROD + dev à défendre
     this.prodArt = this.add.text(PROD_X, GAME_H / 2, ASCII.prod, {
-      fontFamily: FONT, fontSize: '24px', color: CSS.cyan, align: 'center', lineSpacing: -4,
+      fontFamily: FONT, fontSize: M('24px', '22px'), color: CSS.cyan, align: 'center', lineSpacing: -4,
     }).setOrigin(0.5).setAlpha(0.95);
     // le "dev" solo : en multi, mpSetup pose plutôt un avatar par joueur (cf.
     // buildPlayerAvatars), donc on ne crée pas ce personnage unique
     if (!this.mp) {
       this.player = this.add.text(PLAYER_X, GAME_H / 2 + 150, ASCII.player, {
-        fontFamily: FONT, fontSize: '22px', color: CSS.green, align: 'center', lineSpacing: -4,
+        fontFamily: FONT, fontSize: M('22px', '20px'), color: CSS.green, align: 'center', lineSpacing: -4,
       }).setOrigin(0.5);
       this.tweens.add({ targets: this.player, y: '+=8', duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
@@ -292,7 +299,7 @@ class GameScene extends Phaser.Scene {
     // ligne de danger
     const danger = this.add.graphics();
     danger.lineStyle(2, PALETTE.red, 0.25);
-    danger.lineBetween(PROD_X + 75, LANE_TOP - 40, PROD_X + 75, LANE_BOTTOM + 40);
+    danger.lineBetween(PROD_X + PROD_EDGE - 5, LANE_TOP - 40, PROD_X + PROD_EDGE - 5, LANE_BOTTOM + 40);
 
     this.lockLine = this.add.graphics();
     this.flashRect = this.add.rectangle(GAME_W / 2, GAME_H / 2, GAME_W, GAME_H, 0xff2222, 0)
@@ -300,46 +307,51 @@ class GameScene extends Phaser.Scene {
   }
 
   buildHud() {
-    const styleSm = { fontFamily: FONT, fontSize: '28px', color: CSS.green };
+    // mobile : HUD agrandi (l'écran est affiché à ~55 %), sur 4 lignes
+    const styleSm = { fontFamily: FONT, fontSize: M('28px', '36px'), color: CSS.green };
     this.hudFps = this.add.text(4, 0, '', {
       fontFamily: FONT, fontSize: '16px', color: CSS.greenSoft,
     }).setDepth(40).setAlpha(0.85);
     this.hudScore = this.add.text(24, 16, '', styleSm).setDepth(40);
-    this.hudCombo = this.add.text(24, 50, '', { ...styleSm, color: CSS.amber }).setDepth(40);
-    this.hudBombs = this.add.text(24, 84, '', { ...styleSm, color: CSS.gold }).setDepth(40);
-    this.hudStars = this.add.text(24, 118, '', { ...styleSm, color: CSS.gold }).setDepth(40);
-    this.hudWave = this.add.text(GAME_W / 2, 22, '', {
-      fontFamily: FONT, fontSize: '32px', color: CSS.white,
+    // mobile : les items (icônes, toujours affichés) remontent sous le score,
+    // le combo (passager) prend la ligne du dessous
+    this.hudCombo = this.add.text(24, M(50, 104), '', { ...styleSm, color: CSS.amber }).setDepth(40);
+    this.hudBombs = this.add.text(24, M(84, 60), '', { ...styleSm, color: CSS.gold }).setDepth(40);
+    this.hudStars = this.add.text(24, M(118, 148), '', {
+      ...styleSm, color: CSS.gold, wordWrap: MOBILE ? { width: GAME_W - 48 } : undefined,
+    }).setDepth(40);
+    this.hudWave = this.add.text(GAME_W / 2, M(22, 26), '', {
+      fontFamily: FONT, fontSize: M('32px', '40px'), color: CSS.white,
     }).setOrigin(0.5, 0.5).setDepth(40);
     // progression des sprints (barre sous le titre) + temps de jeu restant
     this.sprintBar = this.add.graphics().setDepth(40);
-    this.hudTime = this.add.text(GAME_W / 2, 66, '', {
-      fontFamily: FONT, fontSize: '26px', color: CSS.greenSoft,
+    this.hudTime = this.add.text(GAME_W / 2, M(66, 82), '', {
+      fontFamily: FONT, fontSize: M('26px', '34px'), color: CSS.greenSoft,
     }).setOrigin(0.5, 0.5).setDepth(40);
     this.hudDiff = this.add.text(GAME_W - 24, 16, diffLabel(this.diff), {
-      fontFamily: FONT, fontSize: '26px', color: this.diff.color || CSS.magenta,
+      fontFamily: FONT, fontSize: M('26px', '34px'), color: this.diff.color || CSS.magenta,
     }).setOrigin(1, 0).setDepth(40);
     // PV : une icône carrée par vie, pleine tant que la vie est là
     const n = this.diff.lives;
-    this.hudProdLabel = this.add.text(GAME_W - 24 - n * 44 - 14, 48, 'PROD', {
-      fontFamily: FONT, fontSize: '32px', color: CSS.green,
+    this.hudProdLabel = this.add.text(GAME_W - 24 - n * 44 - 14, M(48, 64), 'PROD', {
+      fontFamily: FONT, fontSize: M('32px', '36px'), color: CSS.green,
     }).setOrigin(1, 0).setDepth(40);
     this.lifeIcons = [];
     for (let i = 0; i < n; i++) {
       const x = GAME_W - 39 - (n - 1 - i) * 44;
-      this.lifeIcons.push(this.add.rectangle(x, 66, 30, 30).setDepth(40));
+      this.lifeIcons.push(this.add.rectangle(x, M(66, 83), 30, 30).setDepth(40));
     }
     this.lifePulse = null;
     // en multi, les PV de chaque joueur sont affichés (en petit) près de la PROD :
     // on masque le gros bandeau de vies local pour laisser la place aux scores
     if (this.mp) { this.hudProdLabel.setVisible(false); this.lifeIcons.forEach((ic) => ic.setVisible(false)); }
     // badges des modes secrets actifs, empilés sous les PV
-    let badgeY = 96;
+    let badgeY = M(96, 108);
     const addBadge = (txt, color) => {
       this.add.text(GAME_W - 24, badgeY, txt, {
-        fontFamily: FONT, fontSize: '22px', color,
+        fontFamily: FONT, fontSize: M('22px', '28px'), color,
       }).setOrigin(1, 0).setDepth(40);
-      badgeY += 26;
+      badgeY += M(26, 32);
     };
     if (GINES_MODE) addBadge(T('ginesBadge'), CSS.magenta);
     if (DISCO_MODE) addBadge(T('discoBadge'), CSS.cyan);
@@ -347,6 +359,7 @@ class GameScene extends Phaser.Scene {
     if (SPEED_MODE) addBadge(T('speedBadge'), CSS.red);
     this.banner = this.add.text(GAME_W / 2, GAME_H / 2 - 60, '', {
       fontFamily: FONT, fontSize: '64px', color: CSS.amber, align: 'center',
+      wordWrap: MOBILE ? { width: GAME_W - 40 } : undefined,
     }).setOrigin(0.5).setDepth(45).setAlpha(0);
     this.buildPauseOverlay();
     this.refreshHud();
@@ -361,20 +374,21 @@ class GameScene extends Phaser.Scene {
         fontFamily: FONT, fontSize: '96px', color: CSS.amber,
       }).setOrigin(0.5),
       this.add.text(cx, GAME_H / 2 - 50, T('pauseSub'), {
-        fontFamily: FONT, fontSize: '26px', color: CSS.greenSoft,
+        fontFamily: FONT, fontSize: M('26px', '32px'), color: CSS.greenSoft,
       }).setOrigin(0.5),
       this.add.text(cx, GAME_H / 2 + 50, T('pauseResume'), {
-        fontFamily: FONT, fontSize: '36px', color: CSS.green,
+        fontFamily: FONT, fontSize: M('36px', '40px'), color: CSS.green,
       }).setOrigin(0.5),
     ]);
     // le seul endroit où couper le son (S ne sert qu'à taper pendant le jeu)
-    this.pauseMute = this.add.text(cx, GAME_H / 2 + 108, '', {
-      fontFamily: FONT, fontSize: '30px', color: CSS.cyan,
+    this.pauseMute = this.add.text(cx, GAME_H / 2 + M(108, 116), '', {
+      fontFamily: FONT, fontSize: M('30px', '36px'), color: CSS.cyan,
     }).setOrigin(0.5);
     this.pauseOverlay.add([
       this.pauseMute,
-      this.add.text(cx, GAME_H / 2 + 162, T('pauseQuit'), {
-        fontFamily: FONT, fontSize: '30px', color: CSS.red,
+      this.add.text(cx, GAME_H / 2 + M(162, 180), T('pauseQuit'), {
+        fontFamily: FONT, fontSize: M('30px', '32px'), color: CSS.red,
+        align: 'center', wordWrap: MOBILE ? { width: GAME_W - 40 } : undefined,
       }).setOrigin(0.5),
     ]);
   }
@@ -418,7 +432,7 @@ class GameScene extends Phaser.Scene {
     this.hudScore.setColor(this.godMode ? CSS.red : CSS.green);
     const mult = this.multiplier();
     this.hudCombo.setText(this.combo > 1 ? `COMBO x${this.combo}  (×${mult})` : '');
-    this.hudBombs.setText(T('hudItems')(this.bombs, this.lasers));
+    this.hudBombs.setText(T(M('hudItems', 'hudItemsMobile'))(this.bombs, this.lasers));
     this.hudStars.setText(this.superComboEnabled
       ? `${T('hudStars')} ${'★'.repeat(this.comboStars)}${'☆'.repeat(6 - this.comboStars)}${this.comboStars > 0 ? T('hudStarsKeys') : ''}`
       : '');
@@ -431,7 +445,7 @@ class GameScene extends Phaser.Scene {
   refreshSprintBar() {
     if (this.infinite) { this.sprintBar.clear(); return; }
     const w = 260, h = 8;
-    const x = GAME_W / 2 - w / 2, y = 40;
+    const x = GAME_W / 2 - w / 2, y = M(40, 50);
     const done = Phaser.Math.Clamp(Math.max(this.wave - 1, 0) / this.maxSprints, 0, 1);
     this.sprintBar.clear();
     this.sprintBar.fillStyle(PALETTE.greenDim, 0.35);
@@ -621,14 +635,14 @@ class GameScene extends Phaser.Scene {
   showEnemyTicker(intro) {
     const text = (T('enemyIntro') || {})[intro.kind];
     if (!text) { this.introBusy = false; return; }
-    const c = this.add.container(0, GAME_H - 36).setDepth(44);
+    const c = this.add.container(0, GAME_H - M(36, 40)).setDepth(44);
     // l'art "legacy" porte un placeholder <tech> : on lui donne un nom neutre
     const techName = intro.art === 'legacy' ? 'LEGACY' : null;
     const icon = this.add.text(0, 0, pickArt(intro.art, techName), {
-      fontFamily: FONT, fontSize: '18px', color: intro.color, align: 'left', lineSpacing: -4,
+      fontFamily: FONT, fontSize: M('18px', '20px'), color: intro.color, align: 'left', lineSpacing: -4,
     }).setOrigin(0, 0.5);
     const label = this.add.text(icon.width + 16, 0, text, {
-      fontFamily: FONT, fontSize: '30px', color: CSS.amber,
+      fontFamily: FONT, fontSize: M('30px', '36px'), color: CSS.amber,
     }).setOrigin(0, 0.5);
     c.add([icon, label]);
     const span = icon.width + 16 + label.width;
@@ -784,7 +798,7 @@ class GameScene extends Phaser.Scene {
   addEnemy(spec) {
     const c = this.add.container(spec.x, spec.y);
     const art = this.add.text(0, 0, pickArt(spec.artKind, spec.techName), {
-      fontFamily: FONT, fontSize: `${spec.artSize}px`, color: spec.color,
+      fontFamily: FONT, fontSize: `${Math.round(spec.artSize * M(1, 1.2))}px`, color: spec.color,
       align: 'center', lineSpacing: -3,
     }).setOrigin(0.5, 1);
     if (spec.level) {
@@ -794,14 +808,15 @@ class GameScene extends Phaser.Scene {
       if (spec.flipped) badge += T('flippedBadge');
       if (spec.kind === 'spammer') badge += T('recruiter');
       c.add(this.add.text(0, -art.height - 16, badge, {
-        fontFamily: FONT, fontSize: '19px', color: lvlColor,
+        fontFamily: FONT, fontSize: M('19px', '26px'), color: lvlColor,
       }).setOrigin(0.5));
     }
+    // mobile : mots plus gros (l'écran est affiché ~2× plus petit)
     const typed = this.add.text(0, 8, '', {
-      fontFamily: FONT, fontSize: '30px', color: CSS.amber,
+      fontFamily: FONT, fontSize: M('30px', '44px'), color: CSS.amber,
     }).setOrigin(0, 0);
     const rest = this.add.text(0, 8, spec.label, {
-      fontFamily: FONT, fontSize: '30px', color: spec.cls === 'powerup' ? CSS.gold : CSS.white,
+      fontFamily: FONT, fontSize: M('30px', '44px'), color: spec.cls === 'powerup' ? CSS.gold : CSS.white,
     }).setOrigin(0, 0);
     c.add([art, typed, rest]);
 
@@ -905,13 +920,14 @@ class GameScene extends Phaser.Scene {
       }).setOrigin(0.5, 1);
     const name = this.add.text(0, -art.height - 36,
       isFinal ? T('finalBossName') : variant ? T(variant.nameKey) : T('bossName'), {
-        fontFamily: FONT, fontSize: isFinal ? '32px' : '26px', color: CSS.red,
+        fontFamily: FONT, fontSize: isFinal ? M('32px', '38px') : M('26px', '34px'), color: CSS.red,
       }).setOrigin(0.5);
     const hp = this.add.text(0, -art.height - 10, '', {
-      fontFamily: FONT, fontSize: '24px', color: CSS.amber,
+      fontFamily: FONT, fontSize: M('24px', '30px'), color: CSS.amber,
     }).setOrigin(0.5);
-    const typed = this.add.text(0, 12, '', { fontFamily: FONT, fontSize: '32px', color: CSS.amber }).setOrigin(0, 0);
-    const rest = this.add.text(0, 12, cmds[0], { fontFamily: FONT, fontSize: '32px', color: CSS.white }).setOrigin(0, 0);
+    const cmdSize = M('32px', '40px');
+    const typed = this.add.text(0, 12, '', { fontFamily: FONT, fontSize: cmdSize, color: CSS.amber }).setOrigin(0, 0);
+    const rest = this.add.text(0, 12, cmds[0], { fontFamily: FONT, fontSize: cmdSize, color: CSS.white }).setOrigin(0, 0);
     c.add([name, hp, art, typed, rest]);
 
     this.boss = {
@@ -1351,7 +1367,7 @@ class GameScene extends Phaser.Scene {
   /* Texte flottant : points gagnés, bonus ramassés... */
   scorePopup(x, y, text, color, size = 30) {
     const t = this.add.text(x, y, text, {
-      fontFamily: FONT, fontSize: `${size}px`, color,
+      fontFamily: FONT, fontSize: `${Math.round(size * M(1, 1.2))}px`, color,
     }).setOrigin(0.5).setDepth(38);
     this.tweens.add({
       targets: t, y: y - 70, alpha: 0, duration: 900, ease: 'Cubic.easeOut',
@@ -1480,7 +1496,7 @@ class GameScene extends Phaser.Scene {
         });
         Sfx.incident();
         this.cameras.main.shake(350, 0.01);
-        this.redSparks.explode(60, PROD_X + 80, fy);
+        this.redSparks.explode(60, PROD_X + PROD_EDGE, fy);
         this.flashRect.setAlpha(0.35);
         this.tweens.add({ targets: this.flashRect, alpha: 0, duration: 450 });
         this.showBanner(e.kind === 'boss' ? T('bossTouch') : T('incident'));
@@ -1495,7 +1511,7 @@ class GameScene extends Phaser.Scene {
     }
     if ((this.godMode || this.time.now < this.invincibleUntil) && e.cls !== 'powerup') {
       // invincible : l'ennemi s'écrase sur un bouclier, aucun dégât
-      this.redSparks.explode(25, PROD_X + 80, e.container.y);
+      this.redSparks.explode(25, PROD_X + PROD_EDGE, e.container.y);
       this.scorePopup(PROD_X + 160, e.container.y,
         this.godMode ? T('invincible') : T('starShieldBlock'), this.godMode ? CSS.red : CSS.gold, 26);
       if (e.kind === 'boss') this.boss = null;
@@ -1510,7 +1526,7 @@ class GameScene extends Phaser.Scene {
       this.stats.missedWords.push(e.label);
       Sfx.incident();
       this.cameras.main.shake(350, 0.01);
-      this.redSparks.explode(60, PROD_X + 80, e.container.y);
+      this.redSparks.explode(60, PROD_X + PROD_EDGE, e.container.y);
       this.flashRect.setAlpha(0.35);
       this.tweens.add({ targets: this.flashRect, alpha: 0, duration: 450 });
       this.showBanner(e.kind === 'boss' ? T('bossTouch') : T('incident'));
@@ -1587,7 +1603,8 @@ class GameScene extends Phaser.Scene {
     this.burnProd();
 
     const downTxt = this.add.text(GAME_W / 2, GAME_H / 2, T('prodDown'), {
-      fontFamily: FONT, fontSize: '120px', color: CSS.red, align: 'center',
+      fontFamily: FONT, fontSize: M('120px', '96px'), color: CSS.red, align: 'center',
+      wordWrap: MOBILE ? { width: GAME_W - 40 } : undefined,
     }).setOrigin(0.5).setDepth(60).setAlpha(0);
     this.tweens.add({ targets: downTxt, alpha: 1, duration: 200, yoyo: true, repeat: 6 });
     this.cameras.main.shake(900, 0.012);
@@ -1615,11 +1632,12 @@ class GameScene extends Phaser.Scene {
     Sfx.waveClear();
 
     const winTxt = this.add.text(GAME_W / 2, GAME_H / 2 - 40, T('prodSaved'), {
-      fontFamily: FONT, fontSize: '110px', color: CSS.green, align: 'center',
+      fontFamily: FONT, fontSize: M('110px', '88px'), color: CSS.green, align: 'center',
+      wordWrap: MOBILE ? { width: GAME_W - 40 } : undefined,
     }).setOrigin(0.5).setDepth(60).setAlpha(0);
     this.tweens.add({ targets: winTxt, alpha: 1, duration: 200, yoyo: true, repeat: 6 });
     if (timeBonus > 0) {
-      this.add.text(GAME_W / 2, GAME_H / 2 + 60,
+      this.add.text(GAME_W / 2, GAME_H / 2 + M(60, 110),
         `${T('timeBonus')} +${timeBonus}  (${remainingS}s)`, {
           fontFamily: FONT, fontSize: '44px', color: CSS.gold,
         }).setOrigin(0.5).setDepth(60);
@@ -1854,7 +1872,7 @@ class GameScene extends Phaser.Scene {
         this.redSparks.explode(14, e.container.x, e.container.y);
         this.scorePopup(e.container.x, e.container.y - 80, T('reEncrypted'), CSS.red, 24);
       }
-      if (e.container.x < PROD_X + 80) this.incident(e);
+      if (e.container.x < PROD_X + PROD_EDGE) this.incident(e);
     }
 
     // ligne de verrouillage
@@ -1865,7 +1883,7 @@ class GameScene extends Phaser.Scene {
       this.lockLine.lineBetween(PLAYER_X + 40, this.player.y - 30, t.container.x, t.container.y);
       this.lockLine.lineStyle(2, PALETTE.amber, 0.9);
       const w = Math.max(t.restText.width + t.typedText.width, 60) + 26;
-      this.lockLine.strokeRect(t.container.x - w / 2, t.container.y - 56, w, 96);
+      this.lockLine.strokeRect(t.container.x - w / 2, t.container.y - 56, w, M(96, 108));
     }
   }
 }

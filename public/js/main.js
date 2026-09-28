@@ -3,8 +3,47 @@
 
 const APP_VERSION = 'v2.0.0';
 
-const GAME_W = 1600;
-const GAME_H = 900;
+/* MOBILE : version téléphone (app Capacitor, ou écran uniquement tactile).
+   Forçable depuis un ordinateur avec ?mobile=1 (ou désactivable avec ?mobile=0).
+   Quand MOBILE est faux, la version standard est STRICTEMENT inchangée : toute
+   différence passe par M(valeurStandard, valeurMobile) ou un `if (MOBILE)`.
+   Mise en page mobile : l'écran de jeu en haut, le clavier virtuel en bas
+   (cf. js/mobile/keyboard.js), portrait uniquement. */
+const MOBILE = (() => {
+  const force = new URLSearchParams(window.location.search).get('mobile');
+  if (force === '1' || force === '0') return force === '1';
+  const cap = window.Capacitor;
+  if (cap && typeof cap.isNativePlatform === 'function' && cap.isNativePlatform()) return true;
+  return typeof window.matchMedia === 'function'
+    && window.matchMedia('(pointer: coarse)').matches
+    && !window.matchMedia('(any-pointer: fine)').matches;
+})();
+const M = (standard, mobile) => (MOBILE ? mobile : standard);
+
+/* Hauteur du clavier virtuel (px CSS) : ~40 % de l'écran, bornée. */
+const MOBILE_KB_H = MOBILE ? Math.round(Math.max(230, Math.min(window.innerHeight * 0.4, 330))) : 0;
+
+/* Mobile : on pose la mise en page (classe, hauteur du clavier, plein écran
+   sous les barres système) AVANT de mesurer la zone de jeu réelle. */
+if (MOBILE) {
+  document.documentElement.classList.add('mobile');
+  document.documentElement.style.setProperty('--kb-h', `${MOBILE_KB_H}px`);
+  const viewport = document.querySelector('meta[name="viewport"]');
+  if (viewport) {
+    viewport.setAttribute('content',
+      'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover');
+  }
+}
+
+/* Standard : 1600×900 (16:9). Mobile : 800 de large, hauteur calquée sur la
+   zone réellement libre au-dessus du clavier (encoches comprises) : le jeu
+   occupe tout l'écran, sans bandes sur les côtés. */
+const GAME_W = M(1600, 800);
+const GAME_H = M(900, (() => {
+  const frame = document.querySelector('.crt-frame');
+  const r = frame ? frame.getBoundingClientRect() : { width: window.innerWidth, height: window.innerHeight };
+  return Math.round(Math.max(700, Math.min(1600, 800 * r.height / Math.max(1, r.width))));
+})());
 
 /* Réglages pilotés par l'admin (rafraîchis via Api.loadConfig au démarrage).
    maxSprints : nb de sprints à tenir pour affronter LE DSI ÉNERVÉ et gagner. */

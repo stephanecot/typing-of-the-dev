@@ -27,6 +27,8 @@ npm run check           # project validations (words, i18n, syntax) — RUN BEFO
 | `public/js/audio.js` | SFX + 5 procedural music tracks (`TRACKS`) + hidden `DISCO_TRACK` |
 | `public/js/scenes/GameScene.js` | gameplay; `waveQueueFor()` (pure function, shared with the help page for spawn %); `INFINITE_BOSSES` |
 | `public/js/scenes/MenuScene.js` | menu, 5-page scrollable help, secret-code prompt, music/language/mode selectors |
+| `public/js/mobile/keyboard.js` | MOBILE only: DOM virtual keyboard (AZERTY/QWERTY + symbols) that dispatches real `keydown` events |
+| `public/js/mobile/ui.js` | MOBILE only: touch DOM screens (home, briefing, help, secret code, game over, ranking) calling MenuScene/GameOverScene methods |
 | `mobile/` | Capacitor Android/iOS wrapper (`webDir: ../public`), see `mobile/README.md` |
 
 ## Invariants — NEVER break these
@@ -46,9 +48,13 @@ npm run check           # project validations (words, i18n, syntax) — RUN BEFO
    `greenDim` reserved for decor/large text); every animated or blinking effect
    respects `REDUCED_MOTION`; never more than ~2.5 flashes/second; color
    information is always doubled (shape, badge, fill).
-6. **Secret codes are never revealed in the in-game help** (the README does
+6. **Mobile never alters the standard version**: every difference goes through
+   `M(standard, mobile)` or `if (MOBILE)` (flag in `main.js`, forced with
+   `?mobile=1`). Mobile = portrait, 800×(measured) canvas above a virtual
+   keyboard, touch DOM menus, no multiplayer, no event banner.
+7. **Secret codes are never revealed in the in-game help** (the README does
    list them).
-7. Wave composition lives in `waveQueueFor()` (pure, deterministic): the help
+8. Wave composition lives in `waveQueueFor()` (pure, deterministic): the help
    page uses it to compute spawn % — no `Math.random()` inside.
 
 ## Rituals (use the dedicated skills)
