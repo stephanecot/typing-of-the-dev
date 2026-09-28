@@ -1,0 +1,18 @@
+{
+  "name": "typing-of-the-dev-mobile",
+  "private": true,
+  "description": "Emballage natif Android/iOS (Capacitor) du jeu web situe dans ../public",
+  "scripts": {
+    "sync": "cap sync",
+    "android": "cap sync android && cap open android",
+    "ios": "cap sync ios && cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/ios": "^8.5.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.2"
+  }
+}

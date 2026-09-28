@@ -22,7 +22,8 @@ const jsFiles = [];
 const walk = (dir) => {
   for (const name of readdirSync(dir)) {
     const p = join(dir, name);
-    if (name === 'node_modules' || name === '.git' || name === 'lib') continue;
+    // android/ et ios/ (mobile/) : projets natifs générés, contiennent une copie de public/
+    if (['node_modules', '.git', 'lib', 'android', 'ios'].includes(name)) continue;
     if (statSync(p).isDirectory()) walk(p);
     else if (name.endsWith('.js') || name.endsWith('.mjs')) jsFiles.push(p);
   }

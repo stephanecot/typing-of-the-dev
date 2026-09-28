@@ -27,11 +27,13 @@ npm run check           # project validations (words, i18n, syntax) — RUN BEFO
 | `public/js/audio.js` | SFX + 5 procedural music tracks (`TRACKS`) + hidden `DISCO_TRACK` |
 | `public/js/scenes/GameScene.js` | gameplay; `waveQueueFor()` (pure function, shared with the help page for spawn %); `INFINITE_BOSSES` |
 | `public/js/scenes/MenuScene.js` | menu, 5-page scrollable help, secret-code prompt, music/language/mode selectors |
+| `mobile/` | Capacitor Android/iOS wrapper (`webDir: ../public`), see `mobile/README.md` |
 
 ## Invariants — NEVER break these
 
 1. **Zero npm dependencies**, zero build step: plain ES2022 JS in script tags.
-   Node ≥ 22.5.
+   Node ≥ 22.5. Sole exception: `mobile/` (Capacitor native wrapper, its own
+   `package.json`) — it only packages `public/`, never add game code there.
 2. **Typed words**: never `{ } [ ]` (painful on AZERTY), never accented
    characters, lowercase except CamelCase exceptions. Mind the STAGIAIRE
    difficulty (`maxLen: 10`): every bank must keep some short words.
