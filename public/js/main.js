@@ -20,8 +20,9 @@ const MOBILE = (() => {
 })();
 const M = (standard, mobile) => (MOBILE ? mobile : standard);
 
-/* Hauteur du clavier virtuel (px CSS) : ~40 % de l'écran, bornée. */
-const MOBILE_KB_H = MOBILE ? Math.round(Math.max(230, Math.min(window.innerHeight * 0.4, 330))) : 0;
+/* Hauteur du clavier virtuel (px CSS) : ~1/3 de l'écran, bornée (3 rangées
+   de lettres + une fine rangée d'actions). */
+const MOBILE_KB_H = MOBILE ? Math.round(Math.max(200, Math.min(window.innerHeight * 0.33, 280))) : 0;
 
 /* Mobile : on pose la mise en page (classe, hauteur du clavier, plein écran
    sous les barres système) AVANT de mesurer la zone de jeu réelle. */

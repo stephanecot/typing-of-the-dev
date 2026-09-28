@@ -253,7 +253,8 @@ html.mobile #game-container canvas { border-radius: 10px; }
 }
 html.vkb-off #vkb { display: none; }
 .vkb-row { flex: 1; display: flex; gap: 4px; min-height: 0; }
-.vkb-control { flex: 0.8; }
+.vkb-control { flex: 0.5; }
+.vkb-gap { flex: 0.5 1 0; }
 #vkb button {
   flex: 1 1 0;
   min-width: 0;
@@ -267,9 +268,8 @@ html.vkb-off #vkb { display: none; }
   border-radius: 6px;
   touch-action: none;
 }
-#vkb button.vkb-special { color: #41f2ff; font-size: 20px; background: #041009; }
-#vkb .vkb-control button { color: var(--amber); font-size: 20px; }
-#vkb button.vkb-on { color: #03140a; background: #41f2ff; }
+#vkb button { font-size: 28px; }
+#vkb .vkb-control button { color: var(--amber); font-size: 20px; background: #041009; border-radius: 4px; }
 #vkb button.vkb-down { color: #03140a; background: var(--green); border-color: var(--green); }
 
 /* ------------------------------------------------ interface mobile (menus tactiles)

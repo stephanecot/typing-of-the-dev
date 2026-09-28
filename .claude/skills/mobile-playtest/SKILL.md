@@ -60,9 +60,12 @@ standalone release APK (`/mobile-build`).
 ### Mobile smoke pass
 
 Home (title + MOBILE ribbon, grade cards, mode, buttons) → briefing → game
-(type a word with taps, ÉCHAP pause/resume) → forced game over → save pseudo →
+(type a word with taps — letters only: `git push --force` = g,i,t,p,u,s,h,f,o,r,c,e
+with 0 error — ÉCHAP pause/resume, SUPER COMBO line at the bottom in high
+difficulties, enemies spread vertically) → forced game over → save pseudo →
 ranking → MENU → help tabs (bestiary renders) → secret code valid + invalid →
-FR/EN toggle (keyboard switches AZERTY/QWERTY). No text overflow, no clipped
+FR/EN toggle (keyboard switches AZERTY/QWERTY). Release builds are not
+debuggable (webview-eval fails): check them with screenshots. No text overflow, no clipped
 HUD, keyboard hidden on DOM screens and during boot.
 
 ## 3. iOS simulator

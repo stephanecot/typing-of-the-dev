@@ -4,7 +4,7 @@
    1. syntaxe de tous les fichiers JS ;
    2. mots à taper : pas de { } [ ], pas d'accents, assez de mots courts
       par banque pour la difficulté STAGIAIRE (maxLen 10), et chaque
-      caractère tapable sur le clavier virtuel mobile ;
+      lettre tapable sur le clavier virtuel mobile ;
    3. i18n : mêmes clés en FR et EN, mêmes formes (fonction/tableau/chaîne),
       mêmes tailles de structures (bestiaires, sections d'aide, notes) ;
    4. cohérence : sprites ASCII référencés par les bestiaires et les boss,
@@ -90,8 +90,10 @@ if (WORDS) {
     }
   }
 
-  // clavier virtuel mobile (js/mobile/keyboard.js) : tout caractère d'un mot
-  // doit y exister (les majuscules passent par ⇧ sur les lettres)
+  // clavier virtuel mobile (js/mobile/keyboard.js) : sur mobile on ne tape
+  // que les lettres (casse, espaces, chiffres, symboles remplis d'office) →
+  // chaque lettre doit exister sur le clavier ; un mot sans lettre est exclu
+  // du tirage mobile (pickWord) : simple avertissement
   const kbSrc = readFileSync(join(ROOT, 'public/js/mobile/keyboard.js'), 'utf8');
   const pagesSrc = (kbSrc.match(/const PAGES = (\{[\s\S]*?\n {2}\});/) || [])[1];
   if (!pagesSrc) {
@@ -100,14 +102,19 @@ if (WORDS) {
     const pages = new Function(`return ${pagesSrc}`)();
     const keys = new Set(Object.values(pages).flat(2).filter((k) => k.length === 1));
     const missing = new Map();
+    const letterless = [];
     for (const [name, list] of banks) {
       for (const w of list) {
+        if (!/[a-z]/i.test(w)) letterless.push(`${name} : "${w}"`);
         for (const c of w) {
-          if (!keys.has(c) && !keys.has(c.toLowerCase()) && !missing.has(c)) missing.set(c, `${name} : "${w}"`);
+          if (/[a-z]/i.test(c) && !keys.has(c.toLowerCase()) && !missing.has(c)) missing.set(c, `${name} : "${w}"`);
         }
       }
     }
-    for (const [c, where] of missing) errors.push(`caractère « ${c} » absent du clavier virtuel mobile (${where})`);
+    for (const [c, where] of missing) errors.push(`lettre « ${c} » absente du clavier virtuel mobile (${where})`);
+    if (letterless.length > 3) {
+      warnings.push(`${letterless.length} mots sans lettre (jamais tirés sur mobile) : ${letterless.slice(0, 3).join(', ')}…`);
+    }
   }
 }
 

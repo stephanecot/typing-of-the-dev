@@ -640,7 +640,10 @@ function wordBank(name) {
 /* Tire un mot au hasard dans une banque, en évitant les doublons à l'écran
    et en respectant une longueur max (selon la difficulté). */
 function pickWord(bank, { maxLen = 99, exclude = new Set() } = {}) {
-  const pool = bank.filter((w) => w.length <= maxLen && !exclude.has(w));
+  // mobile : on ne tape que les lettres → un mot sans lettre serait intuable
+  const mobile = typeof MOBILE !== 'undefined' && MOBILE;
+  const pool = bank.filter((w) => w.length <= maxLen && !exclude.has(w)
+    && (!mobile || /[a-z]/i.test(w)));
   const source = pool.length ? pool : bank;
   return source[Math.floor(Math.random() * source.length)];
 }

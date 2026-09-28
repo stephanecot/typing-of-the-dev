@@ -35,9 +35,9 @@ const I18N = {
     mHelpTabs: ['RÈGLES', 'GRADES', 'BESTIAIRE', 'BOSS', 'NOTES'],
     mBriefingSteps: [
       ['1.', 'Les bugs avancent vers ta PROD, à gauche. Tape la PREMIÈRE LETTRE d\'un ennemi pour le verrouiller.'],
-      ['2.', 'Finis son mot sans faute pour l\'écraser. Les espaces sont facultatifs — une faute remet ton combo à zéro.'],
+      ['2.', 'Finis son mot sans faute pour l\'écraser. Tape juste les LETTRES : majuscules, espaces, chiffres et symboles se remplissent tout seuls. Une faute remet ton combo à zéro.'],
       ['3.', 'Ne laisse aucun ennemi atteindre la PROD : trop d\'incidents = GAME OVER.'],
-      ['4.', 'Sur le clavier : ÉCHAP = pause · TAB = changer de cible · ⏎ = kill -9 · ⌫ = autocomplete · ?\u2060123 = chiffres et symboles.'],
+      ['4.', 'En haut du clavier : ÉCHAP = pause · TAB = changer de cible · ⏎ = kill -9 · ⌫ = autocomplete.'],
     ],
     menuEventBanner: 'ÉDITION SPÉCIALE DEVFEST TOULOUSE 2026 · 19 NOVEMBRE · DIAGORA LABÈGE · #DevFestToulouse',
     menuSelect: '> SÉLECTIONNEZ VOTRE GRADE <',
@@ -401,9 +401,9 @@ const I18N = {
     mHelpTabs: ['RULES', 'RANKS', 'BESTIARY', 'BOSSES', 'NOTES'],
     mBriefingSteps: [
       ['1.', 'Bugs march toward your PROD on the left. Type the FIRST LETTER of an enemy to lock onto it.'],
-      ['2.', 'Finish its word without a typo to squash it. Spaces are optional — a typo resets your combo.'],
+      ['2.', 'Finish its word without a typo to squash it. Just type the LETTERS: capitals, spaces, digits and symbols fill in by themselves. A typo resets your combo.'],
       ['3.', 'Let no enemy reach the PROD: too many incidents = GAME OVER.'],
-      ['4.', 'On the keyboard: ESC = pause · TAB = switch target · ⏎ = kill -9 · ⌫ = autocomplete · ?\u2060123 = digits and symbols.'],
+      ['4.', 'Top of the keyboard: ESC = pause · TAB = switch target · ⏎ = kill -9 · ⌫ = autocomplete.'],
     ],
     menuEventBanner: 'DEVFEST TOULOUSE 2026 SPECIAL EDITION · NOVEMBER 19 · DIAGORA LABÈGE · #DevFestToulouse',
     menuSelect: '> SELECT YOUR RANK <',

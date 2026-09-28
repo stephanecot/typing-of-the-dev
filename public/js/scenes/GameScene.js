@@ -11,8 +11,8 @@ const PLAYER_X = M(190, 56);
 const PROD_X = M(95, 56);
 const PROD_EDGE = M(80, 60);
 const SPAWN_X = GAME_W + 80;
-const LANE_TOP = M(130, 200); // mobile : HUD plus gros, les ennemis passent dessous
-const LANE_BOTTOM = GAME_H - 90;
+const LANE_TOP = M(130, 180); // mobile : HUD plus gros, les ennemis passent dessous
+const LANE_BOTTOM = GAME_H - M(90, 190); // mobile : super combo + ticker en bas
 /* Mobile : l'écran est 2× moins large (800 px) et on tape au pouce. Les ennemis
    vont 0,45× moins vite : un peu plus de temps de trajet qu'en standard. */
 const MOBILE_SPEED = 0.45;
@@ -317,9 +317,11 @@ class GameScene extends Phaser.Scene {
     // le combo (passager) prend la ligne du dessous
     this.hudCombo = this.add.text(24, M(50, 104), '', { ...styleSm, color: CSS.amber }).setDepth(40);
     this.hudBombs = this.add.text(24, M(84, 60), '', { ...styleSm, color: CSS.gold }).setDepth(40);
-    this.hudStars = this.add.text(24, M(118, 148), '', {
-      ...styleSm, color: CSS.gold, wordWrap: MOBILE ? { width: GAME_W - 48 } : undefined,
-    }).setDepth(40);
+    // mobile : le super combo (difficultés hautes) passe en bas de l'écran
+    this.hudStars = this.add.text(24, M(118, GAME_H - 10), '', {
+      ...styleSm, fontSize: M('28px', '30px'), color: CSS.gold,
+      wordWrap: MOBILE ? { width: GAME_W - 48 } : undefined,
+    }).setOrigin(0, M(0, 1)).setDepth(40);
     this.hudWave = this.add.text(GAME_W / 2, M(22, 26), '', {
       fontFamily: FONT, fontSize: M('32px', '40px'), color: CSS.white,
     }).setOrigin(0.5, 0.5).setDepth(40);
@@ -635,7 +637,7 @@ class GameScene extends Phaser.Scene {
   showEnemyTicker(intro) {
     const text = (T('enemyIntro') || {})[intro.kind];
     if (!text) { this.introBusy = false; return; }
-    const c = this.add.container(0, GAME_H - M(36, 40)).setDepth(44);
+    const c = this.add.container(0, GAME_H - M(36, 110)).setDepth(44);
     // l'art "legacy" porte un placeholder <tech> : on lui donne un nom neutre
     const techName = intro.art === 'legacy' ? 'LEGACY' : null;
     const icon = this.add.text(0, 0, pickArt(intro.art, techName), {
@@ -769,7 +771,7 @@ class GameScene extends Phaser.Scene {
         ? [pickWord(GINES_MODE ? wordBank('insults') : WORDS.exceptions,
             { maxLen: this.diff.maxLen + 8, exclude: new Set([label]) })]
         : null,
-      x: SPAWN_X, y: Phaser.Math.Between(LANE_TOP, LANE_BOTTOM),
+      x: SPAWN_X, y: this.pickLaneY(),
       // vitesse = base de l'ennemi × difficulté × croissance uniforme par sprint
       // (+2,5 %/sprint, plafonnée pour le mode infini) × variation visuelle (±5 %)
       speed: conf.speed * this.diff.speed
@@ -777,6 +779,26 @@ class GameScene extends Phaser.Scene {
         * Phaser.Math.FloatBetween(0.95, 1.05),
       color: conf.color, artKind: conf.art, techName, artSize: conf.size,
     });
+  }
+
+  /* Hauteur d'apparition. Standard : tirage libre dans le couloir. Mobile :
+     l'écran étant 2× plus étroit, les mots se chevauchent vite → on tire
+     16 hauteurs et on garde la plus éloignée des ennemis présents (le boss,
+     très haut, compte avec une marge de sa demi-hauteur). */
+  pickLaneY() {
+    if (!MOBILE) return Phaser.Math.Between(LANE_TOP, LANE_BOTTOM);
+    let best = LANE_TOP;
+    let bestGap = -Infinity;
+    for (let i = 0; i < 16; i++) {
+      const y = Phaser.Math.Between(LANE_TOP, LANE_BOTTOM);
+      let gap = Infinity;
+      for (const e of this.enemies) {
+        const margin = e.kind === 'boss' ? 170 : 0;
+        gap = Math.min(gap, Math.abs(e.baseY - y) - margin);
+      }
+      if (gap > bestGap) { bestGap = gap; best = y; }
+    }
+    return best;
   }
 
   spawnPowerup() {
@@ -790,7 +812,7 @@ class GameScene extends Phaser.Scene {
     const t = Phaser.Utils.Array.GetRandom(types);
     this.addEnemy({
       kind: 'powerup', cls: 'powerup', label: t.label, effect: t.effect,
-      x: SPAWN_X, y: Phaser.Math.Between(LANE_TOP, LANE_BOTTOM),
+      x: SPAWN_X, y: this.pickLaneY(),
       speed: 95 * this.diff.speed, color: CSS.gold, artKind: 'powerup', artSize: 18,
     });
   }
@@ -1024,7 +1046,7 @@ class GameScene extends Phaser.Scene {
 
     if (!this.target) {
       // verrouille l'ennemi correspondant le plus proche de la prod
-      const candidates = this.enemies.filter((en) => en.label[0] === char);
+      const candidates = this.enemies.filter((en) => this.sameKey(char, this.firstKey(en.label)));
       if (!candidates.length) { this.softMiss(); return; }
       candidates.sort((a, b) => a.container.x - b.container.x);
       this.target = candidates[0];
@@ -1032,10 +1054,12 @@ class GameScene extends Phaser.Scene {
     }
 
     const t = this.target;
+    this.skipAuto(t); // mobile : espaces, chiffres et symboles remplis d'office
     // l'espace est facultatif : taper directement la lettre qui le suit le saute
     const skipSpace = t.label[t.progress] === ' ' && char === t.label[t.progress + 1];
-    if (char === t.label[t.progress] || skipSpace) {
+    if (this.sameKey(char, t.label[t.progress]) || skipSpace) {
       t.progress += skipSpace ? 2 : 1;
+      this.skipAuto(t);
       this.stats.typedOK++;
       Sfx.blip(this.combo);
       this.updateLabel(t);
@@ -1058,7 +1082,7 @@ class GameScene extends Phaser.Scene {
     Sfx.missile();
     this.scorePopup(e.container.x, e.container.y - 90, T('indepDodge'), CSS.cyan, 24);
     e.container.x = Math.min(e.container.x + 240, SPAWN_X - 40);
-    e.baseY = Phaser.Math.Between(LANE_TOP, LANE_BOTTOM);
+    e.baseY = this.pickLaneY();
     e.container.setAlpha(0.2);
     this.tweens.add({ targets: e.container, alpha: 1, duration: 350 });
   }
@@ -1176,10 +1200,36 @@ class GameScene extends Phaser.Scene {
   isValidKeystroke(char) {
     if (this.target) {
       const t = this.target;
+      if (MOBILE) return this.sameKey(char, t.label[this.nextKeyIndex(t)]);
       return char === t.label[t.progress]
         || (t.label[t.progress] === ' ' && char === t.label[t.progress + 1]);
     }
-    return this.enemies.some((en) => en.label[0] === char);
+    return this.enemies.some((en) => this.sameKey(char, this.firstKey(en.label)));
+  }
+
+  /* Saisie simplifiée MOBILE : seules les LETTRES se tapent, sans se soucier
+     de la casse ; espaces, chiffres et symboles sont remplis d'office (comme
+     l'espace facultatif du standard). « git push --force » = gitpushforce.
+     En standard, ces helpers reproduisent exactement la comparaison stricte. */
+  sameKey(typed, expected) {
+    if (!MOBILE) return typed === expected;
+    return typeof expected === 'string' && typed.toLowerCase() === expected.toLowerCase();
+  }
+
+  // position du prochain caractère à taper (mobile : saute les non-lettres)
+  nextKeyIndex(e) {
+    let p = e.progress;
+    if (MOBILE) while (p < e.label.length && !/[a-z]/i.test(e.label[p])) p++;
+    return p;
+  }
+
+  skipAuto(e) { if (MOBILE) e.progress = this.nextKeyIndex(e); }
+
+  // caractère qui verrouille un ennemi (mobile : sa première lettre)
+  firstKey(label) {
+    if (!MOBILE) return label[0];
+    const m = label.match(/[a-z]/i);
+    return m ? m[0] : '';
   }
 
   /* Pouvoirs des étoiles de combat : A bouclier 3 s (1★) · E détruit
