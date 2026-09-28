@@ -23,3 +23,6 @@ description: Release a new version of Typing of the Dev - version bump, FR/EN re
    1–5, one game start), verify the release-notes page renders.
 5. Commit (French message, one line summary + bullets) — only after the user
    confirms; push to `origin main`.
+6. **Mobile apps** (only if the user wants to ship them too): `/mobile-build`
+   — bump the app `versionCode`/`versionName`, `cap sync`, signed APK/AAB.
+   The GitHub Pages demo already serves the mobile mode on phones.

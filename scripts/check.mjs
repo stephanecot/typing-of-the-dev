@@ -3,7 +3,8 @@
    Vérifie les invariants documentés dans CLAUDE.md :
    1. syntaxe de tous les fichiers JS ;
    2. mots à taper : pas de { } [ ], pas d'accents, assez de mots courts
-      par banque pour la difficulté STAGIAIRE (maxLen 10) ;
+      par banque pour la difficulté STAGIAIRE (maxLen 10), et chaque
+      caractère tapable sur le clavier virtuel mobile ;
    3. i18n : mêmes clés en FR et EN, mêmes formes (fonction/tableau/chaîne),
       mêmes tailles de structures (bestiaires, sections d'aide, notes) ;
    4. cohérence : sprites ASCII référencés par les bestiaires et les boss,
@@ -87,6 +88,26 @@ if (WORDS) {
     if (MAXLEN_BANKS.has(name) && list.length >= 8 && courts < 3) {
       warnings.push(`banque ${name} : seulement ${courts} mot(s) ≤ 10 caractères (difficulté STAGIAIRE)`);
     }
+  }
+
+  // clavier virtuel mobile (js/mobile/keyboard.js) : tout caractère d'un mot
+  // doit y exister (les majuscules passent par ⇧ sur les lettres)
+  const kbSrc = readFileSync(join(ROOT, 'public/js/mobile/keyboard.js'), 'utf8');
+  const pagesSrc = (kbSrc.match(/const PAGES = (\{[\s\S]*?\n {2}\});/) || [])[1];
+  if (!pagesSrc) {
+    errors.push('clavier virtuel : objet PAGES introuvable dans keyboard.js');
+  } else {
+    const pages = new Function(`return ${pagesSrc}`)();
+    const keys = new Set(Object.values(pages).flat(2).filter((k) => k.length === 1));
+    const missing = new Map();
+    for (const [name, list] of banks) {
+      for (const w of list) {
+        for (const c of w) {
+          if (!keys.has(c) && !keys.has(c.toLowerCase()) && !missing.has(c)) missing.set(c, `${name} : "${w}"`);
+        }
+      }
+    }
+    for (const [c, where] of missing) errors.push(`caractère « ${c} » absent du clavier virtuel mobile (${where})`);
   }
 }
 

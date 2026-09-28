@@ -21,6 +21,10 @@ then test what you were asked plus this minimal smoke pass:
 4. `read_console_messages onlyErrors:true` after each phase — any error is a
    finding.
 
+If asked to test the mobile version (or the change touches it), also follow
+`.claude/skills/mobile-playtest/SKILL.md` (Android emulator, real taps,
+`node mobile/scripts/webview-eval.mjs`) and its standard-version regression pass.
+
 Drive via `javascript_tool` (direct scene calls), not synthetic keystrokes.
 Reset any mode flags you toggled (page reload) when done.
 

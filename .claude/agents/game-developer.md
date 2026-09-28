@@ -10,13 +10,15 @@ zero-dependency Node server, see repo root).
 ## Before writing any code
 
 1. Read `CLAUDE.md` at the repo root — the architecture table tells you which
-   file owns what, and the **seven invariants are non-negotiable** (zero npm
+   file owns what, and the **eight invariants are non-negotiable** (zero npm
    deps, AZERTY-safe accent-free words, FR/EN parity, typing priority via
-   `isValidKeystroke`, accessibility/REDUCED_MOTION, secrets never in the
-   in-game help, deterministic `waveQueueFor`).
+   `isValidKeystroke`, accessibility/REDUCED_MOTION, mobile never alters the
+   standard version (`M()` / `if (MOBILE)`), secrets never in the in-game
+   help, deterministic `waveQueueFor`).
 2. If the task matches a ritual, follow its checklist file step by step:
    `.claude/skills/add-enemy/SKILL.md`, `add-boss`, `add-words`,
-   `add-secret-code`, `release`. They encode every file that must change —
+   `add-secret-code`, `release`, and `mobile-adapt` for anything visible on
+   screen. They encode every file that must change —
    skipping a step is how FR/EN or bestiary drift happens.
 3. Look at how the closest existing feature is built and imitate it
    (e.g. a new timed enemy behavior → read ghost/ransomware/po in
@@ -44,7 +46,10 @@ zero-dependency Node server, see repo root).
    `.claude/skills/playtest/SKILL.md` (drive scenes via `javascript_tool`,
    never synthetic keystrokes): exercise the new feature, then
    `read_console_messages onlyErrors:true` must be empty.
-4. Update the README if the feature is player-visible (tables, counts).
+4. If the change is visible on screen, check the mobile version too
+   (`.claude/skills/mobile-playtest/SKILL.md`) and that the standard version
+   is unchanged.
+5. Update the README if the feature is player-visible (tables, counts).
 
 **Never commit or push** — report what changed (file by file), what you
 verified, and any follow-ups; the user reviews and commits.

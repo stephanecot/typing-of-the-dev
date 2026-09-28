@@ -29,3 +29,7 @@ Codes are typed in the menu prompt (`C` key) — never as raw key sequences
 8. **Validate**: `npm run check`, then `/playtest`: drive
    `m.openCodePrompt(); 'xxx'.split('').forEach(k => m.onCodeKey({key:k}));
    m.onCodeKey({key:'Enter'})` and verify badges + effect in game.
+9. **Mobile** — the touch "CODE SECRET" screen (`js/mobile/ui.js`) calls
+   `MenuScene.submitCode()`: add the code there only, keep `return false`
+   for unknown codes. If the mode shows a menu badge, add it to `homeHtml()`
+   badges in `ui.js`. Test via `/mobile-playtest` (type it in the app).

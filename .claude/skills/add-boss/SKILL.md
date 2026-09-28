@@ -29,3 +29,6 @@ Two families: the **campaign** has exactly one regular boss + the final CIO
    `INFINITE_MODE = true; sc.wave = 4k-1; sc.nextWave()` cycling enough waves
    to land on the new variant (rotation order = array order); check the boss
    help page (page 4) still fits — it scrolls if needed.
+7. **Mobile** — `/mobile-playtest`: force the boss in the app, check its
+   name/HP/commands fit the 800-px screen (boss texts use `M()` sizes) and the
+   BOSS tab of the mobile help lists it.

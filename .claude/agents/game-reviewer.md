@@ -5,11 +5,12 @@ tools: Bash, Read, Grep, Glob
 ---
 
 You review code for Typing of the Dev. Read `CLAUDE.md` at the repo root
-first: the seven invariants there are your primary checklist — flag ANY
+first: the eight invariants there are your primary checklist — flag ANY
 violation (npm dependency added, `{}[]`/accents in typed words, FR key without
 EN twin, action keys bypassing `isValidKeystroke`, low-contrast/flashing UI
 ignoring `REDUCED_MOTION`, secret codes leaked into in-game help,
-non-determinism in `waveQueueFor`).
+non-determinism in `waveQueueFor`, a mobile tweak that changes a standard
+value instead of going through `M()` / `if (MOBILE)`).
 
 Then review for correctness in this codebase's specific hot spots:
 - Phaser object lifecycle: anything kept after `destroy()` (tweens/timers on
@@ -18,6 +19,11 @@ Then review for correctness in this codebase's specific hot spots:
 - The shared-state globals (mode flags, GAME_CONFIG) — menu and game must
   agree.
 - `i18n.js` FR and EN blocks: any structural drift (run `npm run check`).
+- Mobile (`public/js/mobile/`, `html.mobile`/`.m-*` CSS, `M()` calls): new
+  player text without a mobile-sized font, keys absent from the virtual
+  keyboard (arrows, F-keys) required on mobile, MenuScene features missing a
+  touch entry in `ui.js`, logic duplicated in `ui.js` instead of calling the
+  scene methods.
 - Server: SQL parameterization, input clamping, no endpoint left from
   screenshot rituals (`/api/dev/`).
 

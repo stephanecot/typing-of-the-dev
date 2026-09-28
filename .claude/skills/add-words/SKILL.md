@@ -24,4 +24,6 @@ All banks live in `public/js/data/words.js`. Hard rules (checked by
   noun × domain — extending those arrays beats adding one-off entries.
 - Append under a `// — extension N —` marker, mind duplicates within a bank.
 
-Validate with `npm run check` (scans every bank).
+Validate with `npm run check` (scans every bank — it also fails if a
+character cannot be typed on the mobile virtual keyboard; extend `PAGES` in
+`public/js/mobile/keyboard.js` only if a new symbol is really needed).

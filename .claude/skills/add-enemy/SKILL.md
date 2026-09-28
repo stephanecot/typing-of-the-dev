@@ -37,5 +37,9 @@ in order:
 7. **Validate**: `npm run check`, then `/playtest` — spawn it via
    `sc.spawnEnemy('kind')`, verify sprite/word/badge and the special behavior,
    check the bestiary page (help page 3) renders within bounds.
+8. **Mobile** — nothing to code (the mobile help renders the same bestiary
+   data), but `/mobile-playtest`: spawn it in the app and check sprite + word
+   stay readable and inside the 800-px screen; new popup texts need `M()`
+   sizes (see `/mobile-adapt`).
 
 Do NOT reveal anything in the in-game help that should stay secret.

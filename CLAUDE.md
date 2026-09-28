@@ -63,6 +63,9 @@ npm run check           # project validations (words, i18n, syntax) — RUN BEFO
 - New words → `/add-words` · New secret code → `/add-secret-code`
 - Version release → `/release` (version, FR/EN notes, README badge)
 - Manual driven test → `/playtest` · README screenshots → see `/release`
+- Mobile version: adapt a change → `/mobile-adapt` · test (emulator, taps,
+  iOS sim, desktop regression) → `/mobile-playtest` · APK/AAB, app version,
+  icons → `/mobile-build`
 
 ## Style & commits
 
