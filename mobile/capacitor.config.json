@@ -2,5 +2,12 @@
   "appId": "io.github.stephanecot.typingofthedev",
   "appName": "Typing of the Dev",
   "webDir": "../public",
-  "backgroundColor": "#050a07"
+  "backgroundColor": "#050a07",
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "css",
+      "initialViewportFitValueHint": "cover",
+      "style": "DARK"
+    }
+  }
 }

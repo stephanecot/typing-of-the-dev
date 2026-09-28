@@ -15,3 +15,6 @@ Thumbs.db
 
 # NB : public/lib/phaser.min.js et public/fonts/ sont volontairement versionnés
 # (vendorés pour que le stand fonctionne offline, sans npm install)
+
+# APK générés (mobile/) : distribués à part, jamais dans git
+*.apk

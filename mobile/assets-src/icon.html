@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<!-- Source des icônes et écrans de démarrage de l'app (cf. mobile/README.md).
+     Rendu en PNG par Chrome headless : icon.html#icon | #fg | #bg | #splash
+       icon   : icône complète (iOS, Android ancien) 1024×1024
+       fg/bg  : icône adaptative Android (premier plan transparent / fond) 1024×1024
+       splash : écran de démarrage 2732×2732 (contenu centré, rogné selon l'écran) -->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: 'VT323'; src: url('../../public/fonts/vt323-latin.woff2') format('woff2'); }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: transparent; }
+  body { font-family: 'VT323', monospace; }
+  .stage { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+
+  /* fond CRT : lueur phosphore, scanlines, vignette */
+  .crt {
+    background:
+      repeating-linear-gradient(to bottom, transparent 0 6px, rgba(0, 0, 0, 0.28) 6px 12px),
+      radial-gradient(circle at 50% 46%, #16492a 0%, #0a2114 38%, #050a07 72%);
+  }
+  .crt::after {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
+  }
+
+  .mark { display: flex; flex-direction: column; align-items: center; position: relative; z-index: 1; }
+  .bug {
+    font-size: var(--bug); line-height: 0.82; white-space: pre; color: #39ff7a;
+    text-shadow: 0 0 calc(var(--bug) * 0.12) rgba(57, 255, 122, 0.75), 0 0 calc(var(--bug) * 0.35) rgba(57, 255, 122, 0.35);
+  }
+  .word { font-size: var(--word); line-height: 1; margin-top: calc(var(--word) * 0.18); white-space: pre; }
+  .word .typed { color: #ffb000; text-shadow: 0 0 calc(var(--word) * 0.15) rgba(255, 176, 0, 0.7); }
+  .word .rest { color: #eafff0; }
+  .word .cur {
+    display: inline-block; width: 0.5em; height: 0.09em; margin-left: 0.04em; vertical-align: -0.02em;
+    background: #ffb000; box-shadow: 0 0 calc(var(--word) * 0.15) rgba(255, 176, 0, 0.8);
+  }
+  .title {
+    font-size: var(--title); line-height: 0.9; text-align: center; color: #39ff7a; margin-bottom: calc(var(--title) * 0.35);
+    text-shadow: -0.03em 0 rgba(255, 59, 59, 0.55), 0.03em 0 rgba(65, 242, 255, 0.55), 0 0 0.25em rgba(57, 255, 122, 0.45);
+  }
+</style>
+</head>
+<body>
+<div class="stage" id="stage"></div>
+<script>
+  const MODES = {
+    // icône complète : le motif occupe ~70 % (iOS arrondit les coins)
+    icon: { crt: true, mark: true, bug: 200, word: 150 },
+    // Android adaptatif : premier plan dans la zone sûre (~60 % du centre)
+    fg: { crt: false, mark: true, bug: 170, word: 128 },
+    bg: { crt: true, mark: false },
+    // démarrage : titre + motif, compact au centre (rogné selon le format d'écran)
+    splash: { crt: true, mark: true, title: 190, bug: 230, word: 170 },
+  };
+  const m = MODES[location.hash.slice(1)] || MODES.icon;
+  const stage = document.getElementById('stage');
+  if (m.crt) stage.classList.add('crt');
+  if (m.mark) {
+    stage.style.setProperty('--bug', `${m.bug}px`);
+    stage.style.setProperty('--word', `${m.word}px`);
+    if (m.title) stage.style.setProperty('--title', `${m.title}px`);
+    stage.innerHTML = `<div class="mark">
+      ${m.title ? '<div class="title">TYPING<br>OF THE DEV</div>' : ''}
+      <div class="bug"> /\\oo/\\ \n&lt;|=00=|&gt;\n /|/\\|\\ </div>
+      <div class="word"><span class="typed">bu</span><span class="rest">g</span><span class="cur"></span></div>
+    </div>`;
+  }
+</script>
+</body>
+</html>
