@@ -9,6 +9,7 @@ const I18N = {
   fr: {
     // ---- menu
     menuTagline: 'Les bugs sont sortis du backlog. Tapez pour survivre.',
+    menuEventBanner: 'ÉDITION SPÉCIALE DEVFEST TOULOUSE 2026 · 19 NOVEMBRE · DIAGORA LABÈGE · #DevFestToulouse',
     menuSelect: '> SÉLECTIONNEZ VOTRE GRADE <',
     menuDeploy: '[ ENTRÉE pour déployer en prod ]',
     menuFooter: 'H: aide & règles · flèches: choisir · ENTRÉE: jouer · ÉCHAP: pause · TAB: changer de cible',
@@ -343,6 +344,7 @@ const I18N = {
   en: {
     // ---- menu
     menuTagline: 'The bugs escaped the backlog. Type to survive.',
+    menuEventBanner: 'DEVFEST TOULOUSE 2026 SPECIAL EDITION · NOVEMBER 19 · DIAGORA LABÈGE · #DevFestToulouse',
     menuSelect: '> SELECT YOUR RANK <',
     menuDeploy: '[ ENTER to deploy to prod ]',
     menuFooter: 'H: help & rules · arrows: select · ENTER: play · ESC: pause · TAB: switch target',

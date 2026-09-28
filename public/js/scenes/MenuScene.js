@@ -29,6 +29,7 @@ class MenuScene extends Phaser.Scene {
         }).setOrigin(0.5);
       }
     });
+    if (EVENT_BANNER) this.buildEventBanner();
     this.buildTitle();
     this.buildDifficulties();
     this.buildFooter();
@@ -554,6 +555,26 @@ class MenuScene extends Phaser.Scene {
         fontFamily: FONT, fontSize: '34px', color: CSS.red,
       }).setOrigin(0.5).setDepth(60);
     this.tweens.add({ targets: badge, alpha: 0.35, duration: 400, yoyo: true, repeat: -1 });
+  }
+
+  /* Bandeau événement (cf. EVENT_BANNER) : bande dorée pleine largeur tout en
+     haut, texte sombre (contraste AAA), encadré de 4 pastilles aux couleurs
+     Google clin d'œil au GDG — purement décoratives, le texte porte l'info. */
+  buildEventBanner() {
+    const cx = GAME_W / 2;
+    const y = 42;
+    this.add.rectangle(cx, y, GAME_W, 44, PALETTE.gold).setDepth(50);
+    const label = this.add.text(cx, y, T('menuEventBanner'), {
+      fontFamily: FONT, fontSize: '28px', color: '#050a07',
+    }).setOrigin(0.5).setDepth(51);
+    const dots = [0x4285f4, 0xea4335, 0xfbbc04, 0x34a853];
+    [-1, 1].forEach((side) => {
+      const x0 = cx + side * (label.width / 2 + 24);
+      dots.forEach((c, i) => {
+        const x = x0 + side * i * 18;
+        this.add.circle(x, y, 6, c).setStrokeStyle(2, 0x050a07).setDepth(51);
+      });
+    });
   }
 
   buildTitle() {

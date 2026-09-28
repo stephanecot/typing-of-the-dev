@@ -64,6 +64,10 @@ applyGameMode();
 /* Code secret SPEED : +30 % de vitesse pour tout le monde, toutes difficultés. */
 let SPEED_MODE = false;
 
+/* Bandeau événement en haut de l'accueil (DevFest Toulouse, 19/11/2026).
+   Passer à false une fois le stand remballé. */
+const EVENT_BANNER = true;
+
 /* "Mode serveur" : vrai quand le backend répond (Api.loadConfig a réussi). Faux
    sur la démo statique GitHub Pages, sans backend. Pilote l'affichage du lien
    vers le leaderboard (inutile sans serveur). */
